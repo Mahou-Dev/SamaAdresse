@@ -113,16 +113,60 @@ public class GeoGridService {
         }
     }
 
+    /**
+     * Résout le quartier géographique d'un point (lat, lon).
+     *
+     * RÈGLE DE RÉSOLUTION DES CHEVAUCHEMENTS GÉOGRAPHIQUES :
+     * -----------------------------------------------------
+     * Les limites administratives approximatives sous forme de bounding boxes rectangulaires
+     * peuvent se chevaucher sur certaines zones d'intersection (ex: KBG et ESC à Ziguinchor).
+     *
+     * Pour garantir un comportement déterministe et géographiquement fidèle (plutôt que dépendant
+     * de l'ordre d'insertion en mémoire) :
+     * 1. On collecte TOUS les quartiers candidats dont la bounding box englobe le point (lat, lon).
+     * 2. S'il n'y en a aucun -> lève OutofZoneException (422).
+     * 3. S'il n'y en a qu'un -> retourne ce quartier.
+     * 4. S'il y en a plusieurs (chevauchement) -> calcule le centre de chaque bounding box candidate :
+     *    (centerLat = (latMin + latMax)/2, centerLon = (lonMin + lonMax)/2)
+     *    et retourne le quartier dont le centre est le plus proche en distance euclidienne.
+     */
     public GeoQuartier resolveQuartier(double lat, double lon) {
         validatePlausibleSenegalCoordinates(lat, lon);
 
+        List<GeoQuartier> candidates = new ArrayList<>();
         for (GeoQuartier q : quartiers) {
             if (q.contains(lat, lon)) {
-                return q;
+                candidates.add(q);
             }
         }
 
-        throw new OutofZoneException("Coordonnées hors zone couverte");
+        if (candidates.isEmpty()) {
+            throw new OutofZoneException("Coordonnées hors zone couverte");
+        }
+
+        if (candidates.size() == 1) {
+            return candidates.get(0);
+        }
+
+        // Cas de chevauchement : sélection du quartier au centre le plus proche
+        GeoQuartier bestCandidate = null;
+        double minDistanceSq = Double.MAX_VALUE;
+
+        for (GeoQuartier candidate : candidates) {
+            double centerLat = (candidate.getLatMin() + candidate.getLatMax()) / 2.0;
+            double centerLon = (candidate.getLonMin() + candidate.getLonMax()) / 2.0;
+
+            double deltaLat = lat - centerLat;
+            double deltaLon = lon - centerLon;
+            double distanceSq = deltaLat * deltaLat + deltaLon * deltaLon;
+
+            if (distanceSq < minDistanceSq) {
+                minDistanceSq = distanceSq;
+                bestCandidate = candidate;
+            }
+        }
+
+        return bestCandidate;
     }
 
     public List<GeoZone> getAllZones() {

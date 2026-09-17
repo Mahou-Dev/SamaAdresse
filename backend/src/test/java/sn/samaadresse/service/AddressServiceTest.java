@@ -174,4 +174,21 @@ class AddressServiceTest {
         assertEquals(originalCode, address.getCode());
         assertEquals("ZIG-KBG-4271", address.getCode());
     }
+
+    @Test
+    @DisplayName("6. Zone de chevauchement KBG/ESC : Le quartier dont le centre est le plus proche gagne")
+    void testResolveQuartier_OverlapZone_ClosestCenterWins() {
+        // Point dans la zone d'intersection KBG (Boucotte) et ESC (Escale Center) : lat 12.5870, lon -16.2670
+        // - Centre de KBG : (12.5750, -16.2650) -> dist^2 = (0.0120)^2 + (-0.0020)^2 = 0.000148
+        // - Centre de ESC : (12.5850, -16.2675) -> dist^2 = (0.0020)^2 + (0.0005)^2  = 0.00000425
+        // Le centre de ESC est nettement plus proche du point.
+        double overlapLat = 12.5870;
+        double overlapLon = -16.2670;
+
+        sn.samaadresse.domain.model.GeoQuartier resolved = geoGridService.resolveQuartier(overlapLat, overlapLon);
+
+        assertNotNull(resolved);
+        assertEquals("ESC", resolved.getCode(), "Le quartier Escale (ESC) doit être sélectionné car son centre est plus proche du point que Boucotte (KBG)");
+        assertEquals("Escale Center", resolved.getName());
+    }
 }
