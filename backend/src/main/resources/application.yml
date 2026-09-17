@@ -3,20 +3,9 @@ spring:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   application:
     name: samaadresse-backend
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/samaadresse}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      initialization-fail-timeout: 0
-      connection-timeout: 1000
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8082}
 
 springdoc:
   api-docs:
@@ -29,17 +18,33 @@ spring:
   config:
     activate:
       on-profile: dev
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:samaadresse;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    username: ${DB_USER:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
+    open-in-view: false
     show-sql: true
+  h2:
+    console:
+      enabled: true
 
 ---
 spring:
   config:
     activate:
       on-profile: prod
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/samaadresse}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
+    open-in-view: false
     show-sql: false
