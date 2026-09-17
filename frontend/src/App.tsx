@@ -22,6 +22,10 @@ import {
   Phone,
   Mail,
   User as UserIcon,
+  MapPin,
+  Copy,
+  Check,
+  Compass,
 } from 'lucide-react';
 
 function HomePage() {
@@ -32,6 +36,9 @@ function HomePage() {
   const [healthStatus, setHealthStatus] = useState<string | null>(null);
   const [loadingHealth, setLoadingHealth] = useState<boolean>(true);
   const [healthError, setHealthError] = useState<string | null>(null);
+  const [copiedCode, setCopiedCode] = useState<boolean>(false);
+
+  const heroCode = "ZIG-KBG-4271";
 
   const fetchHealthStatus = async () => {
     setLoadingHealth(true);
@@ -57,20 +64,28 @@ function HomePage() {
     navigate('/');
   };
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between p-4 sm:p-8">
-      {/* Senegal gradient bar */}
-      <div className="fixed top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-amber-400 to-red-500 z-50" />
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(heroCode);
+    setCopiedCode(true);
+    showToast(`Code d'adresse ${heroCode} copié !`, 'success');
+    setTimeout(() => setCopiedCode(false), 2000);
+  };
 
+  return (
+    <div className="min-h-screen bg-[#FBF9F5] text-[#231A15] flex flex-col justify-between p-4 sm:p-8 font-sans">
       {/* Header Bar */}
-      <header className="max-w-5xl mx-auto w-full pt-4 pb-6 flex items-center justify-between gap-4 border-b border-slate-900">
+      <header className="max-w-5xl mx-auto w-full pt-4 pb-6 flex items-center justify-between gap-4 border-b border-[#E6DDD0]">
         <Link to="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 font-bold group-hover:border-emerald-500/50 transition">
-            🇸🇳
+          <div className="w-10 h-10 rounded-xl bg-[#1D528F] flex items-center justify-center text-white shadow-sm transition">
+            <MapPin className="w-5 h-5 text-white" />
           </div>
           <div>
-            <span className="font-extrabold text-lg text-slate-100 tracking-tight block">SamaAdresse</span>
-            <span className="text-[11px] text-slate-500 block leading-none">Mon Adresse Géolocalisée</span>
+            <span className="font-extrabold text-xl text-[#231A15] tracking-tight block leading-tight">
+              SamaAdresse
+            </span>
+            <span className="text-xs font-medium text-[#5C4D44] block">
+              Signalétique & Adressage Géolocalisé
+            </span>
           </div>
         </Link>
 
@@ -78,15 +93,15 @@ function HomePage() {
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3">
               <div className="hidden sm:flex flex-col items-end">
-                <span className="text-sm font-semibold text-slate-200">{user.fullName}</span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium text-emerald-400">
-                  <Shield className="w-3 h-3" />
+                <span className="text-sm font-bold text-[#231A15]">{user.fullName}</span>
+                <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-[#1D528F]">
+                  <Shield className="w-3 h-3 text-[#1D528F]" />
                   {user.role}
                 </span>
               </div>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-red-400 border border-slate-800 hover:border-red-500/30 text-xs font-semibold transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFFFFF] hover:bg-[#FEF2F2] text-[#5C4D44] hover:text-[#DC2626] border border-[#D4CEBF] hover:border-[#DC2626]/40 text-xs font-bold transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
                 <span>Déconnexion</span>
@@ -96,14 +111,14 @@ function HomePage() {
             <div className="flex items-center gap-2">
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-semibold transition"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#231A15] border border-[#D4CEBF] text-xs font-bold transition"
               >
-                <LogIn className="w-4 h-4 text-emerald-400" />
+                <LogIn className="w-4 h-4 text-[#1D528F]" />
                 <span>Connexion</span>
               </Link>
               <Link
                 to="/register"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition shadow-lg shadow-emerald-950/40"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#B84A24] hover:bg-[#963919] text-white text-xs font-bold transition shadow-sm"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Inscription</span>
@@ -114,62 +129,99 @@ function HomePage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto w-full py-8 flex-1 flex flex-col justify-center">
-        {/* Banner */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium w-fit mb-6">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          Sénégal 🇸🇳 — Plateforme Nationale d'Adressage
+      <main className="max-w-5xl mx-auto w-full py-10 flex-1 flex flex-col justify-center">
+        {/* Ancrage Terrain Badge */}
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#F2ECE1] border border-[#E6DDD0] text-[#231A15] text-xs font-bold w-fit mb-6">
+          <Compass className="w-4 h-4 text-[#B84A24]" />
+          <span>SÉGNÉGAL • ZIGUINCHOR & REGIONS</span>
         </div>
 
-        <div className="mb-10 space-y-3">
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-slate-400 bg-clip-text text-transparent">
-            SamaAdresse — Mon Adresse
+        <div className="mb-8 space-y-3">
+          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#231A15] leading-tight">
+            L'adresse exacte de votre maison, <br className="hidden sm:inline" />
+            même sans nom de rue.
           </h1>
-          <p className="text-lg sm:text-xl text-slate-400 max-w-2xl">
-            Génération et gestion d'adresses géolocalisées intelligentes pour les proprietaires et citoyens du Sénégal.
+          <p className="text-base sm:text-lg text-[#5C4D44] max-w-2xl leading-relaxed">
+            Transformez vos repères visuels ("après la mosquée, 3e concession") en un code court, mémorisable et géolocalisé.
           </p>
+        </div>
+
+        {/* HERO ADDRESS PLAQUE (LE LIVRABLE CLÉ) */}
+        <div className="mb-10 w-full max-w-2xl">
+          <div className="rounded-2xl border-4 border-[#1D528F] bg-[#FFFFFF] shadow-md overflow-hidden">
+            {/* Plaque Header Band */}
+            <div className="bg-[#1D528F] px-6 py-2.5 text-center text-white flex items-center justify-between">
+              <span className="text-xs font-bold tracking-widest uppercase">République du Sénégal</span>
+              <span className="text-xs font-mono font-bold tracking-wider uppercase">Region Ziguinchor</span>
+            </div>
+
+            {/* Plaque Body Content */}
+            <div className="p-6 sm:p-8 text-center bg-[#FFFFFF] space-y-4">
+              <span className="text-xs font-bold text-[#5C4D44] uppercase tracking-wider block">
+                Plaque d'Adressage Officielle
+              </span>
+
+              <div className="inline-flex items-center gap-3 bg-[#FBF9F5] px-6 py-3 rounded-xl border border-[#D4CEBF]">
+                <span className="text-3xl sm:text-5xl font-extrabold font-mono text-[#231A15] tracking-widest">
+                  {heroCode}
+                </span>
+                <button
+                  onClick={handleCopyCode}
+                  title="Copier le code d'adresse"
+                  className="p-2 rounded-lg bg-[#F2ECE1] hover:bg-[#E6DDD0] text-[#231A15] transition cursor-pointer border border-[#D4CEBF]"
+                >
+                  {copiedCode ? <Check className="w-5 h-5 text-[#2A6B44]" /> : <Copy className="w-5 h-5 text-[#1D528F]" />}
+                </button>
+              </div>
+
+              <div className="pt-2 text-sm font-medium text-[#5C4D44] flex items-center justify-center gap-1.5 max-w-md mx-auto">
+                <MapPin className="w-4 h-4 text-[#B84A24] shrink-0" />
+                <span>Quartier Kangourou • 3e concession après la Grande Mosquée</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Authenticated User Session Card */}
         {isAuthenticated && user && (
-          <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 border border-emerald-500/30 shadow-2xl backdrop-blur-md mb-8">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
-              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400">
+          <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#D4CEBF] shadow-sm mb-8">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-[#E6DDD0]">
+              <div className="p-3 rounded-xl bg-[#F2ECE1] text-[#1D528F]">
                 <UserCheck className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-100">Session Utilisateur Active</h2>
-                <p className="text-xs text-slate-400">Access Token conservé uniquement en mémoire React (Secured)</p>
+                <h2 className="text-xl font-bold text-[#231A15]">Session Propriétaire Active</h2>
+                <p className="text-xs text-[#5C4D44]">Access Token en mémoire React (Sécurisé)</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-xs text-slate-500 font-semibold block mb-1 flex items-center gap-1.5">
-                  <UserIcon className="w-3.5 h-3.5 text-emerald-400" /> Nom complet
+              <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#E6DDD0]">
+                <span className="text-xs text-[#5C4D44] font-semibold block mb-1 flex items-center gap-1.5">
+                  <UserIcon className="w-3.5 h-3.5 text-[#1D528F]" /> Nom complet
                 </span>
-                <span className="text-sm font-bold text-slate-200">{user.fullName}</span>
+                <span className="text-sm font-bold text-[#231A15]">{user.fullName}</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-xs text-slate-500 font-semibold block mb-1 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-amber-400" /> Email
+              <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#E6DDD0]">
+                <span className="text-xs text-[#5C4D44] font-semibold block mb-1 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-[#B84A24]" /> Email
                 </span>
-                <span className="text-sm font-bold text-slate-200 truncate block">{user.email}</span>
+                <span className="text-sm font-bold text-[#231A15] truncate block">{user.email}</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-xs text-slate-500 font-semibold block mb-1 flex items-center gap-1.5">
-                  <Phone className="w-3.5 h-3.5 text-red-400" /> Téléphone
+              <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#E6DDD0]">
+                <span className="text-xs text-[#5C4D44] font-semibold block mb-1 flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5 text-[#2A6B44]" /> Téléphone
                 </span>
-                <span className="text-sm font-bold text-slate-200">{user.phoneNumber}</span>
+                <span className="text-sm font-bold text-[#231A15]">{user.phoneNumber}</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800">
-                <span className="text-xs text-slate-500 font-semibold block mb-1 flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-emerald-400" /> Rôle Utilisateur
+              <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#E6DDD0]">
+                <span className="text-xs text-[#5C4D44] font-semibold block mb-1 flex items-center gap-1.5">
+                  <Shield className="w-3.5 h-3.5 text-[#1D528F]" /> Rôle Utilisateur
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-xs">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#1D528F]/10 text-[#1D528F] font-bold text-xs">
                   {user.role}
                 </span>
               </div>
@@ -178,44 +230,44 @@ function HomePage() {
         )}
 
         {/* Healthcheck Card */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-md mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-800">
+        <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#D4CEBF] shadow-sm mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-6 border-b border-[#E6DDD0]">
             <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-slate-800 text-emerald-400">
+              <div className="p-3 rounded-xl bg-[#F2ECE1] text-[#2A6B44]">
                 <Activity className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-100">Statut du Backend API</h2>
-                <p className="text-sm text-slate-400">Test de connexion vers GET /api/health</p>
+                <h2 className="text-xl font-bold text-[#231A15]">Statut API & Base de Données</h2>
+                <p className="text-sm text-[#5C4D44]">Connexion PostgreSQL 16 via Spring Boot (/api/health)</p>
               </div>
             </div>
 
             <button
               onClick={fetchHealthStatus}
               disabled={loadingHealth}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 transition text-sm font-medium text-slate-200 border border-slate-700/60 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F2ECE1] hover:bg-[#E6DDD0] active:scale-95 transition text-sm font-bold text-[#231A15] border border-[#D4CEBF] disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw className={`w-4 h-4 ${loadingHealth ? 'animate-spin text-emerald-400' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loadingHealth ? 'animate-spin text-[#1D528F]' : ''}`} />
               {loadingHealth ? 'Vérification...' : 'Actualiser'}
             </button>
           </div>
 
-          <div className="flex items-center justify-between p-4 sm:p-5 rounded-xl bg-slate-950/60 border border-slate-800/80">
-            <span className="text-sm font-semibold text-slate-300">Endpoint: /api/health</span>
+          <div className="flex items-center justify-between p-4 sm:p-5 rounded-xl bg-[#FBF9F5] border border-[#E6DDD0]">
+            <span className="text-sm font-semibold text-[#231A15]">Endpoint: /api/health</span>
 
             {loadingHealth ? (
-              <span className="inline-flex items-center gap-2 text-sm text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+              <span className="inline-flex items-center gap-2 text-sm text-[#5C4D44]">
+                <span className="w-2 h-2 rounded-full bg-[#B84A24] animate-ping" />
                 Chargement...
               </span>
             ) : healthStatus === 'UP' ? (
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-sm">
-                <CheckCircle2 className="w-4 h-4" />
-                STATUS : UP
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF4ED] border border-[#2A6B44]/30 text-[#1C4E30] font-bold text-sm">
+                <CheckCircle2 className="w-4 h-4 text-[#2A6B44]" />
+                STATUT : CONNECTÉ (POSTGRESQL 16)
               </span>
             ) : (
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 font-semibold text-sm">
-                <XCircle className="w-4 h-4" />
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] font-bold text-sm">
+                <XCircle className="w-4 h-4 text-[#DC2626]" />
                 {healthError ? `HORS LIGNE (${healthError})` : 'INDISPONIBLE'}
               </span>
             )}
@@ -224,38 +276,39 @@ function HomePage() {
 
         {/* Stack Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-800/60">
-            <div className="flex items-center gap-3 text-emerald-400 mb-2">
+          <div className="p-5 rounded-xl bg-[#F2ECE1] border border-[#E6DDD0]">
+            <div className="flex items-center gap-3 text-[#1D528F] mb-2">
               <Server className="w-5 h-5" />
-              <h3 className="font-bold text-slate-200">Backend & Sécurité</h3>
+              <h3 className="font-bold text-[#231A15]">Backend Spring Boot</h3>
             </div>
-            <p className="text-sm text-slate-400">Spring Boot 3.4 + Java 21</p>
-            <p className="text-xs text-slate-500 mt-1">JWT + Cookie SHA-256 + BCrypt + Rate Limit</p>
+            <p className="text-sm text-[#5C4D44]">Spring Boot 3.4 + Java 21</p>
+            <p className="text-xs text-[#8C7B70] mt-1">PostgreSQL 16 + JWT SHA-256 Cookie</p>
           </div>
 
-          <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-800/60">
-            <div className="flex items-center gap-3 text-amber-400 mb-2">
+          <div className="p-5 rounded-xl bg-[#F2ECE1] border border-[#E6DDD0]">
+            <div className="flex items-center gap-3 text-[#B84A24] mb-2">
               <Layout className="w-5 h-5" />
-              <h3 className="font-bold text-slate-200">Frontend PWA</h3>
+              <h3 className="font-bold text-[#231A15]">Frontend PWA</h3>
             </div>
-            <p className="text-sm text-slate-400">React 19 + Vite + TS</p>
-            <p className="text-xs text-slate-500 mt-1">Tailwind v4 + AuthContext mémoire</p>
+            <p className="text-sm text-[#5C4D44]">React 19 + Vite + TypeScript</p>
+            <p className="text-xs text-[#8C7B70] mt-1">Design Terre & Enseigne de Ziguinchor</p>
           </div>
 
-          <div className="p-5 rounded-xl bg-slate-900/40 border border-slate-800/60">
-            <div className="flex items-center gap-3 text-red-400 mb-2">
+          <div className="p-5 rounded-xl bg-[#F2ECE1] border border-[#E6DDD0]">
+            <div className="flex items-center gap-3 text-[#2A6B44] mb-2">
               <Database className="w-5 h-5" />
-              <h3 className="font-bold text-slate-200">Modèle de Données</h3>
+              <h3 className="font-bold text-[#231A15]">Base de Données</h3>
             </div>
-            <p className="text-sm text-slate-400">Entités User & Address</p>
-            <p className="text-xs text-slate-500 mt-1">PostgreSQL 15+ / H2 (UUID, RBAC)</p>
+            <p className="text-sm text-[#5C4D44]">PostgreSQL 16 sur port 5434</p>
+            <p className="text-xs text-[#8C7B70] mt-1">Entités User & Address (UUID)</p>
           </div>
         </div>
       </main>
 
-      <footer className="max-w-5xl mx-auto w-full pt-6 border-t border-slate-900 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
-        <span>© 2026 SamaAdresse — Tous droits réservés</span>
-        <span>Phase 2 — Authentification JWT & Modèle Utilisateur</span>
+      {/* Footer */}
+      <footer className="max-w-5xl mx-auto w-full pt-6 border-t border-[#E6DDD0] text-center text-xs text-[#5C4D44] flex flex-col sm:flex-row justify-between items-center gap-2">
+        <span>© 2026 SamaAdresse — Plateforme Nationale d'Adressage Géolocalisé</span>
+        <span>Ziguinchor, Sénégal</span>
       </footer>
     </div>
   );

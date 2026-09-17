@@ -38,23 +38,23 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-center justify-between p-4 rounded-xl border backdrop-blur-md shadow-2xl transition-all duration-300 ${
+            className={`pointer-events-auto flex items-center justify-between p-4 rounded-xl border shadow-lg transition-all duration-300 ${
               toast.type === 'success'
-                ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-200'
+                ? 'bg-[#EAF4ED] border-[#2A6B44]/40 text-[#1C4E30]'
                 : toast.type === 'error'
-                ? 'bg-red-950/90 border-red-500/40 text-red-200'
-                : 'bg-slate-900/95 border-slate-700/60 text-slate-200'
+                ? 'bg-[#FEF2F2] border-[#DC2626]/40 text-[#991B1B]'
+                : 'bg-[#FFFFFF] border-[#D4CEBF] text-[#231A15]'
             }`}
           >
             <div className="flex items-center gap-3">
-              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />}
-              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-red-400 shrink-0" />}
-              {toast.type === 'info' && <Info className="w-5 h-5 text-amber-400 shrink-0" />}
+              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-[#2A6B44] shrink-0" />}
+              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0" />}
+              {toast.type === 'info' && <Info className="w-5 h-5 text-[#1D528F] shrink-0" />}
               <span className="text-sm font-medium leading-snug">{toast.message}</span>
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="p-1 rounded-lg hover:bg-white/10 text-slate-400 hover:text-slate-200 transition cursor-pointer"
+              className="p-1 rounded-lg hover:bg-black/5 text-[#5C4D44] hover:text-[#231A15] transition cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

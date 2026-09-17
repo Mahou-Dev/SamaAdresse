@@ -1,7 +1,33 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --color-sable: #FBF9F5;
+  --color-sienne: #F2ECE1;
+  --color-sienne-dark: #E6DDD0;
+  --color-ombre: #231A15;
+  --color-ombre-light: #5C4D44;
+  --color-ombre-muted: #8C7B70;
+  --color-ocre: #B84A24;
+  --color-ocre-hover: #963919;
+  --color-bleu: #1D528F;
+  --color-bleu-hover: #153C6B;
+  --color-manguier: #2A6B44;
+}
+
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-slate-950;
+    background-color: #FBF9F5;
+    color: #231A15;
+    min-height: 100vh;
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: #B84A24;
+    color: #FFFFFF;
   }
 }
