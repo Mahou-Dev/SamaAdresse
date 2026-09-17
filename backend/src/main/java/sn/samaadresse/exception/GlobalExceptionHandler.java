@@ -114,6 +114,51 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
     }
 
+    @ExceptionHandler(OutofZoneException.class)
+    public ResponseEntity<ErrorResponse> handleOutofZone(
+        OutofZoneException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+            .error("Unprocessable Entity")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+
+    @ExceptionHandler(InvalidCoordinatesException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCoordinates(
+        InvalidCoordinatesException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Bad Request")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(AddressNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleAddressNotFound(
+        AddressNotFoundException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.NOT_FOUND.value())
+            .error("Not Found")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(
         AccessDeniedException ex, HttpServletRequest request

@@ -4,6 +4,9 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider, useToast } from './components/Toast';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { NewAddressPage } from './pages/NewAddressPage';
+import { MyAddressesPage } from './pages/MyAddressesPage';
+import { PublicAddressPage } from './pages/PublicAddressPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { customFetch } from './api/apiClient';
 import {
@@ -26,6 +29,9 @@ import {
   Copy,
   Check,
   Compass,
+  Plus,
+  ListFilter,
+  ArrowRight,
 } from 'lucide-react';
 
 function HomePage() {
@@ -92,19 +98,27 @@ function HomePage() {
         <div className="flex items-center gap-3">
           {isAuthenticated && user ? (
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex flex-col items-end">
-                <span className="text-sm font-bold text-[#231A15]">{user.fullName}</span>
-                <span className="inline-flex items-center gap-1 text-xs font-mono font-bold text-[#1D528F]">
-                  <Shield className="w-3 h-3 text-[#1D528F]" />
-                  {user.role}
-                </span>
-              </div>
+              <Link
+                to="/addresses/mine"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#F2ECE1] hover:bg-[#E6DDD0] text-[#231A15] text-xs font-bold transition"
+              >
+                <ListFilter className="w-4 h-4 text-[#1D528F]" />
+                <span>Mes Adresses</span>
+              </Link>
+              <Link
+                to="/addresses/new"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#B84A24] hover:bg-[#963919] text-white text-xs font-bold transition shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Créer Adresse</span>
+              </Link>
+
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FFFFFF] hover:bg-[#FEF2F2] text-[#5C4D44] hover:text-[#DC2626] border border-[#D4CEBF] hover:border-[#DC2626]/40 text-xs font-bold transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FFFFFF] hover:bg-[#FEF2F2] text-[#5C4D44] hover:text-[#DC2626] border border-[#D4CEBF] hover:border-[#DC2626]/40 text-xs font-bold transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                <span>Déconnexion</span>
+                <span className="hidden md:inline">Déconnexion</span>
               </button>
             </div>
           ) : (
@@ -133,7 +147,7 @@ function HomePage() {
         {/* Ancrage Terrain Badge */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#F2ECE1] border border-[#E6DDD0] text-[#231A15] text-xs font-bold w-fit mb-6">
           <Compass className="w-4 h-4 text-[#B84A24]" />
-          <span>SÉGNÉGAL • ZIGUINCHOR & REGIONS</span>
+          <span>SÉNÉGAL • ZIGUINCHOR & REGIONS</span>
         </div>
 
         <div className="mb-8 space-y-3">
@@ -177,6 +191,16 @@ function HomePage() {
               <div className="pt-2 text-sm font-medium text-[#5C4D44] flex items-center justify-center gap-1.5 max-w-md mx-auto">
                 <MapPin className="w-4 h-4 text-[#B84A24] shrink-0" />
                 <span>Quartier Kangourou • 3e concession après la Grande Mosquée</span>
+              </div>
+
+              <div className="pt-3 flex justify-center gap-3">
+                <Link
+                  to={`/a/${heroCode}`}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#F2ECE1] hover:bg-[#E6DDD0] text-[#1D528F] font-bold text-xs transition border border-[#D4CEBF]"
+                >
+                  <span>Tester la Fiche Publique</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </div>
           </div>
@@ -282,7 +306,7 @@ function HomePage() {
               <h3 className="font-bold text-[#231A15]">Backend Spring Boot</h3>
             </div>
             <p className="text-sm text-[#5C4D44]">Spring Boot 3.4 + Java 21</p>
-            <p className="text-xs text-[#8C7B70] mt-1">PostgreSQL 16 + JWT SHA-256 Cookie</p>
+            <p className="text-xs text-[#8C7B70] mt-1">Génération Code ZONE-QUARTIER-XXXX</p>
           </div>
 
           <div className="p-5 rounded-xl bg-[#F2ECE1] border border-[#E6DDD0]">
@@ -300,7 +324,7 @@ function HomePage() {
               <h3 className="font-bold text-[#231A15]">Base de Données</h3>
             </div>
             <p className="text-sm text-[#5C4D44]">PostgreSQL 16 sur port 5434</p>
-            <p className="text-xs text-[#8C7B70] mt-1">Entités User & Address (UUID)</p>
+            <p className="text-xs text-[#8C7B70] mt-1">Entités User & Address (UUID, Index)</p>
           </div>
         </div>
       </main>
@@ -323,11 +347,20 @@ export function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/a/:code" element={<PublicAddressPage />} />
             <Route
-              path="/profile"
+              path="/addresses/new"
               element={
                 <ProtectedRoute>
-                  <HomePage />
+                  <NewAddressPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/addresses/mine"
+              element={
+                <ProtectedRoute>
+                  <MyAddressesPage />
                 </ProtectedRoute>
               }
             />

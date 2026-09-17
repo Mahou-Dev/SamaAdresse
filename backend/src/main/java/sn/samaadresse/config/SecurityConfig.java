@@ -43,6 +43,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     AntPathRequestMatcher.antMatcher("/api/health"),
                     AntPathRequestMatcher.antMatcher("/api/auth/**"),
+                    AntPathRequestMatcher.antMatcher(org.springframework.http.HttpMethod.GET, "/api/addresses/*"),
                     AntPathRequestMatcher.antMatcher("/v3/api-docs/**"),
                     AntPathRequestMatcher.antMatcher("/swagger-ui/**"),
                     AntPathRequestMatcher.antMatcher("/swagger-ui.html")
