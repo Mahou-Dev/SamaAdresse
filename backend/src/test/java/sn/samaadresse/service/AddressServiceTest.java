@@ -38,6 +38,9 @@ class AddressServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private FileStorageService fileStorageService;
+
     @Spy
     private GeoGridService geoGridService = new GeoGridService();
 
@@ -50,7 +53,7 @@ class AddressServiceTest {
     @BeforeEach
     void setUp() {
         geoGridService.initGeoGridData();
-        addressService = new AddressService(addressRepository, userRepository, geoGridService, addressCodeGenerator);
+        addressService = new AddressService(addressRepository, userRepository, geoGridService, addressCodeGenerator, fileStorageService);
 
         testUser = User.builder()
                 .id(UUID.randomUUID())

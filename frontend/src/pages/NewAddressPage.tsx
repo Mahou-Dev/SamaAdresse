@@ -18,6 +18,8 @@ import {
   PlusCircle,
   ListFilter,
   Compass,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 
 export const NewAddressPage: React.FC = () => {
@@ -25,6 +27,10 @@ export const NewAddressPage: React.FC = () => {
   const [longitude, setLongitude] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [locationType, setLocationType] = useState<LocationType>('MAISON');
+
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const [loadingGps, setLoadingGps] = useState<boolean>(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
@@ -36,6 +42,36 @@ export const NewAddressPage: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<boolean>(false);
 
   const { showToast } = useToast();
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhotoError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Format de fichier non supporté. Seules les images JPEG, PNG et WebP sont autorisées.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("La taille de l'image dépasse la limite maximale de 5 Mo.");
+      return;
+    }
+
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setPhotoError(null);
+  };
 
   const handleCaptureGps = () => {
     if (!navigator.geolocation) {
@@ -92,12 +128,15 @@ export const NewAddressPage: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const response = await createAddress({
-        latitude: latNum,
-        longitude: lonNum,
-        description: description.trim(),
-        locationType,
-      });
+      const response = await createAddress(
+        {
+          latitude: latNum,
+          longitude: lonNum,
+          description: description.trim(),
+          locationType,
+        },
+        photoFile ?? undefined
+      );
 
       setCreatedAddress(response);
       showToast(`Plaque d'adresse ${response.code} générée avec succès !`, 'success');
@@ -185,6 +224,17 @@ export const NewAddressPage: React.FC = () => {
                 </div>
               </div>
 
+              {createdAddress.photoUrl && (
+                <div className="rounded-xl overflow-hidden border border-[#E6DDD0] shadow-inner max-h-56">
+                  <img
+                    src={createdAddress.photoUrl}
+                    alt="Photo de la façade"
+                    className="w-full h-56 object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+
               <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#E6DDD0] text-left text-sm space-y-2">
                 <div className="flex items-start gap-2 text-[#231A15] font-medium">
                   <MapPin className="w-4 h-4 text-[#B84A24] shrink-0 mt-0.5" />
@@ -210,6 +260,7 @@ export const NewAddressPage: React.FC = () => {
                     setLatitude('');
                     setLongitude('');
                     setDescription('');
+                    handleRemovePhoto();
                     handleCaptureGps();
                   }}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#F2ECE1] hover:bg-[#E6DDD0] text-[#231A15] border border-[#D4CEBF] font-bold text-xs transition cursor-pointer"
@@ -372,6 +423,79 @@ export const NewAddressPage: React.FC = () => {
                 />
               </div>
 
+              {/* Photo Upload Zone (Optional) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#231A15]">
+                    Photo de Façade <span className="text-[#8C7B70] font-normal">(optionnelle)</span>
+                  </label>
+                  <span className="text-[11px] text-[#5C4D44]">Max 5 Mo • JPEG, PNG, WebP</span>
+                </div>
+
+                <input
+                  id="photo-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+
+                {photoError && (
+                  <div className="p-3 rounded-lg bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-[#DC2626] shrink-0" />
+                    <span>{photoError}</span>
+                  </div>
+                )}
+
+                {photoPreview ? (
+                  <div className="relative rounded-xl overflow-hidden border-2 border-[#1D528F] bg-[#231A15] group">
+                    <img
+                      src={photoPreview}
+                      alt="Aperçu de la façade"
+                      className="w-full h-48 object-cover opacity-90 group-hover:opacity-100 transition"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex items-end justify-between p-3">
+                      <span className="text-white text-xs font-medium truncate max-w-[60%]">
+                        {photoFile?.name}
+                      </span>
+                      <div className="flex gap-2">
+                        <label
+                          htmlFor="photo-input"
+                          className="px-3 py-1.5 rounded-lg bg-[#1D528F] hover:bg-[#153C6B] text-white text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Reprendre</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          className="px-3 py-1.5 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Supprimer</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="photo-input"
+                    className="flex flex-col items-center justify-center p-6 rounded-xl border-2 border-dashed border-[#D4CEBF] hover:border-[#1D528F] bg-[#FBF9F5] hover:bg-[#F2ECE1] transition cursor-pointer text-center group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#F2ECE1] group-hover:bg-[#E6DDD0] text-[#1D528F] flex items-center justify-center mb-2 transition">
+                      <Camera className="w-6 h-6" />
+                    </div>
+                    <span className="text-xs font-bold text-[#231A15]">
+                      Prendre une photo de façade ou choisir une image
+                    </span>
+                    <span className="text-[11px] text-[#5C4D44] mt-1">
+                      Sur mobile, l'appareil photo s'ouvrira directement
+                    </span>
+                  </label>
+                )}
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -381,7 +505,7 @@ export const NewAddressPage: React.FC = () => {
                 {submitting ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Génération du code d'adresse...</span>
+                    <span>{photoFile ? 'Téléversement de la photo & création...' : 'Génération du code d\'adresse...'}</span>
                   </>
                 ) : (
                   <>

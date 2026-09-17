@@ -38,14 +38,45 @@ export interface PublicAddressResponse {
   zone: string;
   quartier: string;
   description: string;
+  photoUrl?: string;
   locationType: LocationType;
   createdAt: string;
 }
 
-export const createAddress = async (payload: CreateAddressPayload): Promise<AddressResponse> => {
+export const createAddress = async (
+  payload: CreateAddressPayload,
+  photo?: File
+): Promise<AddressResponse> => {
+  if (photo) {
+    const formData = new FormData();
+    formData.append('latitude', payload.latitude.toString());
+    formData.append('longitude', payload.longitude.toString());
+    formData.append('description', payload.description);
+    formData.append('locationType', payload.locationType);
+    formData.append('photo', photo);
+
+    return customFetch<AddressResponse>('/api/addresses', {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
   return customFetch<AddressResponse>('/api/addresses', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+};
+
+export const uploadAddressPhoto = async (
+  id: string,
+  file: File
+): Promise<AddressResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return customFetch<AddressResponse>(`/api/addresses/${id}/photo`, {
+    method: 'POST',
+    body: formData,
   });
 };
 

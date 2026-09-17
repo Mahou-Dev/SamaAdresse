@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../components/Toast';
-import { getMyAddresses } from '../api/addressApi';
+import { getMyAddresses, uploadAddressPhoto } from '../api/addressApi';
 import type { AddressResponse } from '../api/addressApi';
 import { ApiError } from '../api/apiClient';
 import {
@@ -17,6 +17,8 @@ import {
   ListFilter,
   Compass,
   AlertCircle,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 export const MyAddressesPage: React.FC = () => {
@@ -24,6 +26,10 @@ export const MyAddressesPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [uploadingAddressId, setUploadingAddressId] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [targetAddressId, setTargetAddressId] = useState<string | null>(null);
 
   const { showToast } = useToast();
 
@@ -55,6 +61,48 @@ export const MyAddressesPage: React.FC = () => {
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
+  const handleOpenPhotoPicker = (addressId: string) => {
+    setTargetAddressId(addressId);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !targetAddressId) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showToast('Format non supporté. Choisissez une image JPEG, PNG ou WebP.', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Taille d'image trop grande (max 5 Mo).", 'error');
+      return;
+    }
+
+    setUploadingAddressId(targetAddressId);
+    try {
+      const updatedAddress = await uploadAddressPhoto(targetAddressId, file);
+      setAddresses((prev) =>
+        prev.map((addr) => (addr.id === updatedAddress.id ? updatedAddress : addr))
+      );
+      showToast('Photo de façade mise à jour avec succès !', 'success');
+    } catch (err: any) {
+      if (err instanceof ApiError) {
+        showToast(err.message, 'error');
+      } else {
+        showToast("Erreur lors de l'upload de la photo.", 'error');
+      }
+    } finally {
+      setUploadingAddressId(null);
+      setTargetAddressId(null);
+    }
+  };
+
   const getLocationTypeBadge = (type: string) => {
     switch (type) {
       case 'COMMERCE':
@@ -80,6 +128,15 @@ export const MyAddressesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#FBF9F5] text-[#231A15] flex flex-col justify-between p-4 sm:p-8 font-sans">
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        onChange={handlePhotoUpload}
+        className="hidden"
+      />
+
       <main className="max-w-5xl mx-auto w-full pt-4 pb-12 flex-1">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between gap-4 mb-8 pb-4 border-b border-[#E6DDD0]">
@@ -109,7 +166,7 @@ export const MyAddressesPage: React.FC = () => {
             Mes Adresses Géolocalisées
           </h1>
           <p className="text-sm text-[#5C4D44]">
-            Gérez vos plaques d'adresse enregistrées et partagez-les facilement.
+            Gérez vos plaques d'adresse enregistrées et ajoutez leurs photos de façade.
           </p>
         </div>
 
@@ -156,6 +213,53 @@ export const MyAddressesPage: React.FC = () => {
                 <div className="bg-[#1D528F] px-5 py-2.5 text-white flex items-center justify-between text-xs font-bold">
                   <span className="font-mono tracking-wider">ZONE {address.zone}</span>
                   {getLocationTypeBadge(address.locationType)}
+                </div>
+
+                {/* Photo or Placeholder Banner */}
+                <div className="relative h-44 bg-[#F2ECE1] overflow-hidden group flex items-center justify-center border-b border-[#E6DDD0]">
+                  {address.photoUrl ? (
+                    <>
+                      <img
+                        src={address.photoUrl}
+                        alt={`Façade ${address.code}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPhotoPicker(address.id)}
+                        disabled={uploadingAddressId === address.id}
+                        className="absolute bottom-3 right-3 px-3 py-1.5 rounded-lg bg-[#231A15]/80 hover:bg-[#231A15] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer backdrop-blur-sm"
+                      >
+                        {uploadingAddressId === address.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Camera className="w-3.5 h-3.5 text-[#E6DDD0]" />
+                        )}
+                        <span>Changer la photo</span>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center p-4 text-center space-y-2">
+                      <div className="w-10 h-10 rounded-full bg-[#E6DDD0] text-[#5C4D44] flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-[#8C7B70]" />
+                      </div>
+                      <span className="text-xs text-[#5C4D44] font-medium">Aucune photo de façade</span>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPhotoPicker(address.id)}
+                        disabled={uploadingAddressId === address.id}
+                        className="px-3.5 py-1.5 rounded-lg bg-[#1D528F] hover:bg-[#153C6B] text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        {uploadingAddressId === address.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Camera className="w-3.5 h-3.5" />
+                        )}
+                        <span>Ajouter une photo</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Plaque Body */}

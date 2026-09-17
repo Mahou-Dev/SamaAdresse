@@ -131,6 +131,21 @@ export const PublicAddressPage: React.FC = () => {
                   {getLocationTypeBadge(address.locationType)}
                 </div>
 
+                {/* Facade Photo if present */}
+                {address.photoUrl && (
+                  <div className="relative rounded-2xl overflow-hidden border border-[#D4CEBF] shadow-inner max-h-64 sm:max-h-72 bg-[#F2ECE1]">
+                    <img
+                      src={address.photoUrl}
+                      alt={`Photo de la façade pour l'adresse ${address.code}`}
+                      className="w-full h-64 sm:h-72 object-cover"
+                      loading="lazy"
+                    />
+                    <div className="absolute bottom-2 right-2 px-2.5 py-1 rounded-md bg-[#231A15]/80 text-white text-[11px] font-mono backdrop-blur-xs">
+                      Photo de Façade
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-[#5C4D44] uppercase tracking-wider block">
                     Plaque Signalétique Officielle

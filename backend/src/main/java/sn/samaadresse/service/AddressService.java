@@ -26,6 +26,7 @@ public class AddressService {
     private final UserRepository userRepository;
     private final GeoGridService geoGridService;
     private final AddressCodeGenerator addressCodeGenerator;
+    private final FileStorageService fileStorageService;
 
     @Transactional
     public AddressResponse createAddress(CreateAddressRequest request, User currentUser) {
@@ -58,6 +59,37 @@ public class AddressService {
         User user = userRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable pour l'email : " + currentUserEmail));
         return createAddress(request, user);
+    }
+
+    @Transactional
+    public AddressResponse createAddressWithPhoto(CreateAddressRequest request, org.springframework.web.multipart.MultipartFile photo, String currentUserEmail) {
+        AddressResponse response = createAddressByEmail(request, currentUserEmail);
+        if (photo != null && !photo.isEmpty()) {
+            return uploadAddressPhoto(response.getId(), photo, currentUserEmail);
+        }
+        return response;
+    }
+
+    @Transactional
+    public AddressResponse uploadAddressPhoto(java.util.UUID addressId, org.springframework.web.multipart.MultipartFile file, String currentUserEmail) {
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new AddressNotFoundException("Adresse introuvable avec l'ID : " + addressId));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable pour l'email : " + currentUserEmail));
+
+        boolean isOwner = address.getOwner().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole() == sn.samaadresse.domain.enums.Role.ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new org.springframework.security.access.AccessDeniedException("Vous n'êtes pas autorisé à modifier la photo de cette adresse.");
+        }
+
+        String photoUrl = fileStorageService.storeFile(file);
+        address.setPhotoUrl(photoUrl);
+        Address savedAddress = addressRepository.save(address);
+
+        return mapToAddressResponse(savedAddress);
     }
 
     @Transactional(readOnly = true)
@@ -118,6 +150,7 @@ public class AddressService {
                 .zone(address.getZone())
                 .quartier(address.getQuartier())
                 .description(address.getDescription())
+                .photoUrl(address.getPhotoUrl())
                 .locationType(address.getLocationType())
                 .createdAt(address.getCreatedAt())
                 .build();

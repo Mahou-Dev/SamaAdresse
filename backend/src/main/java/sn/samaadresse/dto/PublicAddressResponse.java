@@ -37,6 +37,9 @@ public class PublicAddressResponse {
     @Schema(description = "Type de lieu", example = "MAISON")
     private LocationType locationType;
 
+    @Schema(description = "URL de la photo de façade de l'adresse", example = "/uploads/123e4567-e89b-12d3-a456-426614174000.jpg")
+    private String photoUrl;
+
     @Schema(description = "Date de création")
     private Instant createdAt;
 }

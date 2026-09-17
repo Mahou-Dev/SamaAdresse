@@ -32,10 +32,10 @@ public class AddressController {
 
     private final AddressService addressService;
 
-    @PostMapping
+    @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Créer une nouvelle adresse géolocalisée", description = "Résout automatiquement la zone et le quartier à partir des coordonnées GPS, puis génère un code court immuable (ex: ZIG-KBG-4271).")
+    @Operation(summary = "Créer une nouvelle adresse géolocalisée (JSON)", description = "Résout automatiquement la zone et le quartier à partir des coordonnées GPS, puis génère un code court immuable (ex: ZIG-KBG-4271).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Adresse créée avec succès",
                     content = @Content(schema = @Schema(implementation = AddressResponse.class))),
@@ -53,6 +53,54 @@ public class AddressController {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
         AddressResponse created = addressService.createAddressByEmail(request, currentUserEmail);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Créer une nouvelle adresse avec photo optionnelle (Multipart)", description = "Permet de créer l'adresse et d'uploader sa photo de façade en une seule requête multipart.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Adresse créée avec succès",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Données ou image invalide",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "422", description = "Coordonnées hors zone couverte",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<AddressResponse> createAddressMultipart(
+            @Valid @ModelAttribute CreateAddressRequest request,
+            @RequestParam(value = "photo", required = false) org.springframework.web.multipart.MultipartFile photo,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse created = addressService.createAddressWithPhoto(request, photo, currentUserEmail);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping(value = "/{id}/photo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Uploader une photo de façade pour une adresse existante", description = "Associe une photo de façade à une adresse existante (owner ou ADMIN). Validations : JPEG/PNG/WebP, max 5 Mo.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Photo uploadée et adresse mise à jour",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Fichier invalide ou non image (magic bytes) ou taille > 5 Mo",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire de cette adresse",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Adresse non trouvée",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<AddressResponse> uploadAddressPhoto(
+            @PathVariable java.util.UUID id,
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse updated = addressService.uploadAddressPhoto(id, file, currentUserEmail);
+        return ResponseEntity.ok(updated);
     }
 
     @GetMapping("/{code}")
