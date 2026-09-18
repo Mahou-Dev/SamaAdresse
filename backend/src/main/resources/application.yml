@@ -10,6 +10,8 @@ spring:
 
 server:
   port: ${PORT:8082}
+  tomcat:
+    max-swallow-size: -1
 
 springdoc:
   api-docs:
