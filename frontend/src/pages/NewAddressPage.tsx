@@ -32,6 +32,15 @@ import {
   WifiOff,
   BookOpen,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { resolveQuartier } from '../utils/geoGrid';
+import {
+  getDraftsCount,
+  saveDraft,
+  getAvailableReservedCode,
+  MAX_DRAFTS,
+} from '../utils/offlineDb';
+import type { OfflineDraft } from '../utils/offlineDb';
 import { useOnlineStatus } from '../context/OnlineStatusContext';
 
 const STEP_TITLES = [
@@ -43,6 +52,7 @@ const STEP_TITLES = [
 
 export const NewAddressPage: React.FC = () => {
   const { isOnline } = useOnlineStatus();
+  const { user } = useAuth();
   const [step, setStep] = useState<number>(1);
   const headingRef = useRef<HTMLHeadingElement | null>(null);
 
@@ -75,6 +85,8 @@ export const NewAddressPage: React.FC = () => {
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [createdAddress, setCreatedAddress] = useState<AddressResponse | null>(null);
+  const [isOfflineCreated, setIsOfflineCreated] = useState<boolean>(false);
+  const [hasTemporaryCode, setHasTemporaryCode] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { showToast } = useToast();
@@ -128,8 +140,8 @@ export const NewAddressPage: React.FC = () => {
 
   // Mise à jour de la position via déplacement du repère sur la carte ou clic
   const handleMapPositionChange = (lat: number, lng: number) => {
-    setLatitude(lat.toFixed(6));
-    setLongitude(lng.toFixed(6));
+    setLatitude((prev) => (Math.abs(parseFloat(prev) - lat) < 0.000001 ? prev : lat.toFixed(6)));
+    setLongitude((prev) => (Math.abs(parseFloat(prev) - lng) < 0.000001 ? prev : lng.toFixed(6)));
     setSubmitError(null);
   };
 
@@ -147,7 +159,7 @@ export const NewAddressPage: React.FC = () => {
 
     try {
       setCompressing(true);
-      const result = await compressImage(file, 1600, 0.8);
+      const result = await compressImage(file, 800, 0.8);
       setPhotoFile(result.file);
       setPhotoPreview(result.previewUrl);
       setCompressionStats({
@@ -156,7 +168,7 @@ export const NewAddressPage: React.FC = () => {
         reductionPercentage: result.reductionPercentage,
       });
       showToast('Photo optimisée pour le chargement mobile', 'info');
-    } catch (err) {
+    } catch {
       setPhotoError("Impossible de traiter l'image. Veuillez réessayer.");
     } finally {
       setCompressing(false);
@@ -182,6 +194,14 @@ export const NewAddressPage: React.FC = () => {
       setSubmitError(val.error || 'Coordonnées invalides');
       return;
     }
+    // Validation immédiate de la zone de couverture
+    try {
+      resolveQuartier(latNum, lonNum);
+    } catch {
+      setSubmitError("Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées.");
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
     setSubmitError(null);
     setStep(2);
   };
@@ -203,8 +223,120 @@ export const NewAddressPage: React.FC = () => {
     const lonNum = parseFloat(longitude);
 
     setSubmitting(true);
+
+    const executeLocalOfflineSave = async (fromLostConnection = false) => {
+      try {
+        const count = await getDraftsCount();
+        if (count >= MAX_DRAFTS) {
+          setSubmitError("File d'attente pleine (20 adresses). Veuillez vous reconnecter pour les transmettre.");
+          setSubmitting(false);
+          return;
+        }
+
+        performance.mark('offline-address-create-start');
+
+        let quartier;
+        try {
+          quartier = resolveQuartier(latNum, lonNum);
+        } catch {
+          setSubmitError("Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées.");
+          setStep(1);
+          setSubmitting(false);
+          return;
+        }
+
+        const clientRequestId = crypto.randomUUID();
+        const draftId = crypto.randomUUID();
+
+        // Récupérer un code réservé local
+        const reservedCode = await getAvailableReservedCode(quartier.zoneCode, quartier.code);
+        const isTemp = !reservedCode;
+        const assignedCode = reservedCode || `${quartier.zoneCode}-${quartier.code}-????`;
+
+        let photoBlob: Blob | null = null;
+        if (includePhoto && photoFile) {
+          photoBlob = photoFile;
+        }
+
+        const draft: OfflineDraft = {
+          id: draftId,
+          clientRequestId,
+          latitude: latNum,
+          longitude: lonNum,
+          zone: quartier.zoneCode,
+          quartier: quartier.code,
+          description: description.trim(),
+          locationType,
+          photoBlob,
+          reservedCode: reservedCode || null,
+          status: 'PENDING',
+          createdAt: new Date().toISOString(),
+          attempts: 0,
+        };
+
+        await saveDraft(draft);
+
+        const offlineResp: AddressResponse = {
+          id: draftId,
+          code: assignedCode,
+          latitude: latNum,
+          longitude: lonNum,
+          zone: quartier.zoneCode,
+          quartier: quartier.code,
+          description: description.trim(),
+          locationType,
+          status: 'ACTIVE',
+          createdAt: draft.createdAt,
+          owner: {
+            id: user?.id || 'offline',
+            fullName: user?.fullName || 'Propriétaire',
+            email: user?.email || '',
+            phoneNumber: user?.phoneNumber || '',
+            role: 'PROPRIETAIRE',
+          },
+        };
+
+        setCreatedAddress(offlineResp);
+        setIsOfflineCreated(true);
+        setHasTemporaryCode(isTemp);
+        setStep(4);
+
+        performance.mark('offline-address-create-end');
+        try {
+          performance.measure(
+            'offline-address-create-time',
+            'offline-address-create-start',
+            'offline-address-create-end'
+          );
+        } catch {
+          // ignore
+        }
+
+        if (fromLostConnection) {
+          showToast('Connexion perdue · adresse enregistrée sur cet appareil', 'info');
+        } else {
+          showToast('Adresse enregistrée sur cet appareil', 'success');
+        }
+      } catch (err: any) {
+        setSubmitError(err?.message || "Erreur lors de l'enregistrement local de l'adresse.");
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+    if (!isOnline) {
+      await executeLocalOfflineSave(false);
+      return;
+    }
+
+    // Tentative en ligne avec timeout de 8 secondes
     try {
-      const result = await createAddress(
+      const clientReqId = crypto.randomUUID();
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('TIMEOUT_8S')), 8000)
+      );
+
+      const onlinePromise = createAddress(
         {
           latitude: latNum,
           longitude: lonNum,
@@ -212,37 +344,40 @@ export const NewAddressPage: React.FC = () => {
           locationType,
           listed,
           showOwnerName: listed ? showOwnerName : false,
+          clientRequestId: clientReqId,
         },
         includePhoto && photoFile ? photoFile : undefined
       );
 
+      const result = await Promise.race([onlinePromise, timeoutPromise]);
       setCreatedAddress(result);
+      setIsOfflineCreated(false);
+      setHasTemporaryCode(false);
       setStep(4);
       showToast(`Adresse ${result.code} créée avec succès !`, 'success');
-    } catch (err: any) {
-      if (err instanceof ApiError) {
-        if (err.status === 422) {
-          setSubmitError(
-            'Cette position est hors des zones couvertes (Ziguinchor et Dakar). Déplacez le repère sur la carte.'
-          );
-          // Retour immédiat à l'étape 1 pour que l'utilisateur corrige l'emplacement
-          setStep(1);
-        } else if (err.status === 400) {
-          setSubmitError(err.message || 'Données invalides.');
-        } else {
-          setSubmitError(err.message || 'Une erreur est survenue lors de la création.');
-        }
-      } else {
-        setSubmitError('Erreur de connexion. Vérifiez votre réseau.');
-      }
-    } finally {
       setSubmitting(false);
+    } catch (err: any) {
+      if (err instanceof ApiError && (err.status === 400 || err.status === 422)) {
+        if (err.status === 422) {
+          setSubmitError('Coordonnées hors zone couverte');
+          setStep(1);
+        } else {
+          setSubmitError(err.message || 'Données invalides.');
+        }
+        setSubmitting(false);
+        return;
+      }
+
+      // Échec réseau, timeout 8s ou erreur 5xx : bascule automatique sur l'enregistrement local
+      await executeLocalOfflineSave(true);
     }
   };
 
   // Réinitialisation pour créer une autre adresse
   const handleReset = () => {
     setCreatedAddress(null);
+    setIsOfflineCreated(false);
+    setHasTemporaryCode(false);
     setDescription('');
     setLocationType('MAISON');
     setPhotoFile(null);
@@ -324,14 +459,14 @@ export const NewAddressPage: React.FC = () => {
         </div>
       )}
 
-      {/* Avertissement hors ligne pour le wizard de création */}
+      {/* Information mode hors ligne pour le wizard de création */}
       {!isOnline && step < 4 && (
         <div
-          role="alert"
-          className="p-3.5 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs font-semibold flex items-center gap-2.5 mb-2 shadow-[0_1px_0_rgba(35,26,21,0.04)]"
+          role="status"
+          className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-[#5C4D44] text-xs font-medium flex items-center gap-2.5 mb-2 shadow-[0_1px_0_rgba(35,26,21,0.04)]"
         >
-          <WifiOff className="w-4 h-4 text-[#DC2626] shrink-0" />
-          <span>La création d'une adresse nécessite une connexion.</span>
+          <WifiOff className="w-4 h-4 text-[#8A3112] shrink-0" />
+          <span>Mode hors ligne · cette adresse sera enregistrée sur votre appareil et transmise dès votre retour sur le réseau.</span>
         </div>
       )}
 
@@ -340,12 +475,12 @@ export const NewAddressPage: React.FC = () => {
       {/* ========================================================================= */}
       {step === 1 && (
         <section aria-labelledby="step1-title" className="space-y-5 animate-fadeIn">
-          <div>
+          <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1]/60 border border-[#E6DDD0]">
             <h1 id="step1-title" className="text-xl sm:text-2xl font-extrabold text-[#231A15] tracking-tight">
               Où se situe votre lieu ?
             </h1>
-            <p className="text-xs sm:text-sm text-[#5C4D44] mt-1">
-              Capturez votre position GPS sur place ou déplacez le repère sur la carte pour définir le bon emplacement.
+            <p className="text-sm sm:text-base text-[#5C4D44] mt-1.5 leading-relaxed">
+              Capturez votre position GPS directement devant l'entrée de votre bâtiment ou déplacez le repère sur la carte interactive pour définir le point d'entrée de votre adresse permanente.
             </p>
           </div>
 
@@ -463,9 +598,7 @@ export const NewAddressPage: React.FC = () => {
             <button
               type="button"
               onClick={handleGoToStep2}
-              disabled={!isOnline}
-              title={!isOnline ? "La création d'une adresse nécessite une connexion." : undefined}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#B84A24] hover:bg-[#963B1C] text-white text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#B84A24] hover:bg-[#963B1C] text-white text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer min-h-[44px]"
             >
               <span>Continuer vers les détails</span>
               <ArrowRight className="w-4 h-4" />
@@ -555,7 +688,7 @@ export const NewAddressPage: React.FC = () => {
                     Figurer dans l'annuaire public
                   </label>
                   <p className="text-[11px] text-[#5C4D44] mt-0.5">
-                    Permet aux livreurs, visiteurs et services de trouver cette adresse par son nom ou son repère visuel.
+                    Par défaut, votre adresse reste privée (accessible uniquement via son code ou son QR code). Cochez cette option pour qu'elle soit trouvable dans l'annuaire public.
                   </p>
                 </div>
               </div>
@@ -596,8 +729,7 @@ export const NewAddressPage: React.FC = () => {
             <button
               type="button"
               onClick={handleGoToStep3}
-              disabled={!isOnline || !description.trim()}
-              title={!isOnline ? "La création d'une adresse nécessite une connexion." : undefined}
+              disabled={!description.trim()}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#B84A24] hover:bg-[#963B1C] text-white text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               <span>Continuer vers la photo</span>
@@ -733,8 +865,7 @@ export const NewAddressPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleFinalSubmit(false)}
-                  disabled={!isOnline || submitting || compressing}
-                  title={!isOnline ? "La création d'une adresse nécessite une connexion." : undefined}
+                  disabled={submitting || compressing}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#5C4D44] hover:text-[#231A15] hover:bg-[#FFFFFF] transition cursor-pointer min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Passer cette étape
@@ -744,8 +875,7 @@ export const NewAddressPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleFinalSubmit(true)}
-                disabled={!isOnline || submitting || compressing}
-                title={!isOnline ? "La création d'une adresse nécessite une connexion." : undefined}
+                disabled={submitting || compressing}
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#B84A24] hover:bg-[#963B1C] text-white text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
               >
                 {submitting ? (
@@ -771,75 +901,90 @@ export const NewAddressPage: React.FC = () => {
       {step === 4 && createdAddress && (
         <article aria-labelledby="step4-title" className="space-y-6 animate-fadeIn">
           <div className="text-center space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2A6B44]/10 text-[#2A6B44] text-xs font-bold">
-              <Check className="w-3.5 h-3.5" />
-              <span>Adresse créée et enregistrée</span>
-            </div>
+            {isOfflineCreated ? (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F2ECE1] border border-[#D4CEBF] text-[#8A3112] text-xs font-bold">
+                <WifiOff className="w-3.5 h-3.5" />
+                <span>Enregistrée sur cet appareil · en attente d'envoi</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#2A6B44]/10 text-[#2A6B44] text-xs font-bold">
+                <Check className="w-3.5 h-3.5" />
+                <span>Adresse créée et enregistrée</span>
+              </div>
+            )}
             <h1 id="step4-title" className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
-              Votre plaque d'adresse numérique
+              {isOfflineCreated ? "Votre plaque d'adresse" : "Votre plaque d'adresse numérique"}
             </h1>
             <p className="text-xs sm:text-sm text-[#5C4D44] max-w-md mx-auto">
-              Ce code ne changera plus. Vous pouvez le partager, imprimer la plaque ou télécharger son QR Code.
+              {isOfflineCreated
+                ? hasTemporaryCode
+                  ? 'Code temporaire attribué hors ligne. Le code définitif sera attribué lors de la synchronisation avec le serveur.'
+                  : 'Adresse enregistrée hors ligne sur votre appareil. Elle sera automatiquement envoyée dès votre retour en ligne.'
+                : 'Ce code ne changera plus. Vous pouvez le partager, imprimer la plaque ou télécharger son QR Code.'}
             </p>
           </div>
 
           {/* Plaque d'adresse héro standardisée */}
-          <div className="w-full flex justify-center py-2">
+          <div className="w-full flex flex-col items-center justify-center py-2 gap-2">
             <AddressPlate
               code={createdAddress.code}
               zone={createdAddress.zone}
               type={createdAddress.locationType}
               size="lg"
-              showCopy={true}
+              showCopy={!isOfflineCreated}
               className="w-full"
             />
           </div>
 
-          {/* Affichage sobre du QR Code */}
-          <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-sm text-center space-y-3">
-            <h2 className="text-sm font-bold text-[#231A15]">
-              QR code d'accès rapide
-            </h2>
-            <div className="inline-block p-2 bg-[#FFFFFF] border border-[#8C8272]/30 rounded-xl shadow-inner">
-              <img
-                src={`/api/addresses/${createdAddress.code}/qrcode`}
-                alt={`QR code pour l'adresse ${createdAddress.code}`}
-                className="w-36 h-36 mx-auto object-contain"
-              />
-            </div>
-            <p className="text-[11px] text-[#5C4D44]">
-              Scannable par toute caméra de smartphone sans application requise.
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => handleDownloadQrCode(createdAddress.code)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#231A15] hover:bg-[#3D2E24] text-white text-xs font-bold transition cursor-pointer min-h-[38px]"
-              >
-                <Download className="w-3.5 h-3.5 text-[#B84A24]" />
-                <span>Télécharger le QR Code</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#8C8272]/50 text-xs font-bold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[38px]"
-              >
-                <Printer className="w-3.5 h-3.5 text-[#5C4D44]" />
-                <span>Imprimer la plaque</span>
-              </button>
-            </div>
-          </div>
+          {!isOfflineCreated && (
+            <>
+              {/* Affichage sobre du QR Code */}
+              <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-sm text-center space-y-3">
+                <h2 className="text-sm font-bold text-[#231A15]">
+                  QR code d'accès rapide
+                </h2>
+                <div className="inline-block p-2 bg-[#FFFFFF] border border-[#8C8272]/30 rounded-xl shadow-inner">
+                  <img
+                    src={`/api/addresses/${createdAddress.code}/qrcode`}
+                    alt={`QR code pour l'adresse ${createdAddress.code}`}
+                    className="w-36 h-36 mx-auto object-contain"
+                  />
+                </div>
+                <p className="text-[11px] text-[#5C4D44]">
+                  Scannable par toute caméra de smartphone sans application requise.
+                </p>
+                <div className="flex items-center justify-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadQrCode(createdAddress.code)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#231A15] hover:bg-[#3D2E24] text-white text-xs font-bold transition cursor-pointer min-h-[38px]"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#B84A24]" />
+                    <span>Télécharger le QR Code</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#8C8272]/50 text-xs font-bold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[38px]"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-[#5C4D44]" />
+                    <span>Imprimer la plaque</span>
+                  </button>
+                </div>
+              </div>
 
-          {/* Bloc de partage */}
-          <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-sm space-y-3">
-            <h2 className="text-sm font-bold text-[#231A15]">
-              Partager l'adresse
-            </h2>
-            <ShareAddress
-              code={createdAddress.code}
-              description={createdAddress.description}
-            />
-          </div>
+              {/* Bloc de partage */}
+              <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-sm space-y-3">
+                <h2 className="text-sm font-bold text-[#231A15]">
+                  Partager l'adresse
+                </h2>
+                <ShareAddress
+                  code={createdAddress.code}
+                  description={createdAddress.description}
+                />
+              </div>
+            </>
+          )}
 
           {/* Actions de fin de parcours */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -849,16 +994,26 @@ export const NewAddressPage: React.FC = () => {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#8C8272]/50 text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Créer une autre adresse</span>
+              <span>{isOfflineCreated ? 'Enregistrer une autre adresse' : 'Créer une autre adresse'}</span>
             </button>
 
-            <Link
-              to={`/a/${createdAddress.code}`}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#1D528F] hover:bg-[#153C6B] text-white text-xs font-bold transition shadow-sm cursor-pointer min-h-[44px]"
-            >
-              <span>Voir la fiche publique</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </Link>
+            {isOfflineCreated ? (
+              <Link
+                to="/addresses/mine"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs font-bold transition shadow-sm cursor-pointer min-h-[44px]"
+              >
+                <span>Voir mes adresses</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            ) : (
+              <Link
+                to={`/a/${createdAddress.code}`}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#1D528F] hover:bg-[#153C6B] text-white text-xs font-bold transition shadow-sm cursor-pointer min-h-[44px]"
+              >
+                <span>Voir la fiche publique</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            )}
           </div>
         </article>
       )}

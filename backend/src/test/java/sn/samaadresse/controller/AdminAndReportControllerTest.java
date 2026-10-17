@@ -70,6 +70,9 @@ class AdminAndReportControllerTest {
     @MockBean
     private sn.samaadresse.security.RateLimiterService rateLimiterService;
 
+    @MockBean
+    private sn.samaadresse.security.ReportRateLimiter reportRateLimiter;
+
     @Test
     @DisplayName("1. GET /api/admin/reports sans jeton (anonyme) -> 401 Unauthorized")
     void adminReports_anonymous_returns401() throws Exception {

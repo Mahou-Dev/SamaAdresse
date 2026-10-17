@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: samaadresse-prod-test-db
+    environment:
+      POSTGRES_DB: samaadresse_prod
+      POSTGRES_USER: samaadresse_prod_user
+      POSTGRES_PASSWORD: ${PROD_TEST_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U samaadresse_prod_user -d samaadresse_prod"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: samaadresse:prod-test
+    container_name: samaadresse-prod-test-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      PORT: "8082"
+      DATABASE_URL: postgres://samaadresse_prod_user:${PROD_TEST_DB_PASSWORD}@db:5432/samaadresse_prod
+      JWT_SECRET: ${JWT_SECRET}
+      PHOTO_STORAGE: db
+      COOKIE_SECURE: "false"
+      DEMO_SEED: "true"
+      DEMO_PASSWORD: ${DEMO_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@samaadresse.sn}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      FRONTEND_BASE_URL: http://localhost:8082
+      ORS_API_KEY: ${ORS_API_KEY:-}
+      SMS_PROVIDER: mock
+      SMS_DAILY_CAP: "20"

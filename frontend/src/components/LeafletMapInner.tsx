@@ -81,23 +81,51 @@ export interface LeafletMapInnerProps {
   startPosition?: [number, number];
 }
 
-// Composant interne pour synchroniser le centre de la carte lors des changements de coordonnées
+// Composant interne pour synchroniser le centre, les bornes et la taille du conteneur de la carte
 const MapController: React.FC<{
   latitude: number;
   longitude: number;
   routeGeometry?: [number, number][];
+  startPosition?: [number, number];
   onPositionChange?: (lat: number, lng: number) => void;
-}> = ({ latitude, longitude, routeGeometry, onPositionChange }) => {
+}> = ({ latitude, longitude, routeGeometry, startPosition, onPositionChange }) => {
   const map = useMap();
 
   useEffect(() => {
-    if (routeGeometry && routeGeometry.length > 1) {
-      const bounds = L.latLngBounds(routeGeometry);
-      map.fitBounds(bounds, { padding: [40, 40], animate: true });
-    } else {
-      map.setView([latitude, longitude], map.getZoom(), { animate: true });
+    const syncView = () => {
+      map.invalidateSize({ animate: false });
+      if (routeGeometry && routeGeometry.length > 1) {
+        const points: [number, number][] = [...routeGeometry, [latitude, longitude]];
+        if (startPosition) {
+          points.push(startPosition);
+        }
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [44, 44], animate: false });
+        map.invalidateSize({ animate: false });
+      } else {
+        map.setView([latitude, longitude], map.getZoom(), { animate: false });
+      }
+    };
+
+    syncView();
+    const timer = setTimeout(syncView, 150);
+
+    const container = map.getContainer();
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && container) {
+      observer = new ResizeObserver(() => {
+        syncView();
+      });
+      observer.observe(container);
     }
-  }, [latitude, longitude, routeGeometry, map]);
+
+    return () => {
+      clearTimeout(timer);
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [latitude, longitude, routeGeometry, startPosition, map]);
 
   useMapEvents({
     click(e) {
@@ -156,6 +184,7 @@ const LeafletMapInner: React.FC<LeafletMapInnerProps> = ({
         attribution={tileAttribution}
         url={tileUrl}
         maxZoom={19}
+        detectRetina={true}
         crossOrigin="anonymous"
         errorTileUrl={offlineTileFallback}
       />
@@ -163,6 +192,7 @@ const LeafletMapInner: React.FC<LeafletMapInnerProps> = ({
         latitude={latitude}
         longitude={longitude}
         routeGeometry={routeGeometry}
+        startPosition={startPosition}
         onPositionChange={onPositionChange}
       />
 

@@ -1,0 +1,42 @@
+@startuml 06-seq-qr-vers-fiche
+!include _style.puml
+title Séquence — Du QR code à la fiche publique (avec cache hors ligne)
+autonumber
+actor "Visiteur" as V
+participant "Navigateur" as B
+participant "Service Worker" as SW
+participant "PWA (React)" as UI
+participant "API (Spring Boot)" as API
+database "PostgreSQL" as DB
+
+V -> B : Scanne le QR (FRONTEND_BASE_URL/a/{code})
+B -> SW : Requête de navigation
+SW --> B : Coquille de l'application (précache)
+B -> UI : Route /a/{code}
+UI -> SW : GET /api/addresses/{code}
+SW -> API : Réseau d'abord (délai 3 s)
+alt réseau disponible
+  API -> DB : Recherche par code
+  alt adresse ACTIVE
+    DB --> API : adresse
+    API --> SW : 200 (sans donnée du propriétaire)
+    SW -> SW : Met en cache la fiche\n(50 entrées, 30 jours)
+    SW --> UI : fiche
+    UI --> V : Plaque, photo, carte, description, itinéraire
+  else ARCHIVED ou SUSPENDED
+    API --> SW : 410 (même corps neutre)
+    SW -> SW : Supprime l'entrée du cache
+    SW --> UI : 410
+    UI --> V : « Cette adresse n'est plus disponible »
+  else inconnue
+    API --> UI : 404
+  end
+else hors ligne ou délai dépassé
+  alt fiche déjà consultée
+    SW --> UI : fiche en cache
+    UI --> V : Fiche + « Version enregistrée le JJ/MM/AAAA »\n+ bandeau hors ligne
+  else jamais consultée
+    UI --> V : « Cette page n'est pas disponible hors ligne »
+  end
+end
+@enduml

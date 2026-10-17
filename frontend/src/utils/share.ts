@@ -12,7 +12,7 @@ export function buildPublicUrl(code: string): string {
   const base =
     typeof window !== 'undefined' && window.location && window.location.origin
       ? window.location.origin
-      : 'http://localhost:5173';
+      : '';
   return `${base}/a/${code}`;
 }
 
@@ -42,7 +42,7 @@ export function isValidSenegalMobile(phone: string): boolean {
 
 /**
  * Copie du texte dans le presse-papiers.
- * Utilise l'API moderne Clipboard si disponible (contexte sécurisé HTTPS/localhost),
+ * Utilise l'API moderne Clipboard si disponible (contexte sécurisé),
  * sinon repli sur document.execCommand (compatibilité anciens navigateurs / HTTP).
  */
 export async function copyToClipboard(text: string): Promise<boolean> {

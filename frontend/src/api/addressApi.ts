@@ -16,6 +16,8 @@ export interface CreateAddressPayload {
   locationType: LocationType;
   listed?: boolean;
   showOwnerName?: boolean;
+  reservedCode?: string;
+  clientRequestId?: string;
 }
 
 export interface UpdateAddressPayload {
@@ -45,6 +47,9 @@ export interface AddressResponse {
   showOwnerName?: boolean;
   moderationNotice?: string | null;
   createdAt: string;
+  codeChanged?: boolean;
+  previousCode?: string | null;
+  clientRequestId?: string;
   owner: {
     id: string;
     fullName: string;
@@ -132,9 +137,19 @@ export interface RouteResponse {
   steps: RouteStep[];
 }
 
+export interface ReservedCodeItem {
+  id: string;
+  code: string;
+  zone: string;
+  quartier: string;
+  status: 'RESERVED' | 'USED' | 'EXPIRED';
+  createdAt: string;
+  expiresAt: string;
+}
+
 export const createAddress = async (
   payload: CreateAddressPayload,
-  photo?: File
+  photo?: File | Blob
 ): Promise<AddressResponse> => {
   if (photo) {
     const formData = new FormData();
@@ -148,7 +163,17 @@ export const createAddress = async (
     if (payload.showOwnerName !== undefined) {
       formData.append('showOwnerName', payload.showOwnerName.toString());
     }
-    formData.append('photo', photo);
+    if (payload.reservedCode) {
+      formData.append('reservedCode', payload.reservedCode);
+    }
+    if (payload.clientRequestId) {
+      formData.append('clientRequestId', payload.clientRequestId);
+    }
+    if (photo instanceof File) {
+      formData.append('photo', photo);
+    } else {
+      formData.append('photo', photo, 'facade.webp');
+    }
 
     return customFetch<AddressResponse>('/api/addresses', {
       method: 'POST',
@@ -159,6 +184,18 @@ export const createAddress = async (
   return customFetch<AddressResponse>('/api/addresses', {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+};
+
+export const topUpReservedCodes = async (zone: string = 'ZIG'): Promise<ReservedCodeItem[]> => {
+  return customFetch<ReservedCodeItem[]>(`/api/address-codes/reservations?zone=${encodeURIComponent(zone)}`, {
+    method: 'POST',
+  });
+};
+
+export const getActiveReservedCodes = async (): Promise<ReservedCodeItem[]> => {
+  return customFetch<ReservedCodeItem[]>('/api/address-codes/reservations', {
+    method: 'GET',
   });
 };
 

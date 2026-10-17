@@ -2,74 +2,90 @@
 !include _style.puml
 title SamaAdresse — Classes : services, infrastructure et persistance (backend)
 left to right direction
-skinparam linetype ortho
-note as N0
-  Brouillon à valider contre le code (noms exacts des classes).
-end note
+set namespaceSeparator none
+skinparam nodesep 20
+skinparam ranksep 65
 
-package "Services" {
+package "Services (sn.samaadresse.service)" {
+  class AddressShareService {
+    +sendShareSms(addressId, userId, phone)
+  }
+  class FileStorageService {
+    +storePhoto(file) : String
+    +deletePhoto(url)
+  }
   class AuthService
-  class JwtService
   class AddressService
   class GeoGridService {
-    +resolve(lat, lon) : ZoneQuartier
+    +resolve(lat, lon) : ResolutionResult
   }
-  class CodeGenerator {
-    +generate(zone, quartier) : String
+  class AddressCodeGenerator {
+    +generateUniqueCode(zone, quartier) : String
   }
-  class ShareService {
-    +sendSms(code, phone)
+  class ReservedCodeService {
+    +reserveCodesForZone(userId, zone)
   }
-  class RouteService <<à confirmer>>
-  class ReservationService <<à confirmer>>
+  class RouteService {
+    +calculateRoute(fromLat, fromLon, code, profile)
+  }
   class ModerationService
 }
-package "Infrastructure" {
+
+package "Infrastructure & Sécurité" {
   interface SmsProvider {
-    +send(to, message)
+    +sendSms(to, message)
   }
   class MockSmsProvider
   class TwilioSmsProvider
   class SendFlashSmsProvider
+  class SmsRateLimiter
   interface PhotoStorage {
-    +save(bytes) : String
-    +delete(name)
+    +save(bytes, contentType) : String
+    +load(id) : Optional<StoredPhoto>
+    +delete(id)
   }
-  class LocalDiskPhotoStorage
-  class DatabasePhotoStorage <<à confirmer>>
-  class RateLimiter
-  class OpenRouteServiceClient <<à confirmer>>
+  class DiskPhotoStorage
+  class DbPhotoStorage
+  class JwtProvider
+  class RateLimiterService
+  class ClientIpResolver
+  class ReportRateLimiter
 }
-package "Persistance (JPA)" {
+
+package "Persistance JPA (sn.samaadresse.repository)" {
+  interface PhotoBlobRepository
   interface UserRepository
-  interface AddressRepository
   interface RefreshTokenRepository
-  interface ReportRepository
+  interface AddressRepository
+  interface ReservedCodeRepository
+  interface AddressReportRepository
   interface AdminActionRepository
-  interface ReservedCodeRepository <<à confirmer>>
 }
 
-AuthService --> JwtService
-AuthService --> UserRepository
-AuthService --> RefreshTokenRepository
-AddressService --> GeoGridService
-AddressService --> CodeGenerator
-AddressService --> PhotoStorage
-AddressService --> AddressRepository
-AddressService --> ReservationService
-CodeGenerator --> AddressRepository
-ShareService --> SmsProvider
-ShareService --> RateLimiter
-RouteService --> OpenRouteServiceClient
-RouteService --> AddressRepository
-ReservationService --> ReservedCodeRepository
-ModerationService --> ReportRepository
-ModerationService --> AdminActionRepository
-ModerationService --> AddressRepository
-
+AddressShareService --> SmsProvider
+AddressShareService --> SmsRateLimiter
 SmsProvider <|.. MockSmsProvider
 SmsProvider <|.. TwilioSmsProvider
 SmsProvider <|.. SendFlashSmsProvider
-PhotoStorage <|.. LocalDiskPhotoStorage
-PhotoStorage <|.. DatabasePhotoStorage
+
+FileStorageService --> PhotoStorage
+PhotoStorage <|.. DiskPhotoStorage
+PhotoStorage <|.. DbPhotoStorage
+DbPhotoStorage --> PhotoBlobRepository
+
+AuthService --> JwtProvider
+AuthService --> UserRepository
+AuthService --> RefreshTokenRepository
+
+AddressService --> GeoGridService
+AddressService --> AddressCodeGenerator
+AddressService --> FileStorageService
+AddressService --> AddressRepository
+
+ReservedCodeService --> ReservedCodeRepository
+RouteService --> AddressRepository
+
+ModerationService --> ReportRateLimiter
+ModerationService --> AddressReportRepository
+ModerationService --> AdminActionRepository
 @enduml

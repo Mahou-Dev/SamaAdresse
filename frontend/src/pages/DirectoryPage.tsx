@@ -24,9 +24,9 @@ const QUARTIERS = [
 
 const TYPES: { value: '' | LocationType; label: string }[] = [
   { value: '', label: 'Tous les types' },
-  { value: 'MAISON', label: 'Habitations' },
-  { value: 'COMMERCE', label: 'Commerces' },
-  { value: 'INSTITUTION', label: 'Institutions' },
+  { value: 'MAISON', label: 'Maison' },
+  { value: 'COMMERCE', label: 'Commerce' },
+  { value: 'INSTITUTION', label: 'Institution' },
 ];
 
 export const DirectoryPage: React.FC = () => {
@@ -235,7 +235,7 @@ export const DirectoryPage: React.FC = () => {
   })();
 
   return (
-    <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6">
+    <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6 min-h-[1100px]">
       {/* En-tête de page */}
       <div className="space-y-1.5">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
@@ -252,10 +252,10 @@ export const DirectoryPage: React.FC = () => {
       </div>
 
       {/* Barre de recherche et filtres */}
-      <section aria-label="Recherche et filtres dans l'annuaire" className="space-y-3">
+      <section aria-label="Recherche et filtres dans l'annuaire" className="space-y-3 min-h-[172px] sm:min-h-[116px]">
         <div className="relative">
           <label htmlFor="directory-search-input" className="sr-only">
-            Rechercher une adresse, une concession, un commerce…
+            Rechercher une adresse, un commerce…
           </label>
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5C4D44]">
             <Search className="w-5 h-5" />
@@ -265,7 +265,7 @@ export const DirectoryPage: React.FC = () => {
             type="search"
             value={inputQ}
             onChange={handleInputChange}
-            placeholder="Rechercher une adresse, une concession, un commerce…"
+            placeholder="Code, quartier ou description…"
             className="w-full pl-11 pr-10 py-3 rounded-xl border border-[#8C8272] bg-[#FFFFFF] text-sm text-[#231A15] placeholder-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F] focus:border-transparent transition shadow-[0_1px_0_rgba(35,26,21,0.06)]"
           />
           {inputQ && (
@@ -383,84 +383,95 @@ export const DirectoryPage: React.FC = () => {
         </div>
       )}
 
-      {/* Squelettes de chargement (hauteur fixe pour CLS < 0,1) */}
-      {loading && (
-        <div className="space-y-3" aria-hidden="true">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="h-[120px] rounded-xl bg-[#FFFFFF] border border-[#8C8272]/30 p-4 flex gap-4 animate-pulse"
-            >
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] shrink-0" />
-              <div className="flex-1 space-y-2 py-1">
-                <div className="h-4 bg-[#F2ECE1] rounded w-1/3" />
-                <div className="h-3 bg-[#F2ECE1] rounded w-3/4" />
-                <div className="h-3 bg-[#F2ECE1] rounded w-1/2" />
-              </div>
+      {/* Conteneur à hauteur réservée pour le message de statut et la liste (CLS < 0,1) */}
+      <div className="space-y-4 min-h-[560px]">
+        {/* Squelettes de chargement (hauteur alignée sur les cartes réelles) */}
+        {loading && (
+          <>
+            <div className="min-h-[20px] flex items-center justify-between text-xs text-[#5C4D44] px-1" aria-hidden="true">
+              <span>Chargement de l'annuaire…</span>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="space-y-3" aria-hidden="true">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="h-[188px] sm:h-[132px] rounded-xl bg-[#FFFFFF] border border-[#8C8272]/30 p-4 flex gap-4 animate-pulse"
+                >
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] shrink-0" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <div className="h-4 bg-[#F2ECE1] rounded w-1/3" />
+                    <div className="h-3 bg-[#F2ECE1] rounded w-3/4" />
+                    <div className="h-3 bg-[#F2ECE1] rounded w-1/2" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
-      {/* Résultats de recherche */}
-      {!loading && !isOffline && (
-        <div className="space-y-4">
-          {/* Compteur de résultats sobre */}
-          {hasSearched && (
-            <div className="flex items-center justify-between text-xs text-[#5C4D44] px-1">
-              <span>
-                {totalElements === 0
-                  ? 'Aucun résultat'
-                  : totalElements === 1
-                  ? '1 adresse trouvée'
-                  : `${totalElements} adresses trouvées`}
-              </span>
-              {(urlQ || urlQuartier || urlType) && (
-                <span className="text-[11px] text-[#5C4D44]">
-                  Filtres actifs
-                </span>
+        {/* Résultats de recherche */}
+        {!loading && !isOffline && (
+          <div className="space-y-4">
+            {/* Compteur de résultats sobre (hauteur réservée) */}
+            <div className="min-h-[20px] flex items-center justify-between text-xs text-[#5C4D44] px-1">
+              {hasSearched && (
+                <>
+                  <span>
+                    {totalElements === 0
+                      ? 'Aucun résultat'
+                      : totalElements === 1
+                      ? '1 adresse trouvée'
+                      : `${totalElements} adresses trouvées`}
+                  </span>
+                  {(urlQ || urlQuartier || urlType) && (
+                    <span className="text-[11px] text-[#5C4D44]">
+                      Filtres actifs
+                    </span>
+                  )}
+                </>
               )}
             </div>
-          )}
 
-          {/* État vide */}
-          {hasSearched && items.length === 0 && !error && (
-            <div className="p-8 sm:p-12 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272]/40 shadow-[0_1px_0_rgba(35,26,21,0.06)] space-y-3">
-              <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] flex items-center justify-center text-[#8A3112] mx-auto">
-                <Search className="w-6 h-6" />
+            {/* État vide */}
+            {hasSearched && items.length === 0 && !error && (
+              <div className="p-8 sm:p-12 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272]/40 shadow-[0_1px_0_rgba(35,26,21,0.06)] space-y-3">
+                <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] flex items-center justify-center text-[#8A3112] mx-auto">
+                  <Search className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="text-base font-bold text-[#231A15]">
+                    Aucune adresse ne correspond à votre recherche.
+                  </h2>
+                  <p className="text-xs text-[#5C4D44] max-w-sm mx-auto">
+                    Essayez avec un mot-clé plus court, ou retirez les filtres par quartier ou type de lieu.
+                  </p>
+                </div>
               </div>
-              <div className="space-y-1">
-                <h2 className="text-base font-bold text-[#231A15]">
-                  Aucune adresse ne correspond à votre recherche.
-                </h2>
-                <p className="text-xs text-[#5C4D44] max-w-sm mx-auto">
-                  Essayez avec un mot-clé plus court, ou retirez les filtres par quartier ou type de lieu.
-                </p>
-              </div>
-            </div>
-          )}
+            )}
 
-          {/* Liste des cartes d'adresses compactes */}
-          <div className="space-y-3">
-            {items.map((item) => (
-              <article
-                key={item.code}
-                className="p-4 rounded-xl border border-[#8C8272]/40 bg-[#FFFFFF] shadow-[0_1px_2px_rgba(35,26,21,0.05)] hover:border-[#1D528F] transition flex flex-col sm:flex-row gap-4 items-start justify-between"
-              >
-                <div className="flex gap-3 sm:gap-4 items-start w-full">
-                  {item.photoUrl ? (
-                    <img
-                      src={item.photoUrl}
-                      alt={`Façade pour l'adresse ${item.code}`}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-[#E6DDD0] shrink-0"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] border border-[#E6DDD0] flex flex-col items-center justify-center text-[#5C4D44] shrink-0">
-                      <MapPin className="w-6 h-6 text-[#1D528F]" />
-                      <span className="text-[10px] font-medium mt-1">Sans photo</span>
-                    </div>
-                  )}
+            {/* Liste des cartes d'adresses compactes */}
+            <div className="space-y-3">
+              {items.map((item) => (
+                <article
+                  key={item.code}
+                  className="p-4 rounded-xl border border-[#8C8272]/40 bg-[#FFFFFF] shadow-[0_1px_2px_rgba(35,26,21,0.05)] hover:border-[#1D528F] transition flex flex-col sm:flex-row gap-4 items-start justify-between"
+                >
+                  <div className="flex gap-3 sm:gap-4 items-start w-full">
+                    {item.photoUrl ? (
+                      <img
+                        src={item.photoUrl}
+                        alt={`Façade pour l'adresse ${item.code}`}
+                        width={80}
+                        height={80}
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-[#E6DDD0] shrink-0"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] border border-[#E6DDD0] flex flex-col items-center justify-center text-[#5C4D44] shrink-0">
+                        <MapPin className="w-6 h-6 text-[#1D528F]" />
+                        <span className="text-[10px] font-medium mt-1">Sans photo</span>
+                      </div>
+                    )}
 
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -475,7 +486,7 @@ export const DirectoryPage: React.FC = () => {
                           ? 'Commerce'
                           : item.locationType === 'INSTITUTION'
                           ? 'Institution'
-                          : 'Habitation'}
+                          : 'Maison'}
                       </span>
                     </div>
 
@@ -525,6 +536,7 @@ export const DirectoryPage: React.FC = () => {
           )}
         </div>
       )}
+      </div>
     </div>
   );
 };

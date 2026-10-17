@@ -26,6 +26,8 @@ public interface AddressRepository extends JpaRepository<Address, UUID> {
 
     List<Address> findByOwnerOrderByCreatedAtDesc(User owner);
 
+    Optional<Address> findByOwnerAndClientRequestId(User owner, UUID clientRequestId);
+
     @Query(
         value = "SELECT a FROM Address a " +
                 "WHERE a.status = sn.samaadresse.domain.enums.AddressStatus.ACTIVE " +

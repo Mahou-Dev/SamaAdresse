@@ -234,31 +234,37 @@ export const HomePage: React.FC = () => {
             </div>
 
             {/* Barre d'actions intégrée au bas du cadre */}
-            <div className="px-4 py-3.5 sm:px-5 bg-[#FBF9F5] border-t border-[#D4CEBF] flex flex-wrap items-center gap-3">
-              <Link
-                to="/addresses/new"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs sm:text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target cursor-pointer"
-              >
-                <span>Créer mon adresse</span>
-              </Link>
-
-              {demoCode && (
+            <div className="px-4 py-3.5 sm:px-5 bg-[#FBF9F5] border-t border-[#D4CEBF] flex flex-col gap-2.5">
+              <div className="flex flex-wrap items-center gap-3">
                 <Link
-                  to={`/a/${demoCode}`}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs sm:text-sm font-bold transition touch-target"
+                  to="/addresses/new"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs sm:text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target cursor-pointer"
                 >
-                  <ExternalLink className="w-4 h-4 text-[#1D528F]" />
-                  <span>Voir une fiche d'exemple</span>
+                  <span>Créer mon adresse</span>
                 </Link>
-              )}
 
-              <Link
-                to="/annuaire"
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#5C4D44] hover:text-[#231A15] text-xs sm:text-sm font-bold transition touch-target"
-              >
-                <BookOpen className="w-4 h-4 text-[#1D528F]" />
-                <span>Consulter l'annuaire</span>
-              </Link>
+                {demoCode && (
+                  <Link
+                    to={`/a/${demoCode}`}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs sm:text-sm font-bold transition touch-target"
+                  >
+                    <ExternalLink className="w-4 h-4 text-[#1D528F]" />
+                    <span>Voir une fiche d'exemple</span>
+                  </Link>
+                )}
+
+                <Link
+                  to="/annuaire"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#5C4D44] hover:text-[#231A15] text-xs sm:text-sm font-bold transition touch-target"
+                >
+                  <BookOpen className="w-4 h-4 text-[#1D528F]" />
+                  <span>Consulter l'annuaire</span>
+                </Link>
+              </div>
+
+              <p className="text-xs text-[#5C4D44] pt-0.5">
+                Fonctionne aussi hors ligne : capturez vos adresses sur le terrain, elles seront transmises dès votre retour sur le réseau.
+              </p>
             </div>
           </div>
         </div>

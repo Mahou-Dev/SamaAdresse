@@ -4,7 +4,7 @@ title Séquence — Itinéraire depuis la position courante (OpenRouteService)
 autonumber
 actor "Visiteur" as V
 participant "PWA (React)" as UI
-participant "API (RouteController)" as API
+participant "API (RouteController / RouteService)" as API
 participant "OpenRouteService" as ORS
 
 V -> UI : « Itinéraire depuis ma position »
@@ -14,17 +14,20 @@ alt position refusée
   UI --> V : Message + bouton « Ouvrir dans l'application de cartes »
 else position obtenue
   UI -> API : GET /api/public/route\n?fromLat&fromLon&code&profile
-  API -> API : Départ plausible au Sénégal ?\nLimitation de débit (20/min/IP)
-  API -> API : Résout la destination depuis le code\n(adresse ACTIVE uniquement)
-  API -> ORS : Directions (clé serveur, langue fr)\ndélais 3 s / 5 s
+  API -> API : Départ plausible au Sénégal ?\nLimitation de débit (20/min/IP via ClientIpResolver)
+  API -> API : Résout la destination depuis le code\n(adresse ACTIVE ou SIGNALED uniquement)
+  API -> API : Vérifie le cache mémoire (TTL 10 min)
+  opt absent du cache
+    API -> ORS : POST /v2/directions/{profile}/geojson (clé serveur, langue fr)\ndélais 3 s / 5 s
+  end
   alt itinéraire trouvé
     ORS --> API : distance, durée, géométrie, étapes
-    API --> UI : distanceMeters, durationSeconds,\ngeometry (GeoJSON), steps (≤ 15)
-    UI --> V : Trajet tracé sur la carte\n« 12 min · 4,3 km » + Voiture / À pied
+    API --> UI : distanceMeters, durationSeconds,\ngeometry (GeoJSON LineString), steps (≤ 15)
+    UI --> V : Trajet tracé sur la carte (fitBounds + invalidateSize)\n« 12 min · 4,3 km » + Voiture / À pied
   else aucun itinéraire
     API --> UI : 422 « Aucun itinéraire trouvé »
     UI --> V : Message + bouton de secours
-  else service indisponible ou clé absente
+  else service indisponible ou clé ORS_API_KEY absente
     API --> UI : 503
     UI --> V : Message + « Ouvrir dans l'application de cartes »
   end

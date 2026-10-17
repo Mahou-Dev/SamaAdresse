@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { Navigation, MapPin, ExternalLink, Loader2 } from 'lucide-react';
 
 const LazyLeafletMapInner = lazy(() => import('./LeafletMapInner'));
@@ -17,7 +17,7 @@ interface AddressMapProps {
   startPosition?: [number, number];
 }
 
-// Squelette de chargement ayant la hauteur exacte de la carte
+// Squelette de chargement ayant la même hauteur que la carte
 const MapSkeleton: React.FC = () => (
   <div className="w-full h-full bg-[#F2ECE1] flex flex-col items-center justify-center gap-2 text-[#5C4D44] animate-pulse">
     <MapPin className="w-6 h-6 text-[#1D528F] animate-bounce" />
@@ -38,6 +38,12 @@ export const AddressMap: React.FC<AddressMapProps> = ({
   startPosition,
 }) => {
   const [loadingGps, setLoadingGps] = useState<boolean>(false);
+  const [mapReady, setMapReady] = useState<boolean>(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMapReady(true), 80);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleOpenDirections = () => {
     if (navigator.geolocation) {
@@ -67,19 +73,23 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     <div className="space-y-3">
       {/* Cadre de carte émaillé et sobre */}
       <div className="relative rounded-xl overflow-hidden border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.08)] h-64 sm:h-80 bg-[#F2ECE1] z-0">
-        <Suspense fallback={<MapSkeleton />}>
-          <LazyLeafletMapInner
-            latitude={latitude}
-            longitude={longitude}
-            code={code}
-            description={description}
-            draggable={draggable}
-            onPositionChange={onPositionChange}
-            accuracyRadiusMeters={accuracyRadiusMeters}
-            routeGeometry={routeGeometry}
-            startPosition={startPosition}
-          />
-        </Suspense>
+        {mapReady ? (
+          <Suspense fallback={<MapSkeleton />}>
+            <LazyLeafletMapInner
+              latitude={latitude}
+              longitude={longitude}
+              code={code}
+              description={description}
+              draggable={draggable}
+              onPositionChange={onPositionChange}
+              accuracyRadiusMeters={accuracyRadiusMeters}
+              routeGeometry={routeGeometry}
+              startPosition={startPosition}
+            />
+          </Suspense>
+        ) : (
+          <MapSkeleton />
+        )}
       </div>
 
       {showDirections && (

@@ -1,0 +1,177 @@
+name: CI — SamaAdresse
+
+on:
+  push:
+    branches: [main, develop, "feature/**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  secrets:
+    name: Contrôle des secrets et fichiers d'environnement
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Vérification de l'absence de .env suivi, de valeurs dans .env.example et de jetons eyJ... (> 60 car.)
+        run: |
+          if [ -n "$(git ls-files .env)" ]; then
+            echo "ECHEC : Le fichier .env est suivi par Git !"
+            exit 1
+          fi
+          if grep -qE '^[A-Z0-9_]+=.+$' .env.example; then
+            echo "ECHEC : .env.example contient des valeurs non vides !"
+            grep -nE '^[A-Z0-9_]+=.+$' .env.example
+            exit 1
+          fi
+          python3 -c "
+          import subprocess, re, os
+          files = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
+          def in_scope(f):
+              return (
+                  f.startswith(('backend/', 'frontend/src/', 'scripts/', '.github/'))
+                  or f in ('.env.example', 'Dockerfile', 'render.yaml', 'README.md', 'docker-compose.yml', 'docker-compose.prod-test.yml')
+                  or (f.startswith('docs/') and f.endswith('.md'))
+              )
+          pat = re.compile(r'(?<![A-Za-z0-9+/=_-])eyJ[A-Za-z0-9+/=._-]{58,}')
+          leaks = []
+          for f in files:
+              if in_scope(f) and os.path.exists(f):
+                  with open(f, 'r', encoding='utf-8', errors='ignore') as fp:
+                      for lineno, line in enumerate(fp, 1):
+                          if pat.search(line):
+                              leaks.append(f'{f}:{lineno}')
+          if leaks:
+              print('Secrets potentiels détectés :', '\n'.join(leaks))
+              raise SystemExit(1)
+          "
+
+  backend:
+    name: Backend (Spring Boot 3.4 / Temurin 21 / JaCoCo)
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: samaadresse_db
+          POSTGRES_USER: samaadresse_user
+          POSTGRES_PASSWORD: ci_test_db_password_non_secret
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Configuration Java 21 (Temurin)
+        uses: actions/setup-java@v4.7.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Vérification Maven et couverture JaCoCo (./mvnw -B verify)
+        working-directory: backend
+        env:
+          DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
+          DB_USER: samaadresse_user
+          DB_PASSWORD: ci_test_db_password_non_secret
+          JWT_SECRET: ci-test-ephemeral-jwt-secret-key-at-least-32-bytes-long
+          DEMO_PASSWORD: CiTestDemoPassword2026!
+        run: ./mvnw -B verify
+
+      - name: Publication de l'artefact jacoco.xml
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: jacoco-xml
+          path: backend/target/site/jacoco/jacoco.xml
+
+  frontend:
+    name: Frontend (TypeScript / Oxlint / Vitest / Build / check:size)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Configuration Node.js 22
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installation des dépendances
+        working-directory: frontend
+        run: npm ci
+
+      - name: Vérification TypeScript (tsc --noEmit)
+        working-directory: frontend
+        run: npx tsc --noEmit
+
+      - name: Linter (oxlint)
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Tests unitaires (Vitest)
+        working-directory: frontend
+        run: npm run test:run
+
+      - name: Build de production Vite
+        working-directory: frontend
+        run: npm run build
+
+      - name: Vérification du budget de taille gzip (check:size)
+        working-directory: frontend
+        run: npm run check:size
+
+  e2e:
+    name: Image Docker de Production, Smoke-Test & Playwright E2E
+    runs-on: ubuntu-24.04
+    needs: [secrets, backend, frontend]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Configuration Node.js 22
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build et démarrage de l'image Docker de production avec PostgreSQL 16
+        env:
+          PROD_TEST_DB_PASSWORD: ci_prod_test_db_password
+          DEMO_PASSWORD: CiTestDemoPassword2026!
+          ADMIN_PASSWORD: CiTestDemoPassword2026!
+          ORS_API_KEY: ""
+        run: |
+          docker compose -f docker-compose.prod-test.yml up -d --build --wait
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8082/api/health > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Exécution de smoke-prod.sh
+        run: ./scripts/smoke-prod.sh http://localhost:8082
+
+      - name: Installation des dépendances Frontend & Navigateurs Playwright
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Exécution des tests E2E Playwright contre le conteneur Docker
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:8082
+          DEMO_PASSWORD: CiTestDemoPassword2026!
+        run: npx playwright test
