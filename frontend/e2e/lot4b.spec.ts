@@ -107,7 +107,7 @@ test.describe('Lot 4b — Contrôles géométriques et Parcours E2E', () => {
 
   test('Parcours 2 : Visiteur signale → Admin suspend avec motif → Fiche indisponible → Propriétaire voit "Suspendue par la modération"', async ({ browser }) => {
     test.setTimeout(60000);
-    const code = 'ZIG-KBG-8454';
+    const code = 'ZIG-KBG-4271';
 
     // 1. Visiteur signale l'adresse
     const visitorContext = await browser.newContext();
@@ -156,9 +156,12 @@ test.describe('Lot 4b — Contrôles géométriques et Parcours E2E', () => {
     await expect(demoPage.locator('text=Suspendue par la modération')).toBeVisible();
     await demoContext.close();
 
-    // Nettoyage : Réactiver l'adresse pour laisser la base de données propre
+    // Nettoyage : Réactiver l'adresse pour laisser les bases de données (dev, e2e et prod-test) propres
     try {
-      execSync(`docker exec samaadresse-postgres psql -U samaadresse -d samaadresse -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
+      for (const db of ['samaadresse', 'samaadresse_e2e']) {
+        execSync(`docker exec samaadresse-postgres psql -U samaadresse -d ${db} -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
+      }
+      execSync(`docker exec samaadresse-prod-test-db psql -U samaadresse_prod_user -d samaadresse_prod -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
     } catch {
       // Ignorer si docker non joignable
     }

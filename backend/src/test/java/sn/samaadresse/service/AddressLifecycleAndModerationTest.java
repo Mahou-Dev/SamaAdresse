@@ -73,6 +73,9 @@ class AddressLifecycleAndModerationTest {
     private AdminActionRepository adminActionRepository;
 
     @Mock
+    private sn.samaadresse.repository.ReservedCodeRepository reservedCodeRepository;
+
+    @Mock
     private GeoGridService geoGridService;
 
     @Mock
@@ -94,7 +97,7 @@ class AddressLifecycleAndModerationTest {
     @BeforeEach
     void setUp() {
         fileStorageService = new FileStorageService(tempDir.toString(), new ImageMagicBytesValidator());
-        addressService = new AddressService(addressRepository, userRepository, geoGridService, addressCodeGenerator, fileStorageService);
+        addressService = new AddressService(addressRepository, reservedCodeRepository, userRepository, geoGridService, addressCodeGenerator, fileStorageService);
         reportRateLimiter = new ReportRateLimiter();
         moderationService = new ModerationService(
                 addressRepository,

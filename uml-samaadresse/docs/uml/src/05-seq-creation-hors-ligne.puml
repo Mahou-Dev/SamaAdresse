@@ -12,18 +12,18 @@ database "PostgreSQL" as DB
 O -> UI : Se connecte, ouvre l'assistant
 UI -> API : POST /api/address-codes/reservations?zone=ZIG
 API -> DB : Réserve 3 codes par quartier\n(30 jours, 40 maximum par utilisateur)
-API --> UI : codes réservés
+API --> UI : List<ReservedCodeResponse>
 UI -> IDB : Stocke les codes réservés (par utilisateur)
 
 == Hors ligne : capture ==
 O -> UI : Capture GPS + description + photo
-UI -> UI : Résolution locale zone/quartier\n(port TypeScript de la grille)
+UI -> UI : Résolution locale zone/quartier\n(geoGrid.ts — port TypeScript de la grille)
 alt position hors zone
-  UI --> O : « Position hors des zones couvertes »
+  UI --> O : « Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar).\nDéplacez le repère ou saisissez d'autres coordonnées. »
 else quartier résolu
   alt un code réservé est disponible
     UI -> IDB : Retire un code du quartier
-    UI -> IDB : Enregistre le brouillon\n{code, position, description, type, photo, clientRequestId}
+    UI -> IDB : Enregistre le brouillon\n{reservedCode, position, description, locationType, photo, clientRequestId}
     UI --> O : Plaque affichée en < 3 s\n« Enregistrée sur cet appareil · en attente d'envoi »
   else aucun code pour ce quartier
     UI -> IDB : Enregistre le brouillon sans code
@@ -31,7 +31,7 @@ else quartier résolu
   end
 end
 
-== Retour du réseau : synchronisation ==
+== Retour du réseau : synchronisation (syncManager.ts) ==
 UI -> UI : Événement online / démarrage / bouton « Envoyer maintenant »
 loop pour chaque brouillon
   UI -> API : POST /api/addresses\n(reservedCode, clientRequestId, position, …)
@@ -39,21 +39,21 @@ loop pour chaque brouillon
   alt déjà traité
     API --> UI : 200 adresse existante (aucun doublon)
   else nouveau
-    API -> API : Recalcule zone/quartier depuis la position
+    API -> API : Recalcule zone/quartier depuis la position (GeoGridService)
     alt réservation valide\n(propriétaire, non expirée, préfixe identique)
       API -> DB : INSERT adresse avec le code réservé\n(réservation → USED)
-      API --> UI : 201 (code conservé)
-    else réservation absente ou incohérente
+      API --> UI : 201 (codeChanged = false)
+    else réservation absente ou préfixe différent
       API -> DB : INSERT adresse avec un nouveau code
       API --> UI : 201 codeChanged = true, previousCode
-      UI --> O : « Le code a changé : ancien → nouveau »
+      UI --> O : Bannière : « Le code provisoire X a été remplacé par Y,\ncar l'adresse se trouve à <nom du quartier>. »
     end
   end
   opt le brouillon contient une photo
-    UI -> API : POST photo (multipart)
+    UI -> API : POST /api/addresses/{id}/photo (multipart)
     API --> UI : 200
   end
   UI -> IDB : Supprime le brouillon
 end
-UI --> O : Adresse envoyée, partage disponible
+UI --> O : Adresse synchronisée, partage et QR disponibles
 @enduml

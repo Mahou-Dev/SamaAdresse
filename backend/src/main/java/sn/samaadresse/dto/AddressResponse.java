@@ -62,4 +62,18 @@ public class AddressResponse {
 
     @Schema(description = "Propriétaire de l'adresse")
     private UserProfileResponse owner;
+
+    @Schema(description = "Indique si le code réservé fourni a dû être remplacé par un nouveau code", example = "false")
+    @Builder.Default
+    private Boolean codeChanged = false;
+
+    @Schema(description = "Ancien code réservé si le code a été remplacé", example = "ZIG-KBG-1234")
+    private String previousCode;
+
+    @Schema(description = "Identifiant de requête client idempotent", example = "123e4567-e89b-12d3-a456-426614174000")
+    private java.util.UUID clientRequestId;
+
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @Builder.Default
+    private boolean idempotentReplay = false;
 }

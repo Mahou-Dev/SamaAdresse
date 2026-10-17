@@ -1,0 +1,86 @@
+@startuml 01-cas-utilisation
+!include _style.puml
+title SamaAdresse — Diagramme de cas d'utilisation
+left to right direction
+skinparam nodesep 12
+skinparam ranksep 55
+
+actor "Visiteur\n(Public)" as V
+actor "Propriétaire\n(rôle PROPRIETAIRE)" as O
+actor "Administrateur\n(rôle ADMIN)" as A
+actor "OpenRouteService\n<<système externe>>" as ORS
+actor "Fournisseur SMS\n<<système externe>>" as SMS
+
+package "Modération (ROLE_ADMIN)" {
+  usecase "Consulter les signalements" as UC23
+  usecase "Suspendre / rétablir\n(motif obligatoire)" as UC24
+  usecase "Classer sans suite" as UC25
+  usecase "Journaliser l'action\n(audit)" as UC26
+}
+package "Compte" {
+  usecase "S'inscrire" as UC9
+  usecase "Se connecter /\nrafraîchir la session" as UC10
+  usecase "Se déconnecter" as UC11
+}
+package "Consultation publique" {
+  usecase "Résoudre un code\n(API publique)" as UC1
+  usecase "Scanner un QR code\nvers la fiche" as UC2
+  usecase "Consulter la carte\net la photo" as UC3
+  usecase "Obtenir un itinéraire\ndepuis ma position" as UC4
+  usecase "Rechercher dans\nl'annuaire" as UC5
+  usecase "Signaler un problème" as UC6
+  usecase "Consulter hors ligne\nune fiche déjà vue" as UC7
+  usecase "Installer l'application\n(PWA)" as UC8
+}
+package "Gestion de mes adresses (ROLE_PROPRIETAIRE)" {
+  usecase "Créer une adresse\n(GPS ou saisie manuelle,\nphoto, description)" as UC12
+  usecase "Générer le code\nzone-quartier-numéro" as UC13
+  usecase "Créer une adresse\nhors ligne (file d'attente)" as UC14
+  usecase "Pré-réserver des codes\nd'adresse par zone" as UC27
+  usecase "Synchroniser les brouillons\nà la reconnexion" as UC15
+  usecase "Télécharger / imprimer\nle QR code et la plaque" as UC16
+  usecase "Partager (lien, copie,\nWhatsApp, partage natif)" as UC17
+  usecase "Envoyer le lien par SMS" as UC18
+  usecase "Modifier description,\ntype, photo" as UC19
+  usecase "Archiver / restaurer" as UC20
+  usecase "Gérer la visibilité\ndans l'annuaire" as UC21
+  usecase "Consulter mes adresses" as UC22
+}
+
+A --> UC23
+A --> UC24
+A --> UC25
+
+V --> UC9
+V --> UC10
+V --> UC1
+V --> UC2
+V --> UC3
+V --> UC4
+V --> UC5
+V --> UC6
+V --> UC7
+V --> UC8
+
+ORS <-- UC4
+SMS <-- UC18
+
+O --> UC11
+O --> UC12
+O --> UC14
+O --> UC27
+O --> UC16
+O --> UC17
+O --> UC19
+O --> UC20
+O --> UC21
+O --> UC22
+
+UC12 --> UC13 : <<include>>
+UC14 --> UC13 : <<include>>
+UC14 --> UC27 : <<extend>>
+UC15 --> UC14 : <<extend>>
+UC18 --> UC17 : <<extend>>
+UC24 --> UC26 : <<include>>
+UC25 --> UC26 : <<include>>
+@enduml

@@ -1,7 +1,9 @@
 package sn.samaadresse.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -12,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import sn.samaadresse.dto.AddressResponse;
@@ -37,9 +38,15 @@ public class AddressController {
     @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Créer une nouvelle adresse géolocalisée (JSON)", description = "Résout automatiquement la zone et le quartier à partir des coordonnées GPS, puis génère un code court immuable (ex: ZIG-KBG-4271).")
+    @Operation(
+            summary = "Créer une nouvelle adresse géolocalisée (JSON)",
+            description = "Résout automatiquement la zone et le quartier à partir des coordonnées GPS, puis génère un code court immuable (ex: ZIG-KBG-4271). Supporte l'idempotence via clientRequestId et la consommation d'un reservedCode."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Adresse créée avec succès",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class),
+                            examples = @ExampleObject(value = "{\"code\":\"ZIG-KBG-4271\",\"latitude\":12.5738,\"longitude\":-16.2650,\"zone\":\"ZIG\",\"quartier\":\"KBG\",\"locationType\":\"MAISON\",\"status\":\"ACTIVE\",\"listed\":false}"))),
+            @ApiResponse(responseCode = "200", description = "Rejeu idempotent d'une requête déjà traitée (clientRequestId existant)",
                     content = @Content(schema = @Schema(implementation = AddressResponse.class))),
             @ApiResponse(responseCode = "400", description = "Coordonnées invalides ou données de formulaire incorrectes",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -54,15 +61,21 @@ public class AddressController {
     ) {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
         AddressResponse created = addressService.createAddressByEmail(request, currentUserEmail);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        HttpStatus status = created.isIdempotentReplay() ? HttpStatus.OK : HttpStatus.CREATED;
+        return ResponseEntity.status(status).body(created);
     }
 
     @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Créer une nouvelle adresse avec photo optionnelle (Multipart)", description = "Permet de créer l'adresse et d'uploader sa photo de façade en une seule requête multipart.")
+    @Operation(
+            summary = "Créer une nouvelle adresse avec photo optionnelle (Multipart)",
+            description = "Permet de créer l'adresse et d'uploader sa photo de façade en une seule requête multipart."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Adresse créée avec succès",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "200", description = "Rejeu idempotent d'une requête déjà traitée (clientRequestId existant)",
                     content = @Content(schema = @Schema(implementation = AddressResponse.class))),
             @ApiResponse(responseCode = "400", description = "Données ou image invalide",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -73,22 +86,29 @@ public class AddressController {
     })
     public ResponseEntity<AddressResponse> createAddressMultipart(
             @Valid @ModelAttribute CreateAddressRequest request,
+            @Parameter(description = "Fichier image optionnel (JPEG/PNG/WebP, max 5 Mo)")
             @RequestParam(value = "photo", required = false) org.springframework.web.multipart.MultipartFile photo,
             Principal principal
     ) {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
         AddressResponse created = addressService.createAddressWithPhoto(request, photo, currentUserEmail);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        HttpStatus status = created.isIdempotentReplay() ? HttpStatus.OK : HttpStatus.CREATED;
+        return ResponseEntity.status(status).body(created);
     }
 
     @PostMapping(value = "/{id}/photo", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Uploader une photo de façade pour une adresse existante", description = "Associe une photo de façade à une adresse existante (owner ou ADMIN). Validations : JPEG/PNG/WebP, max 5 Mo.")
+    @Operation(
+            summary = "Uploader une photo de façade pour une adresse existante",
+            description = "Associe une photo de façade à une adresse existante (propriétaire ou ADMIN). Validations : JPEG/PNG/WebP par magic bytes, max 5 Mo."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Photo uploadée et adresse mise à jour",
                     content = @Content(schema = @Schema(implementation = AddressResponse.class))),
             @ApiResponse(responseCode = "400", description = "Fichier invalide ou non image (magic bytes) ou taille > 5 Mo",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire de cette adresse",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -96,8 +116,8 @@ public class AddressController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<AddressResponse> uploadAddressPhoto(
-            @PathVariable java.util.UUID id,
-            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @Parameter(description = "Identifiant UUID de l'adresse") @PathVariable java.util.UUID id,
+            @Parameter(description = "Fichier image (JPEG/PNG/WebP)") @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
             Principal principal
     ) {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
@@ -106,17 +126,22 @@ public class AddressController {
     }
 
     @GetMapping("/{code}")
-    @Operation(summary = "Résoudre une adresse publique par son code court", description = "Endpoint public sans authentification. Renvoie la fiche adresse si elle existe et est active.")
+    @Operation(
+            summary = "Résoudre une adresse publique par son code court",
+            description = "Endpoint public sans authentification. Renvoie la fiche adresse si elle existe et est active (410 Gone si archivée ou suspendue)."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Adresse trouvée",
                     content = @Content(schema = @Schema(implementation = PublicAddressResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Adresse non trouvée ou inactive",
+            @ApiResponse(responseCode = "404", description = "Adresse non trouvée",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "410", description = "Adresse archivée ou suspendue",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "429", description = "Limite de requêtes dépassée (60 req/min/IP)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<PublicAddressResponse> getPublicAddressByCode(
-            @PathVariable String code,
+            @Parameter(description = "Code court de l'adresse", example = "ZIG-KBG-4271") @PathVariable String code,
             jakarta.servlet.http.HttpServletRequest servletRequest
     ) {
         String clientIp = extractClientIp(servletRequest);
@@ -126,14 +151,21 @@ public class AddressController {
     }
 
     @GetMapping("/{code}/qrcode")
-    @Operation(summary = "Générer le QR code d'une adresse publique", description = "Génère à la volée une image PNG du QR Code (300x300 px) encodant l'URL publique complète de la fiche adresse.")
+    @Operation(
+            summary = "Générer le QR code d'une adresse publique",
+            description = "Génère à la volée une image PNG du QR Code (300x300 px) encodant l'URL publique complète de la fiche adresse."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Image PNG du QR code générée",
                     content = @Content(mediaType = "image/png")),
-            @ApiResponse(responseCode = "404", description = "Adresse non trouvée ou inactive",
+            @ApiResponse(responseCode = "404", description = "Adresse non trouvée",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "410", description = "Adresse archivée ou suspendue",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<byte[]> getAddressQrCode(@PathVariable String code) {
+    public ResponseEntity<byte[]> getAddressQrCode(
+            @Parameter(description = "Code court de l'adresse", example = "ZIG-KBG-4271") @PathVariable String code
+    ) {
         String cleanCode = code.toUpperCase();
         byte[] qrBytes = qrCodeService.generateAddressQrCode(cleanCode);
 
@@ -152,7 +184,10 @@ public class AddressController {
     @GetMapping("/mine")
     @PreAuthorize("isAuthenticated()")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Lister les adresses du propriétaire connecté", description = "Renvoie toutes les adresses créées par l'utilisateur connecté.")
+    @Operation(
+            summary = "Lister les adresses du propriétaire connecté",
+            description = "Renvoie toutes les adresses créées par l'utilisateur connecté."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Liste d'adresses de l'utilisateur",
                     content = @Content(schema = @Schema(implementation = AddressResponse.class))),
@@ -168,9 +203,24 @@ public class AddressController {
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Mettre à jour la description ou le type d'une adresse (propriétaire uniquement)", description = "Le code et la position sont immuables (400 si fournis ou si l'adresse est archivée/suspendue).")
+    @Operation(
+            summary = "Mettre à jour la description ou le type d'une adresse (propriétaire uniquement)",
+            description = "Le code et la position sont immuables (400 si fournis ou si l'adresse est archivée/suspendue)."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Adresse mise à jour",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Modification interdite (code/position immuables ou adresse inactive)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Adresse introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<AddressResponse> updateAddress(
-            @PathVariable java.util.UUID id,
+            @Parameter(description = "Identifiant UUID de l'adresse") @PathVariable java.util.UUID id,
             @Valid @RequestBody sn.samaadresse.dto.UpdateAddressRequest request,
             Principal principal
     ) {
@@ -182,17 +232,24 @@ public class AddressController {
     @PatchMapping("/{id}/visibility")
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Modifier la visibilité d'une adresse dans l'annuaire (propriétaire uniquement)", description = "Réservé au propriétaire de l'adresse (403 sinon). Met à jour les options de publication dans l'annuaire.")
+    @Operation(
+            summary = "Modifier la visibilité d'une adresse dans l'annuaire (propriétaire uniquement)",
+            description = "Réservé au propriétaire de l'adresse (403 sinon). Met à jour les options de publication dans l'annuaire."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Visibilité mise à jour avec succès",
                     content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Adresse inactive",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "Adresse non trouvée",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<AddressResponse> updateVisibility(
-            @PathVariable java.util.UUID id,
+            @Parameter(description = "Identifiant UUID de l'adresse") @PathVariable java.util.UUID id,
             @RequestBody sn.samaadresse.dto.UpdateVisibilityRequest request,
             Principal principal
     ) {
@@ -204,9 +261,22 @@ public class AddressController {
     @DeleteMapping("/{id}/photo")
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Supprimer la photo de façade d'une adresse (propriétaire uniquement)", description = "Retire la photo de l'adresse et supprime le fichier du disque.")
+    @Operation(
+            summary = "Supprimer la photo de façade d'une adresse (propriétaire uniquement)",
+            description = "Retire la photo de l'adresse et la supprime du stockage (disque ou base de données)."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Photo supprimée",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Adresse introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<AddressResponse> deleteAddressPhoto(
-            @PathVariable java.util.UUID id,
+            @Parameter(description = "Identifiant UUID de l'adresse") @PathVariable java.util.UUID id,
             Principal principal
     ) {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
@@ -217,9 +287,24 @@ public class AddressController {
     @PostMapping("/{id}/archive")
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Archiver une adresse (propriétaire uniquement)", description = "Passe le statut de l'adresse à ARCHIVED. La fiche publique et le QR code renvoient alors 410 Gone.")
+    @Operation(
+            summary = "Archiver une adresse (propriétaire uniquement)",
+            description = "Passe le statut de l'adresse à ARCHIVED. La fiche publique et le QR code renvoient alors 410 Gone."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Adresse archivée",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Opération invalide sur le statut actuel",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Adresse introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<AddressResponse> archiveAddress(
-            @PathVariable java.util.UUID id,
+            @Parameter(description = "Identifiant UUID de l'adresse") @PathVariable java.util.UUID id,
             Principal principal
     ) {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
@@ -230,9 +315,24 @@ public class AddressController {
     @PostMapping("/{id}/restore")
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Restaurer une adresse archivée (propriétaire uniquement)", description = "Réactive une adresse ARCHIVED vers ACTIVE. Interdit (400) si l'adresse est SUSPENDED.")
+    @Operation(
+            summary = "Restaurer une adresse archivée (propriétaire uniquement)",
+            description = "Réactive une adresse ARCHIVED vers ACTIVE. Interdit (400) si l'adresse est SUSPENDED."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Adresse restaurée",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Restauration interdite (adresse non archivée ou suspendue)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Non authentifié",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Adresse introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     public ResponseEntity<AddressResponse> restoreAddress(
-            @PathVariable java.util.UUID id,
+            @Parameter(description = "Identifiant UUID de l'adresse") @PathVariable java.util.UUID id,
             Principal principal
     ) {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
@@ -241,13 +341,6 @@ public class AddressController {
     }
 
     private String extractClientIp(jakarta.servlet.http.HttpServletRequest request) {
-        if (request == null) {
-            return "0.0.0.0";
-        }
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "0.0.0.0";
+        return sn.samaadresse.security.ClientIpResolver.resolve(request);
     }
 }

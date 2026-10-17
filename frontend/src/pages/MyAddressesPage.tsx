@@ -13,6 +13,9 @@ import { AddressPlate } from '../components/AddressPlate';
 import { ShareAddress } from '../components/ShareAddress';
 import { formatMyAddressesSubtitle } from '../utils/myAddresses';
 import { useOnlineStatus } from '../context/OnlineStatusContext';
+import { syncManager } from '../utils/syncManager';
+import { getDrafts } from '../utils/offlineDb';
+import type { OfflineDraft } from '../utils/offlineDb';
 import {
   Plus,
   Loader2,
@@ -30,11 +33,15 @@ import {
   ShieldAlert,
   X,
   CheckCircle2,
+  WifiOff,
 } from 'lucide-react';
 
 export const MyAddressesPage: React.FC = () => {
   const { isOnline } = useOnlineStatus();
   const [addresses, setAddresses] = useState<AddressResponse[]>([]);
+  const [drafts, setDrafts] = useState<OfflineDraft[]>([]);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [codeChangedNotification, setCodeChangedNotification] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [uploadingAddressId, setUploadingAddressId] = useState<string | null>(null);
@@ -61,8 +68,14 @@ export const MyAddressesPage: React.FC = () => {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const fetchAddresses = async () => {
-    setLoading(true);
+  const fetchAddresses = async (silent = false) => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setLoading(false);
+      return;
+    }
+    if (!silent) {
+      setLoading(true);
+    }
     setErrorMsg(null);
     try {
       const data = await getMyAddresses();
@@ -78,9 +91,58 @@ export const MyAddressesPage: React.FC = () => {
     }
   };
 
+  const loadDrafts = async () => {
+    try {
+      const list = await getDrafts();
+      setDrafts(list);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
-    fetchAddresses();
+    fetchAddresses(false);
+    loadDrafts();
+
+    const unsubscribe = syncManager.subscribe((event) => {
+      if (event.type === 'SYNC_START') {
+        setIsSyncing(true);
+      } else if (event.type === 'SYNC_PROGRESS') {
+        loadDrafts();
+      } else if (event.type === 'SYNC_SUCCESS') {
+        if (event.draftId) {
+          setDrafts((prev) => prev.filter((d) => d.id !== event.draftId));
+        } else {
+          loadDrafts();
+        }
+        if (event.address) {
+          setAddresses((prev) => {
+            if (prev.some((a) => a.id === event.address!.id || a.code === event.address!.code)) {
+              return prev;
+            }
+            return [event.address!, ...prev];
+          });
+          showToast(`Adresse ${event.address.code} synchronisée !`, 'success');
+        }
+      } else if (event.type === 'CODE_CHANGED') {
+        if (event.message) {
+          setCodeChangedNotification(event.message);
+        }
+      } else if (event.type === 'SYNC_COMPLETE') {
+        setIsSyncing(false);
+        loadDrafts();
+        fetchAddresses(true);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
+
+  const handleSyncNow = async () => {
+    await syncManager.syncNow();
+    await loadDrafts();
+    await fetchAddresses(true);
+  };
 
   // Fermer le menu Actions sur Échap ou clic extérieur
   useEffect(() => {
@@ -250,7 +312,7 @@ export const MyAddressesPage: React.FC = () => {
           </h1>
           <p className="text-xs sm:text-sm text-[#5C4D44] mt-1 font-medium min-h-[20px]">
             {loading ? (
-              <span className="inline-block w-28 h-4 bg-[#E6DDD0] rounded animate-pulse" />
+              <span className="inline-block w-28 h-4 bg-[#E6DDD0] rounded animate-pulse align-middle" />
             ) : !errorMsg && addresses.length > 0 ? (
               formatMyAddressesSubtitle(activeAddresses.length, archivedAddresses.length)
             ) : null}
@@ -265,6 +327,116 @@ export const MyAddressesPage: React.FC = () => {
           <span>Nouvelle adresse</span>
         </Link>
       </div>
+
+      {/* Notification de code réassigné */}
+      {codeChangedNotification && (
+        <div
+          role="status"
+          className="mt-2 mb-6 px-4 py-3.5 rounded-xl bg-[#1D528F]/10 border border-[#1D528F]/30 text-[#1D528F] text-xs sm:text-sm font-medium flex items-center justify-between gap-4 shadow-[0_1px_0_rgba(35,26,21,0.04)]"
+        >
+          <div className="flex items-start sm:items-center gap-2.5 leading-relaxed">
+            <RefreshCw className="w-4 h-4 shrink-0 mt-0.5 sm:mt-0" />
+            <span>{codeChangedNotification}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCodeChangedNotification(null)}
+            className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#1D528F]/30 text-xs font-bold text-[#1D528F] hover:bg-[#1D528F]/10 transition shrink-0 inline-flex items-center justify-center touch-target cursor-pointer"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
+
+      {/* Section en tête de liste : En attente d'envoi (N) */}
+      {drafts.length > 0 && (
+        <section
+          aria-labelledby="drafts-heading"
+          className="mb-6 p-4 rounded-xl bg-[#FBF9F5] border border-[#D4CEBF] space-y-3"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#E6DDD0] pb-2.5">
+            <div className="flex items-center gap-2">
+              <WifiOff className="w-4 h-4 text-[#8A3112]" />
+              <h2 id="drafts-heading" className="text-sm font-bold text-[#231A15]">
+                En attente d'envoi ({drafts.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={handleSyncNow}
+              disabled={!isOnline || isSyncing}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#231A15] hover:bg-[#3D2E24] text-white text-xs font-bold transition disabled:opacity-50 min-h-[36px] cursor-pointer"
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Envoi en cours...</span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Envoyer maintenant</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {drafts.map((draft) => {
+              const displayCode = draft.reservedCode || `${draft.zone}-${draft.quartier}-????`;
+              const formattedDate = new Date(draft.createdAt).toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              });
+              return (
+                <div
+                  key={draft.id}
+                  className="p-3 bg-[#FFFFFF] rounded-lg border border-[#E6DDD0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                >
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span className="font-mono text-[11px] sm:text-xs font-bold text-[#231A15] whitespace-nowrap shrink-0">
+                        {displayCode}
+                      </span>
+                      <span className="text-[11px] text-[#5C4D44] truncate">
+                        • {draft.description || 'Sans description'}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#8C8272]">
+                      Capturée le {formattedDate}
+                    </p>
+                    {draft.lastError && (
+                      <p className="text-[11px] text-[#991B1B]">{draft.lastError}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {draft.status === 'SYNCING' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1D528F] bg-[#1D528F]/10 px-2 py-0.5 rounded whitespace-nowrap">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Envoi en cours</span>
+                      </span>
+                    )}
+                    {draft.status === 'PENDING' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8A3112] bg-[#F2ECE1] px-2 py-0.5 rounded whitespace-nowrap">
+                        <span>En attente</span>
+                      </span>
+                    )}
+                    {draft.status === 'FAILED' && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#991B1B] bg-[#FEF2F2] px-2 py-0.5 rounded whitespace-nowrap">
+                        <span>Échec</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Message d'archivage récent avec bouton "Annuler" */}
       {recentlyArchived && (
@@ -299,8 +471,8 @@ export const MyAddressesPage: React.FC = () => {
         </div>
       )}
 
-      {/* Onglets "Actives (n)" / "Archivées (n)" */}
-      {!loading && !errorMsg && addresses.length > 0 && (
+      {/* Onglets "Actives (n)" / "Archivées (n)" — toujours rendus en chargement pour éviter tout CLS */}
+      {(loading || (!errorMsg && addresses.length > 0)) && (
         <div
           role="tablist"
           aria-label="Filtrer par état des adresses"
@@ -317,7 +489,7 @@ export const MyAddressesPage: React.FC = () => {
                 : 'border-transparent text-[#5C4D44] hover:text-[#231A15]'
             }`}
           >
-            Actives ({activeAddresses.length})
+            Actives ({loading ? '…' : activeAddresses.length})
           </button>
           <button
             type="button"
@@ -330,14 +502,14 @@ export const MyAddressesPage: React.FC = () => {
                 : 'border-transparent text-[#5C4D44] hover:text-[#231A15]'
             }`}
           >
-            Archivées ({archivedAddresses.length})
+            Archivées ({loading ? '…' : archivedAddresses.length})
           </button>
         </div>
       )}
 
-      {/* Bannière unique d'aide pour les photos de façade (si au moins 1 adresse active n'a pas de photo) */}
-      {!loading && !errorMsg && activeTab === 'ACTIVE' && hasAddressWithoutPhoto && (
-        <div className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-xs font-medium text-[#231A15] flex items-center gap-2.5 mb-6 shadow-[0_1px_0_rgba(35,26,21,0.04)]">
+      {/* Bannière unique d'aide pour les photos de façade (hauteur réservée pendant le chargement pour CLS = 0) */}
+      {(loading || (!errorMsg && activeTab === 'ACTIVE' && hasAddressWithoutPhoto)) && (
+        <div className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-xs font-medium text-[#231A15] flex items-center gap-2.5 mb-6 shadow-[0_1px_0_rgba(35,26,21,0.04)] min-h-[46px]">
           <ImageIcon className="w-4 h-4 text-[#8A3112] shrink-0" />
           <span>Une photo de la façade aide à retrouver l'adresse.</span>
         </div>
@@ -353,12 +525,12 @@ export const MyAddressesPage: React.FC = () => {
           </p>
         </div>
       ) : loading ? (
-        /* ÉTAT DE CHARGEMENT : Squelettes dimensionnés exactement à la taille des cartes réelles */
+        /* ÉTAT DE CHARGEMENT : 6 squelettes dimensionnés à la taille des cartes réelles */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Chargement des adresses">
-          {[1, 2, 3, 4].map((n) => (
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <div
               key={n}
-              className="rounded-xl border border-[#D4CEBF] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] p-2.5 sm:p-3 flex flex-col justify-between gap-2 h-[185px] sm:h-[190px] animate-pulse"
+              className="rounded-xl border border-[#D4CEBF] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] p-2.5 sm:p-3 flex flex-col justify-between gap-2 min-h-[196px] animate-pulse"
             >
               <div className="flex gap-2.5 items-start">
                 <div className="w-16 h-16 min-w-16 min-h-16 aspect-square rounded-lg bg-[#F2ECE1] shrink-0" />
@@ -368,7 +540,7 @@ export const MyAddressesPage: React.FC = () => {
                   <div className="h-3 bg-[#F2ECE1] rounded w-1/3" />
                 </div>
               </div>
-              <div className="pt-2 border-t border-[#E6DDD0] flex items-center justify-between">
+              <div className="pt-2 border-t border-[#E6DDD0] flex items-center justify-between min-h-[44px]">
                 <div className="h-4 bg-[#E6DDD0] rounded w-32" />
                 <div className="h-6 bg-[#E6DDD0] rounded w-8" />
               </div>
@@ -384,7 +556,7 @@ export const MyAddressesPage: React.FC = () => {
           </div>
           <button
             type="button"
-            onClick={fetchAddresses}
+            onClick={() => fetchAddresses(false)}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition cursor-pointer touch-target shrink-0"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -467,7 +639,7 @@ export const MyAddressesPage: React.FC = () => {
             return (
               <div
                 key={address.id}
-                className="rounded-xl border border-[#8C8272] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] p-2.5 sm:p-3 flex flex-col justify-between gap-2 relative"
+                className="rounded-xl border border-[#8C8272] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] p-2.5 sm:p-3 flex flex-col justify-between gap-2 relative min-h-[196px]"
               >
                 {/* Mention de suspension par la modération le cas échéant */}
                 {isSuspended && (
@@ -484,6 +656,8 @@ export const MyAddressesPage: React.FC = () => {
                       <img
                         src={photoSrc}
                         alt={`Façade ${address.code}`}
+                        width={64}
+                        height={64}
                         className="w-full h-full object-cover"
                         loading="lazy"
                         onError={() => setFailedPhotos((prev) => ({ ...prev, [address.id]: true }))}

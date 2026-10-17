@@ -1,0 +1,28 @@
+@startuml 11-seq-annuaire
+!include _style.puml
+title Séquence — Recherche dans l'annuaire
+autonumber
+actor "Visiteur" as V
+participant "PWA (React)" as UI
+participant "API (DirectoryController /\nAddressService)" as API
+database "PostgreSQL" as DB
+
+V -> UI : Saisit une recherche, choisit un quartier / un type
+UI -> UI : Anti-rebond 300 ms, état synchronisé dans l'URL
+alt hors ligne
+  UI --> V : « La recherche nécessite une connexion »
+else en ligne
+  UI -> API : GET /api/public/directory\n?q&quartier&type&page&size
+  API -> API : Limitation 30 requêtes/min/IP (RateLimiterService)\nq ≥ 2 caractères (ou un filtre), size ≤ 20, page ≤ 10
+  alt limite atteinte
+    API --> UI : 429
+    UI --> V : « Trop de recherches, réessayez dans une minute »
+  else requête valide
+    API -> DB : Adresses ACTIVE et listed = true\n(code sans tirets, searchText normalisé sans accents)
+    note right of DB : Le nom du propriétaire n'est cherché et\nrenvoyé que si showOwnerName = true.
+    DB --> API : DirectoryPageResponse
+    API --> UI : code, zone, quartier, locationType, description (≤ 120 car.),\nphotoUrl, ownerDisplayName (si autorisé)
+    UI --> V : Cartes de résultats + pagination
+  end
+end
+@enduml

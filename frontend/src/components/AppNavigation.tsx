@@ -178,7 +178,7 @@ export const AppNavigation: React.FC = () => {
             <Link
               to="/addresses/new"
               aria-current={pathname === '/addresses/new' ? 'page' : undefined}
-              aria-label="Nouvelle adresse"
+              aria-label="Créer une nouvelle adresse"
               className="flex flex-col items-center justify-center -mt-4 touch-target group"
             >
               <div className="w-10 h-10 rounded-full bg-[#B84A24] text-white flex items-center justify-center shadow-[0_3px_6px_rgba(184,74,36,0.35)] group-active:scale-95 transition">

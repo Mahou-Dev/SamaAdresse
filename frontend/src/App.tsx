@@ -15,15 +15,20 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { ReloadPrompt } from './components/ReloadPrompt';
 
 // Lazy loading des routes secondaires et volumineuses (Partie 0.7)
-const MyAddressesPage = lazy(() => import('./pages/MyAddressesPage').then(m => ({ default: m.MyAddressesPage })));
-const NewAddressPage = lazy(() => import('./pages/NewAddressPage').then(m => ({ default: m.NewAddressPage })));
+const initialPathname = typeof window !== 'undefined' ? window.location.pathname : '';
+const myAddressesPreload = initialPathname.startsWith('/addresses/mine') ? import('./pages/MyAddressesPage') : null;
+const newAddressPreload = initialPathname.startsWith('/addresses/new') ? import('./pages/NewAddressPage') : null;
+const directoryPreload = initialPathname.startsWith('/annuaire') ? import('./pages/DirectoryPage') : null;
+
+const MyAddressesPage = lazy(() => (myAddressesPreload ?? import('./pages/MyAddressesPage')).then(m => ({ default: m.MyAddressesPage })));
+const NewAddressPage = lazy(() => (newAddressPreload ?? import('./pages/NewAddressPage')).then(m => ({ default: m.NewAddressPage })));
 const EditAddressPage = lazy(() => import('./pages/EditAddressPage').then(m => ({ default: m.EditAddressPage })));
 const AdminPage = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
 const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
-const DirectoryPage = lazy(() => import('./pages/DirectoryPage').then(m => ({ default: m.DirectoryPage })));
+const DirectoryPage = lazy(() => (directoryPreload ?? import('./pages/DirectoryPage')).then(m => ({ default: m.DirectoryPage })));
 
 const RouteLoadingFallback = () => (
-  <div className="max-w-4xl mx-auto px-4 py-8 space-y-4 animate-pulse">
+  <div className="max-w-5xl mx-auto w-full px-4 py-8 space-y-4 animate-pulse min-h-[1200px]">
     <div className="h-8 bg-[#E6DDD0] rounded w-1/3" />
     <div className="h-32 bg-[#E6DDD0]/60 rounded-xl" />
   </div>

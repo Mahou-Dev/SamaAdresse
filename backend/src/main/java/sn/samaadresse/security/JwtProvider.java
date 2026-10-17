@@ -4,8 +4,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import sn.samaadresse.domain.entity.User;
 
 import javax.crypto.SecretKey;
@@ -19,11 +23,29 @@ public class JwtProvider {
     private final SecretKey key;
     private final long accessTokenExpirationMs;
 
+    public JwtProvider(String secret, long accessTokenExpirationMs) {
+        this(secret, accessTokenExpirationMs, null);
+    }
+
+    @Autowired
     public JwtProvider(
-        @Value("${jwt.secret:samaadresse-secret-key-must-be-at-least-256-bits-long-for-hmac-sha-signing!}") String secret,
-        @Value("${jwt.access-token-expiration-ms:900000}") long accessTokenExpirationMs
+        @Value("${jwt.secret:}") String secret,
+        @Value("${jwt.access-token-expiration-ms:900000}") long accessTokenExpirationMs,
+        Environment environment
     ) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        boolean isProd = environment != null && environment.acceptsProfiles(Profiles.of("prod"));
+        if (StringUtils.hasText(secret)) {
+            byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+            if (secretBytes.length < 32) {
+                throw new IllegalStateException("JWT_SECRET doit contenir au moins 32 octets (256 bits).");
+            }
+            this.key = Keys.hmacShaKeyFor(secretBytes);
+        } else if (isProd) {
+            throw new IllegalStateException("JWT_SECRET est obligatoire en profil prod et doit contenir au moins 32 octets.");
+        } else {
+            // Clé éphémère aléatoire en mémoire pour les tests ou le développement sans JWT_SECRET défini
+            this.key = Jwts.SIG.HS256.key().build();
+        }
         this.accessTokenExpirationMs = accessTokenExpirationMs;
     }
 

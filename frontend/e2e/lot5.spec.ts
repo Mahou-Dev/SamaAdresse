@@ -14,12 +14,12 @@ async function loginUser(page: any, email: string = 'demo@samaadresse.sn', pass:
 test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
 
   test('Parcours A : Consultation hors ligne d\'une fiche déjà vue (données, photo, bandeau, badge)', async ({ context, page }) => {
-    const code = 'ZIG-KBG-8454';
+    const code = 'ZIG-KBG-4271';
     // 1. Navigation vers /a/{code} en ligne
     await page.goto(`/a/${code}`);
     await page.waitForSelector(`text=${code}`);
     await expect(page.locator(`text=${code}`).first()).toBeVisible();
-    await expect(page.locator('text=Chez Amadou')).toBeVisible();
+    await expect(page.locator('text=Maison familiale au portail vert').first()).toBeVisible();
 
     // Attente brève pour assurer la persistance dans le cache
     await page.waitForTimeout(1000);
@@ -33,14 +33,14 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
     // 4. Assertions
     // Fiche affichée (code, description)
     await expect(page.locator(`text=${code}`).first()).toBeVisible();
-    await expect(page.locator('text=Chez Amadou')).toBeVisible();
+    await expect(page.locator('text=Maison familiale au portail vert').first()).toBeVisible();
 
     // Bandeau hors ligne présent
     const offlineBanner = page.locator('text=Vous êtes hors ligne');
     await expect(offlineBanner).toBeVisible();
 
     // Badge de fraîcheur présent
-    const freshnessBadge = page.locator('text=hors ligne');
+    const freshnessBadge = page.locator('text=Version enregistrée');
     await expect(freshnessBadge.first()).toBeVisible();
 
     // Lien d'itinéraire préservé
@@ -53,8 +53,8 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
 
   test('Parcours B : Consultation hors ligne d\'une fiche JAMAIS vue', async ({ context, page }) => {
     // 1. Visite préalable d'une fiche pour peupler le cache
-    await page.goto('/a/ZIG-KBG-8454');
-    await page.waitForSelector('text=ZIG-KBG-8454');
+    await page.goto('/a/ZIG-KBG-4271');
+    await page.waitForSelector('text=ZIG-KBG-4271');
     await page.waitForTimeout(500);
 
     // 2. Coupure réseau
@@ -68,12 +68,12 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
     await expect(page.locator('text=Cette page n\'est pas disponible hors ligne')).toBeVisible();
 
     // Liens vers fiches déjà consultées affichés et fonctionnels
-    const cachedLink = page.locator('a:has-text("ZIG-KBG-8454")');
+    const cachedLink = page.locator('a:has-text("ZIG-KBG-4271")');
     await expect(cachedLink).toBeVisible();
 
     // Clic vers la fiche en cache fonctionne
     await cachedLink.click();
-    await expect(page.locator('text=Chez Amadou')).toBeVisible();
+    await expect(page.locator('text=Maison familiale au portail vert').first()).toBeVisible();
 
     await context.setOffline(false);
   });
@@ -136,7 +136,7 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
     });
   });
 
-  test('Parcours D : Création hors ligne bloquée honnêtement', async ({ context, page }) => {
+  test('Parcours D : Wizard hors ligne avec session (Lot 7)', async ({ context, page }) => {
     // 1. Initialiser le PWA shell en ligne et connecter l'utilisateur
     await loginUser(page, 'demo@samaadresse.sn');
     await page.goto('/');
@@ -149,13 +149,8 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
     // 3. Navigation vers /addresses/new
     await page.goto('/addresses/new');
 
-    // 4. Assertions
-    // Message sobre présent
-    await expect(page.locator('text=La création d\'une adresse nécessite une connexion.')).toBeVisible();
-
-    // Bouton de validation désactivé
-    const continueBtn = page.locator('button:has-text("Continuer vers les détails")');
-    await expect(continueBtn).toBeDisabled();
+    // 4. Assertions (Lot 7 : le wizard N'EST PLUS BLOQUÉ, bandeau discret visible)
+    await expect(page.locator('text=Mode hors ligne · les nouvelles adresses seront transmises à votre retour en ligne')).toBeVisible();
 
     await context.setOffline(false);
   });
@@ -229,8 +224,10 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
 
     // 2. Service Worker enregistré
     await page.goto('/');
+    await page.waitForSelector('h1');
     const swRegistered = await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) return false;
+      await navigator.serviceWorker.ready;
       const registrations = await navigator.serviceWorker.getRegistrations();
       return registrations.length > 0;
     });

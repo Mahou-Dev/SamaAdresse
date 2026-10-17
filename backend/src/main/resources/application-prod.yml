@@ -1,0 +1,92 @@
+# =============================================================================
+# application-prod.yml — Configuration de production SamaAdresse (aucun secret)
+# =============================================================================
+spring:
+  datasource:
+    url: ${DB_URL:}
+    username: ${DB_USER:}
+    password: ${DB_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      max-lifetime: 540000
+      idle-timeout: 300000
+      connection-timeout: 30000
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+
+server:
+  port: ${PORT:8082}
+  forward-headers-strategy: framework
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/manifest+json,image/svg+xml
+    min-response-size: 1024
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+app:
+  cookie:
+    secure: ${COOKIE_SECURE:true}
+
+storage:
+  type: ${PHOTO_STORAGE:${STORAGE_TYPE:db}}
+
+demo:
+  seed: ${DEMO_SEED:false}
+  password: ${DEMO_PASSWORD:}
+
+admin:
+  email: ${ADMIN_EMAIL:}
+  password: ${ADMIN_PASSWORD:}
+
+frontend:
+  base:
+    url: ${FRONTEND_BASE_URL}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-ms: ${JWT_ACCESS_EXP:900000}
+  refresh-token-expiration-ms: ${JWT_REFRESH_EXP:604800000}
+
+sms:
+  provider: ${SMS_PROVIDER:mock}
+  timeout: ${SMS_TIMEOUT:5s}
+  daily-cap: ${SMS_DAILY_CAP:200}
+  user-hourly-limit: ${SMS_USER_HOURLY_LIMIT:5}
+  recipient-daily-limit: ${SMS_RECIPIENT_DAILY_LIMIT:3}
+  twilio:
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    from-number: ${TWILIO_FROM:${TWILIO_FROM_NUMBER:}}
+    api-base-url: ${TWILIO_API_BASE_URL:https://api.twilio.com}
+  sendflash:
+    api-url: ${SENDFLASH_API_URL:https://api.sendflash.com/v1/sms/send}
+    api-key: ${SENDFLASH_API_KEY:}
+    sender-id: ${SENDFLASH_SENDER_ID:SamaAdresse}
+
+geo:
+  fallback-max-distance-km: ${GEO_FALLBACK_MAX_DISTANCE_KM:3.0}
+
+ors:
+  api-key: ${ORS_API_KEY:}
+  base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}
+
+logging:
+  level:
+    root: INFO
+    sn.samaadresse: INFO

@@ -1,0 +1,1400 @@
+{
+  "info": {
+    "name": "SamaAdresse API",
+    "_postman_id": "00000000-0000-4000-8000-5a616d614164",
+    "description": "API REST de la plateforme citoyenne d'adressage numérique par géolocalisation GPS et QR Code (Ziguinchor, Dakar, Saint-Louis).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "demoEmail",
+      "value": "demo@samaadresse.sn",
+      "type": "string"
+    },
+    {
+      "key": "demoPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "demoCode",
+      "value": "ZIG-KBG-4271",
+      "type": "string"
+    },
+    {
+      "key": "demoAddressId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Parcours démo",
+      "description": "Parcours complet automatisé : connexion (sauvegarde du jeton), création d'adresse, résolution publique, recherche annuaire, signalement public et calcul d'itinéraire.",
+      "item": [
+        {
+          "name": "1. Connexion (sauvegarde du jeton)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Connexion réussie (200)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.accessToken).to.be.a('string');",
+                  "    pm.collectionVariables.set('token', jsonData.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{demoEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "2. Création d'adresse",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Adresse créée (201)', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.code).to.match(/^ZIG-[A-Z]{3}-\\d{4}$/);",
+                  "    pm.collectionVariables.set('demoCode', jsonData.code);",
+                  "    pm.collectionVariables.set('demoAddressId', jsonData.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 12.5612,\n  \"longitude\": -16.2725,\n  \"description\": \"Maison d\\u00e9mo Newman, portail bleu \\u00e0 Kand\\u00e9\",\n  \"locationType\": \"MAISON\",\n  \"listed\": true,\n  \"showOwnerName\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Résolution publique du code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Fiche publique résolue (200)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.code).to.eql(pm.collectionVariables.get('demoCode'));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{{demoCode}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{{demoCode}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. Recherche dans l'annuaire",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Recherche annuaire valide (200)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.content).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/directory?q=Newman&quartier=KBG",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "directory"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Newman"
+                },
+                {
+                  "key": "quartier",
+                  "value": "KBG"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. Signalement public",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Signalement enregistré (202)', function () {",
+                  "    pm.response.to.have.status(202);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"POSITION_INCORRECTE\",\n  \"comment\": \"V\\u00e9rification automatis\\u00e9e du parcours d\\u00e9mo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/public/addresses/{{demoCode}}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "addresses",
+                "{{demoCode}}",
+                "reports"
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. Calcul d'itinéraire",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Itinéraire calculé (200) ou clé ORS absente (503)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 503]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/route?fromLat=12.5835&fromLon=-16.2712&code={{demoCode}}&profile=driving-car",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "route"
+              ],
+              "query": [
+                {
+                  "key": "fromLat",
+                  "value": "12.5835"
+                },
+                {
+                  "key": "fromLon",
+                  "value": "-16.2712"
+                },
+                {
+                  "key": "code",
+                  "value": "{{demoCode}}"
+                },
+                {
+                  "key": "profile",
+                  "value": "driving-car"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Administration & Modération",
+      "item": [
+        {
+          "name": "POST /api/admin/addresses/{id}/reinstate — Réactiver une adresse suspendue",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/addresses/{id}/reinstate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "addresses",
+                "{id}",
+                "reinstate"
+              ],
+              "query": []
+            },
+            "description": "Repasse l'adresse en ACTIVE et écrit une entrée dans admin_actions.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /api/admin/addresses/{id}/suspend — Suspendre une adresse (motif obligatoire)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/addresses/{id}/suspend",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "addresses",
+                "{id}",
+                "suspend"
+              ],
+              "query": []
+            },
+            "description": "Passe l'adresse en SUSPENDED (410 Gone en public) et écrit une entrée dans admin_actions.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /api/admin/reports — Lister les signalements d'adresses (paginé)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "reports"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Statut du signalement (OPEN, RESOLVED, DISMISSED)"
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Index de page (base 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "",
+                  "description": "Taille de page"
+                }
+              ]
+            },
+            "description": "Filtrable par statut OPEN, RESOLVED ou DISMISSED.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/admin/reports/{id} — Mettre à jour le statut d'un signalement (RESOLVED ou DISMISSED)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "reports",
+                "{id}"
+              ],
+              "query": []
+            },
+            "description": "Met à jour le signalement et écrit une entrée dans admin_actions.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /api/admin/reset-rate-limits — Réinitialiser les limiteurs de débit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reset-rate-limits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "reset-rate-limits"
+              ],
+              "query": []
+            },
+            "description": "Vide le cache des limiteurs de débit en mémoire.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adresses Géolocalisées",
+      "item": [
+        {
+          "name": "POST /api/addresses — Créer une nouvelle adresse géolocalisée (JSON)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses"
+              ],
+              "query": []
+            },
+            "description": "Résout automatiquement la zone et le quartier à partir des coordonnées GPS, puis génère un code court immuable (ex: ZIG-KBG-4271). Supporte l'idempotence via clientRequestId et la consommation d'un reservedCode.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "GET /api/addresses/mine — Lister les adresses du propriétaire connecté",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/mine",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "mine"
+              ],
+              "query": []
+            },
+            "description": "Renvoie toutes les adresses créées par l'utilisateur connecté.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/addresses/{code} — Résoudre une adresse publique par son code court",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{code}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{code}"
+              ],
+              "query": []
+            },
+            "description": "Endpoint public sans authentification. Renvoie la fiche adresse si elle existe et est active (410 Gone si archivée ou suspendue)."
+          }
+        },
+        {
+          "name": "GET /api/addresses/{code}/qrcode — Générer le QR code d'une adresse publique",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{code}/qrcode",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{code}",
+                "qrcode"
+              ],
+              "query": []
+            },
+            "description": "Génère à la volée une image PNG du QR Code (300x300 px) encodant l'URL publique complète de la fiche adresse."
+          }
+        },
+        {
+          "name": "PATCH /api/addresses/{id} — Mettre à jour la description ou le type d'une adresse (propriétaire uniquement)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{id}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{id}"
+              ],
+              "query": []
+            },
+            "description": "Le code et la position sont immuables (400 si fournis ou si l'adresse est archivée/suspendue).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /api/addresses/{id}/archive — Archiver une adresse (propriétaire uniquement)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{id}/archive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{id}",
+                "archive"
+              ],
+              "query": []
+            },
+            "description": "Passe le statut de l'adresse à ARCHIVED. La fiche publique et le QR code renvoient alors 410 Gone.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /api/addresses/{id}/photo — Uploader une photo de façade pour une adresse existante",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{id}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{id}",
+                "photo"
+              ],
+              "query": []
+            },
+            "description": "Associe une photo de façade à une adresse existante (propriétaire ou ADMIN). Validations : JPEG/PNG/WebP par magic bytes, max 5 Mo.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "DELETE /api/addresses/{id}/photo — Supprimer la photo de façade d'une adresse (propriétaire uniquement)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{id}/photo",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{id}",
+                "photo"
+              ],
+              "query": []
+            },
+            "description": "Retire la photo de l'adresse et la supprime du stockage (disque ou base de données).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /api/addresses/{id}/restore — Restaurer une adresse archivée (propriétaire uniquement)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{id}/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{id}",
+                "restore"
+              ],
+              "query": []
+            },
+            "description": "Réactive une adresse ARCHIVED vers ACTIVE. Interdit (400) si l'adresse est SUSPENDED.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "PATCH /api/addresses/{id}/visibility — Modifier la visibilité d'une adresse dans l'annuaire (propriétaire uniquement)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{id}/visibility",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{id}",
+                "visibility"
+              ],
+              "query": []
+            },
+            "description": "Réservé au propriétaire de l'adresse (403 sinon). Met à jour les options de publication dans l'annuaire.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Annuaire Public",
+      "item": [
+        {
+          "name": "GET /api/public/directory — Consulter et rechercher dans l'annuaire public",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/directory",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "directory"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Terme de recherche (code ou mots-clés, min 2 caractères sauf si un filtre est actif)"
+                },
+                {
+                  "key": "quartier",
+                  "value": "",
+                  "description": "Code ou nom de quartier (ex: KBG, BOUCOTTE)"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Type de lieu (MAISON, COMMERCE, INSTITUTION)"
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Index de page (base 0, défaut 0)"
+                },
+                {
+                  "key": "size",
+                  "value": "",
+                  "description": "Taille de page (défaut 12, max 50)"
+                }
+              ]
+            },
+            "description": "Recherche par texte libre (description, quartier, nom si autorisé) ou par code, avec filtrage par quartier et type de lieu. Limité à 30 requêtes par minute par IP."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentification",
+      "item": [
+        {
+          "name": "POST /api/auth/login — Connexion utilisateur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "query": []
+            },
+            "description": "Retourne l'Access Token dans le corps et pose un Refresh Token en Cookie HTTP-Only (SameSite=Strict). Limité à 5 essais/min/IP.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "POST /api/auth/logout — Déconnexion utilisateur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ],
+              "query": []
+            },
+            "description": "Révoque le Refresh Token en base et efface le cookie HttpOnly"
+          }
+        },
+        {
+          "name": "GET /api/auth/me — Profil de l'utilisateur connecté",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ],
+              "query": []
+            },
+            "description": "Route protégée nécessitant l'en-tête Authorization Bearer",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /api/auth/refresh — Rafraîchissement silencieux de l'Access Token via Cookie Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ],
+              "query": []
+            },
+            "description": "Échange le cookie HttpOnly refreshToken contre un nouveau couple Access Token + Refresh Token (rotation)."
+          }
+        },
+        {
+          "name": "POST /api/auth/register — Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "query": []
+            },
+            "description": "Crée un compte utilisateur avec hachage BCrypt (coût 12).",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Itinéraire Public",
+      "item": [
+        {
+          "name": "GET /api/public/route — Calculer un itinéraire vers une adresse géolocalisée",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/route",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "route"
+              ],
+              "query": [
+                {
+                  "key": "fromLat",
+                  "value": "12.5638",
+                  "description": "Latitude GPS du point de départ (au Sénégal)"
+                },
+                {
+                  "key": "fromLon",
+                  "value": "-16.2735",
+                  "description": "Longitude GPS du point de départ (au Sénégal)"
+                },
+                {
+                  "key": "code",
+                  "value": "ZIG-KBG-4271",
+                  "description": "Code court de l'adresse de destination"
+                },
+                {
+                  "key": "profile",
+                  "value": "driving-car",
+                  "description": "Profil de déplacement (driving-car ou foot-walking, défaut driving-car)"
+                }
+              ]
+            },
+            "description": "Proxy vers OpenRouteService. Destination résolue depuis le code. Coordonnées de départ strictement au Sénégal. Limité à 20 requêtes par minute par IP. Aucune coordonnée journalisée."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Partage d'adresse",
+      "item": [
+        {
+          "name": "POST /api/addresses/{code}/share/sms — Envoyer le lien d'une adresse par SMS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/addresses/{code}/share/sms",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "addresses",
+                "{code}",
+                "share",
+                "sms"
+              ],
+              "query": []
+            },
+            "description": "Envoie au destinataire un SMS (GSM-7, < 160 caractères, sans donnée personnelle) :\n`SamaAdresse : adresse ZIG-KBG-4271. Voir la fiche et l'itinéraire : {FRONTEND_BASE_URL}/a/ZIG-KBG-4271`.\n\nRéservé aux utilisateurs connectés (chaque SMS est payant). Limites anti-fraude :\n5 SMS / heure / utilisateur, 3 SMS / 24 h / numéro destinataire, plafond global quotidien (SMS_DAILY_CAP).\nLe numéro destinataire n'est jamais enregistré.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Photos",
+      "item": [
+        {
+          "name": "GET /uploads/{filename} — Récupérer une photo de façade",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/uploads/{filename}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads",
+                "{filename}"
+              ],
+              "query": []
+            },
+            "description": "Sert l'image stockée sur disque (dev) ou en base PostgreSQL bytea (prod) avec Cache-Control: public, max-age=31536000, immutable et ETag."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Réservations de codes d'adresse",
+      "item": [
+        {
+          "name": "GET /api/address-codes/reservations — Obtenir les réservations actives de l'utilisateur",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/address-codes/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "address-codes",
+                "reservations"
+              ],
+              "query": []
+            },
+            "description": "Renvoie la liste de tous les codes réservés actifs et non expirés de l'utilisateur connecté.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /api/address-codes/reservations — Compléter le stock de codes réservés pour une zone",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/address-codes/reservations",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "address-codes",
+                "reservations"
+              ],
+              "query": [
+                {
+                  "key": "zone",
+                  "value": "ZIG",
+                  "description": "Code de zone (ZIG ou DKR)"
+                }
+              ]
+            },
+            "description": "Complète à 3 codes actifs par quartier pour la zone demandée (ZIG ou DKR), dans la limite de 40 réservations actives par utilisateur. Limité à 5 appels par heure.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Santé",
+      "item": [
+        {
+          "name": "GET /api/health — Vérifier la disponibilité du service",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ],
+              "query": []
+            },
+            "description": "Renvoie {\"status\":\"UP\"} immédiatement sans interroger PostgreSQL, afin que le contrôle de santé de Render ne réveille pas l'instance Neon au repos."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signalements Publics",
+      "item": [
+        {
+          "name": "POST /api/public/addresses/{code}/reports — Signaler un problème sur une adresse publique (anonyme)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/public/addresses/{code}/reports",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "public",
+                "addresses",
+                "{code}",
+                "reports"
+              ],
+              "query": []
+            },
+            "description": "Limité à 3 signalements/heure/IP et 1 signalement par adresse par IP par 24 h (clé = hash SHA-256 en mémoire). Renvoie 202 Accepted.",
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

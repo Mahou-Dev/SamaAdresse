@@ -10,18 +10,32 @@ spring:
 
 server:
   port: ${PORT:8082}
+  forward-headers-strategy: framework
   tomcat:
     max-swallow-size: -1
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/manifest+json,image/svg+xml
+    min-response-size: 1024
 
 springdoc:
   api-docs:
     path: /v3/api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    enabled: true
 
 admin:
   email: ${ADMIN_EMAIL:}
   password: ${ADMIN_PASSWORD:}
+
+storage:
+  type: ${STORAGE_TYPE:disk}
+
+demo:
+  seed: ${DEMO_SEED:false}
+  password: ${DEMO_PASSWORD:}
 
 ---
 spring:
@@ -31,8 +45,11 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5434/samaadresse}
     username: ${DB_USER:samaadresse}
-    password: ${DB_PASSWORD:samaadresse_dev}
+    password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -45,7 +62,7 @@ frontend:
     url: ${FRONTEND_BASE_URL:http://localhost:5173}
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-key-at-least-32-chars-long-for-hmac-sha256}
+  secret: ${JWT_SECRET:}
   access-token-expiration-ms: ${JWT_ACCESS_EXP:900000}
   refresh-token-expiration-ms: ${JWT_REFRESH_EXP:604800000}
 
@@ -58,7 +75,12 @@ sms:
   twilio:
     account-sid: ${TWILIO_ACCOUNT_SID:}
     auth-token: ${TWILIO_AUTH_TOKEN:}
-    from-number: ${TWILIO_FROM_NUMBER:}
+    from-number: ${TWILIO_FROM:${TWILIO_FROM_NUMBER:}}
+    api-base-url: ${TWILIO_API_BASE_URL:https://api.twilio.com}
+  sendflash:
+    api-url: ${SENDFLASH_API_URL:https://api.sendflash.com/v1/sms/send}
+    api-key: ${SENDFLASH_API_KEY:}
+    sender-id: ${SENDFLASH_SENDER_ID:SamaAdresse}
 
 upload:
   dir: ${UPLOAD_DIR:./uploads}
@@ -82,12 +104,15 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5434/samaadresse_e2e}
     username: ${DB_USER:samaadresse}
-    password: ${DB_PASSWORD:samaadresse_dev}
+    password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     open-in-view: false
     show-sql: false
 
@@ -96,7 +121,7 @@ frontend:
     url: ${FRONTEND_BASE_URL:http://localhost:5173}
 
 jwt:
-  secret: ${JWT_SECRET:dev-secret-key-at-least-32-chars-long-for-hmac-sha256}
+  secret: ${JWT_SECRET:}
   access-token-expiration-ms: 900000
   refresh-token-expiration-ms: 604800000
 
@@ -116,28 +141,3 @@ ors:
 logging:
   level:
     sn.samaadresse: INFO
-
----
-spring:
-  config:
-    activate:
-      on-profile: prod
-  datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/samaadresse}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
-  jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
-    show-sql: false
-
-frontend:
-  base:
-    url: ${FRONTEND_BASE_URL}
-
-ors:
-  api-key: ${ORS_API_KEY:}
-  base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}

@@ -1,0 +1,48 @@
+@startuml 03a-classes-controleurs-services
+!include _style.puml
+title SamaAdresse — Classes : contrôleurs REST et services (backend)
+left to right direction
+set namespaceSeparator none
+skinparam nodesep 22
+skinparam ranksep 70
+
+package "Contrôleurs REST (sn.samaadresse.controller)" {
+  class AuthController
+  class AddressController
+  class AddressShareController
+  class DirectoryController
+  class RouteController
+  class ReservedCodeController
+  class PublicReportController
+  class AdminModerationController
+  class PhotoController
+  class HealthController
+}
+
+package "Services métier (sn.samaadresse.service)" {
+  class AuthService
+  class AddressService
+  class QrCodeService
+  class AddressShareService
+  class RouteService
+  class ReservedCodeService
+  class ModerationService
+  interface PhotoStorage
+}
+
+AuthController --> AuthService
+AddressController --> AddressService
+AddressController --> QrCodeService
+DirectoryController --> AddressService
+AddressShareController --> AddressShareService
+RouteController --> RouteService
+ReservedCodeController --> ReservedCodeService
+PublicReportController --> ModerationService
+AdminModerationController --> ModerationService
+PhotoController --> PhotoStorage
+
+note bottom of HealthController
+  GET /api/health
+  (sans accès base de données)
+end note
+@enduml

@@ -13,7 +13,8 @@ import java.util.UUID;
         @Index(name = "idx_address_code", columnList = "code", unique = true),
         @Index(name = "idx_address_owner", columnList = "owner_id"),
         @Index(name = "idx_address_status", columnList = "status"),
-        @Index(name = "idx_address_directory", columnList = "status, listed")
+        @Index(name = "idx_address_directory", columnList = "status, listed"),
+        @Index(name = "idx_address_client_request", columnList = "owner_id, client_request_id")
 })
 @Getter
 @Setter
@@ -25,6 +26,9 @@ public class Address {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "client_request_id")
+    private UUID clientRequestId;
 
     @Column(nullable = false, unique = true, updatable = false, length = 20)
     private String code;

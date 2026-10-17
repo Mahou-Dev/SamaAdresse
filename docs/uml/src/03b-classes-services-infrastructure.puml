@@ -1,0 +1,91 @@
+@startuml 03b-classes-services-infrastructure
+!include _style.puml
+title SamaAdresse — Classes : services, infrastructure et persistance (backend)
+left to right direction
+set namespaceSeparator none
+skinparam nodesep 20
+skinparam ranksep 65
+
+package "Services (sn.samaadresse.service)" {
+  class AddressShareService {
+    +sendShareSms(addressId, userId, phone)
+  }
+  class FileStorageService {
+    +storePhoto(file) : String
+    +deletePhoto(url)
+  }
+  class AuthService
+  class AddressService
+  class GeoGridService {
+    +resolve(lat, lon) : ResolutionResult
+  }
+  class AddressCodeGenerator {
+    +generateUniqueCode(zone, quartier) : String
+  }
+  class ReservedCodeService {
+    +reserveCodesForZone(userId, zone)
+  }
+  class RouteService {
+    +calculateRoute(fromLat, fromLon, code, profile)
+  }
+  class ModerationService
+}
+
+package "Infrastructure & Sécurité" {
+  interface SmsProvider {
+    +sendSms(to, message)
+  }
+  class MockSmsProvider
+  class TwilioSmsProvider
+  class SendFlashSmsProvider
+  class SmsRateLimiter
+  interface PhotoStorage {
+    +save(bytes, contentType) : String
+    +load(id) : Optional<StoredPhoto>
+    +delete(id)
+  }
+  class DiskPhotoStorage
+  class DbPhotoStorage
+  class JwtProvider
+  class RateLimiterService
+  class ClientIpResolver
+  class ReportRateLimiter
+}
+
+package "Persistance JPA (sn.samaadresse.repository)" {
+  interface PhotoBlobRepository
+  interface UserRepository
+  interface RefreshTokenRepository
+  interface AddressRepository
+  interface ReservedCodeRepository
+  interface AddressReportRepository
+  interface AdminActionRepository
+}
+
+AddressShareService --> SmsProvider
+AddressShareService --> SmsRateLimiter
+SmsProvider <|.. MockSmsProvider
+SmsProvider <|.. TwilioSmsProvider
+SmsProvider <|.. SendFlashSmsProvider
+
+FileStorageService --> PhotoStorage
+PhotoStorage <|.. DiskPhotoStorage
+PhotoStorage <|.. DbPhotoStorage
+DbPhotoStorage --> PhotoBlobRepository
+
+AuthService --> JwtProvider
+AuthService --> UserRepository
+AuthService --> RefreshTokenRepository
+
+AddressService --> GeoGridService
+AddressService --> AddressCodeGenerator
+AddressService --> FileStorageService
+AddressService --> AddressRepository
+
+ReservedCodeService --> ReservedCodeRepository
+RouteService --> AddressRepository
+
+ModerationService --> ReportRateLimiter
+ModerationService --> AddressReportRepository
+ModerationService --> AdminActionRepository
+@enduml

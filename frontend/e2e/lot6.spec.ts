@@ -19,6 +19,14 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await page.waitForSelector('text=ZIG-KBG-4271');
     await expect(page.locator('text=ZIG-KBG-4271')).toBeVisible();
 
+    // Attendre que le Service Worker soit actif et contrôle la page avant de passer hors ligne
+    await page.evaluate(async () => {
+      if ('serviceWorker' in navigator) {
+        await navigator.serviceWorker.ready;
+      }
+    });
+    await page.waitForTimeout(800);
+
     // Vérifier chargement de police Outfit
     const fontLoadedOnline = await page.evaluate(async () => {
       await document.fonts.ready;
@@ -44,10 +52,10 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
 
     // Captures mobile 360 et desktop 1440
     await page.setViewportSize({ width: 360, height: 780 });
-    await page.screenshot({ path: 'docs/audit/lot6/landing-offline-360.png' });
+    await page.screenshot({ path: '../docs/audit/lot6/landing_360x780_offline.png' });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.screenshot({ path: 'docs/audit/lot6/landing-offline-1440.png' });
+    await page.screenshot({ path: '../docs/audit/lot6/landing_1440x900_offline.png' });
 
     await context.setOffline(false);
   });
@@ -81,17 +89,39 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await page.goto('/annuaire');
     await page.waitForSelector('text=Annuaire public');
 
-    // 1. Recherche avec mot-clé
+    // 1. Recherche avec mot-clé (et vérification placeholder non tronqué à 360 px)
     const searchInput = page.locator('#directory-search-input');
+    await page.setViewportSize({ width: 360, height: 780 });
+    const placeholderFits = await searchInput.evaluate((el: HTMLInputElement) => {
+      const style = window.getComputedStyle(el);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const textWidth = ctx.measureText(el.placeholder).width;
+      const paddingLeft = parseFloat(style.paddingLeft) || 0;
+      const paddingRight = parseFloat(style.paddingRight) || 0;
+      return textWidth <= (el.clientWidth - paddingLeft - paddingRight + 2);
+    });
+    expect(placeholderFits).toBe(true);
     await searchInput.fill('mosquee');
 
     // Vérifier debounce et affichage du résultat
     await page.waitForTimeout(500);
     await expect(page.locator('text=ZIG-KBG-4271')).toBeVisible();
     await expect(page.locator('text=Mamadou Diallo')).toBeVisible();
+    await expect(page.locator('article').locator('text=Maison').first()).toBeVisible();
 
     // Vérifier URL synchronisée
     expect(page.url()).toContain('q=mosquee');
+
+    // Captures annuaire_recherche (360x780 et 1440x900)
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/annuaire_360x780_recherche.png', fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/annuaire_1440x900_recherche.png', fullPage: false });
 
     // 2. Recherche par filtre
     await searchInput.fill('');
@@ -109,6 +139,15 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await searchInput.fill('motinconnuintrouvable');
     await page.waitForTimeout(500);
     await expect(page.locator('text=Aucune adresse ne correspond à votre recherche')).toBeVisible();
+
+    // Captures annuaire_aucun_resultat (360x780 et 1440x900)
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/annuaire_360x780_aucun_resultat.png', fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/annuaire_1440x900_aucun_resultat.png', fullPage: false });
   });
 
   test('1.3 Annuaire public : État hors ligne', async ({ context, page }) => {
@@ -119,6 +158,15 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await page.reload();
 
     await expect(page.locator('text=L\'annuaire n\'est pas disponible hors ligne')).toBeVisible();
+
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/annuaire_360x780_offline.png', fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/annuaire_1440x900_offline.png', fullPage: false });
+
     await context.setOffline(false);
   });
 
@@ -143,6 +191,15 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     // Case 2 absente tant que case 1 n'est pas cochée
     await expect(page.locator('#directory-show-owner')).not.toBeVisible();
 
+    // Captures wizard_etape2_visibilite avec case décochée par défaut (360x780 et 1440x900)
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/wizard_360x780_etape2_visibilite.png', fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/wizard_1440x900_etape2_visibilite.png', fullPage: false });
+
     // Cocher case 1
     await listedCheckbox.check();
 
@@ -160,9 +217,25 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     // ZIG-KBG-4271 est listée dans les données de test, son badge doit être visible
     const card = page.locator('div:has-text("ZIG-KBG-4271")').first();
     await expect(card.locator('text=Dans l\'annuaire')).toBeVisible();
+
+    await page.setViewportSize({ width: 360, height: 780 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/mes_adresses_360x780_pill_annuaire.png', fullPage: false });
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: '../docs/audit/lot6/mes_adresses_1440x900_pill_annuaire.png', fullPage: false });
   });
 
-  test('2.2 Fiche publique : Bloc itinéraire, bascule Voiture/À pied, mention confidentialité', async ({ page }) => {
+  test('2.2 Fiche publique : Itinéraire réel ORS (voiture et à pied), JSON assainis et captures réelles', async ({ context, page }) => {
+    test.setTimeout(90000);
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+
+    // Accorder la permission de géolocalisation et définir un point de départ réaliste à Ziguinchor (Escale : 12.5835, -16.2712)
+    await context.grantPermissions(['geolocation']);
+    await context.setGeolocation({ latitude: 12.5835, longitude: -16.2712 });
+
     await page.goto('/a/ZIG-KBG-4271');
     await page.waitForSelector('text=ZIG-KBG-4271');
 
@@ -172,6 +245,109 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await expect(page.locator('button:has-text("À pied")')).toBeVisible();
     await expect(page.locator('text=Votre position n\'est pas enregistrée')).toBeVisible();
     await expect(page.locator('a:has-text("Ouvrir dans Google Maps")')).toBeVisible();
+
+    // Pré-chauffer les deux profils réels auprès d'OpenRouteService (avec jusqu'à 3 essais en cas de hoquet réseau externe de l'API publique ORS)
+    for (const prof of ['driving-car', 'foot-walking']) {
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const r = await page.request.get(`/api/public/route?fromLat=12.5835&fromLon=-16.2712&code=ZIG-KBG-4271&profile=${prof}`);
+        if (r.status() === 200) break;
+        await page.waitForTimeout(1500);
+      }
+    }
+
+    // 1. Calcul réel en voiture (driving-car)
+    const [carResp] = await Promise.all([
+      page.waitForResponse((res: any) => res.url().includes('/api/public/route') && res.url().includes('profile=driving-car') && res.status() === 200),
+      page.locator('button:has-text("Itinéraire depuis ma position")').last().click(),
+    ]);
+    const carBody = await carResp.json();
+    expect(carBody.distance).toBeGreaterThan(0);
+    expect(carBody.duration).toBeGreaterThan(0);
+    expect(Array.isArray(carBody.steps)).toBe(true);
+    expect(carBody.steps.length).toBeGreaterThan(0);
+
+    // Sauvegarder la réponse assainie dans docs/audit/ors-real-car.json (sans coordonnées de l'utilisateur)
+    const carSanitized = {
+      code: 'ZIG-KBG-4271',
+      profile: 'driving-car',
+      duration: carBody.duration,
+      distance: carBody.distance,
+      stepsCount: carBody.steps.length,
+    };
+    fs.writeFileSync(path.resolve('..', 'docs/audit/ors-real-car.json'), JSON.stringify(carSanitized, null, 2) + '\n', 'utf8');
+
+    // Déplier les étapes pour afficher les noms de rues réels et centrer sur le bloc carte + itinéraire
+    const toggleStepsBtn = page.locator('button:has-text("Voir les")');
+    if (await toggleStepsBtn.isVisible()) {
+      await toggleStepsBtn.click();
+    }
+
+    const frameMapAndWaitTiles = async (width: number, height: number) => {
+      await page.setViewportSize({ width, height });
+      await page.waitForTimeout(250);
+      await page.evaluate(() => {
+        const mapEl = document.querySelector('.leaflet-container');
+        if (mapEl) {
+          const rect = mapEl.getBoundingClientRect();
+          const targetTop = window.scrollY + rect.top - 72;
+          window.scrollTo({ top: Math.max(0, targetTop), behavior: 'instant' });
+        }
+      });
+      await page.waitForFunction(() => {
+        const mapEl = document.querySelector('.leaflet-container');
+        if (!mapEl) return false;
+        const mRect = mapEl.getBoundingClientRect();
+        const tiles = Array.from(mapEl.querySelectorAll('.leaflet-tile')) as HTMLElement[];
+        if (tiles.length === 0) return false;
+        const visibleTiles = tiles.filter((t) => {
+          const r = t.getBoundingClientRect();
+          return r.right > mRect.left && r.left < mRect.right && r.bottom > mRect.top && r.top < mRect.bottom;
+        });
+        return visibleTiles.length > 0 && visibleTiles.every((t) => t.classList.contains('leaflet-tile-loaded'));
+      }, { timeout: 15000 });
+      await page.waitForTimeout(300);
+
+      const mapBox = await page.locator('.leaflet-container').boundingBox();
+      expect(mapBox).not.toBeNull();
+      expect(mapBox!.y).toBeGreaterThanOrEqual(56);
+      expect(mapBox!.y + mapBox!.height).toBeLessThanOrEqual(height);
+      await expect(page.locator('.custom-leaflet-start-marker')).toBeVisible();
+      await expect(page.locator('.custom-leaflet-marker')).toBeVisible();
+      await expect(page.locator('.leaflet-interactive').first()).toBeVisible();
+    };
+
+    await frameMapAndWaitTiles(360, 780);
+    await page.screenshot({ path: '../docs/audit/lot6/fiche_360x780_itineraire_voiture.png', fullPage: false });
+
+    await frameMapAndWaitTiles(1440, 900);
+    await page.screenshot({ path: '../docs/audit/lot6/fiche_1440x900_itineraire_voiture.png', fullPage: false });
+
+    // 2. Basculer sur À pied (foot-walking)
+    const [footResp] = await Promise.all([
+      page.waitForResponse((res: any) => res.url().includes('/api/public/route') && res.url().includes('profile=foot-walking') && res.status() === 200),
+      page.locator('button:has-text("À pied")').click(),
+    ]);
+    const footBody = await footResp.json();
+    expect(footBody.distance).toBeGreaterThan(0);
+    expect(footBody.duration).toBeGreaterThan(0);
+    expect(Array.isArray(footBody.steps)).toBe(true);
+    expect(footBody.steps.length).toBeGreaterThan(0);
+
+    // Sauvegarder la réponse assainie dans docs/audit/ors-real-foot.json (sans coordonnées de l'utilisateur)
+    const footSanitized = {
+      code: 'ZIG-KBG-4271',
+      profile: 'foot-walking',
+      duration: footBody.duration,
+      distance: footBody.distance,
+      stepsCount: footBody.steps.length,
+    };
+    fs.writeFileSync(path.resolve('..', 'docs/audit/ors-real-foot.json'), JSON.stringify(footSanitized, null, 2) + '\n', 'utf8');
+
+    await frameMapAndWaitTiles(360, 780);
+    await page.screenshot({ path: '../docs/audit/lot6/fiche_360x780_itineraire_pied.png', fullPage: false });
+
+    await frameMapAndWaitTiles(1440, 900);
+    await page.screenshot({ path: '../docs/audit/lot6/fiche_1440x900_itineraire_pied.png', fullPage: false });
   });
 
   test('0.3 Preuves manquantes : Wizard hors ligne avec bouton désactivé', async ({ context, page }) => {
@@ -183,16 +359,15 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await context.setOffline(true);
     await page.waitForTimeout(300);
 
-    // Vérifier que le bouton Continuer est désactivé
-    const continueBtn = page.locator('button:has-text("Continuer vers les détails")');
-    await expect(continueBtn).toBeDisabled();
+    // Vérifier que le mode hors ligne est signalé (Lot 7 : wizard débloqué)
+    await expect(page.locator('text=Mode hors ligne · les nouvelles adresses seront transmises à votre retour en ligne')).toBeVisible();
 
     // Capture d'écran fullPage
     await page.setViewportSize({ width: 360, height: 780 });
-    await page.screenshot({ path: 'docs/audit/lot6/wizard-offline-full-360.png', fullPage: true });
+    await page.screenshot({ path: '../docs/audit/lot6/wizard_360x780_offline_fullpage.png', fullPage: true });
 
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.screenshot({ path: 'docs/audit/lot6/wizard-offline-full-1440.png', fullPage: true });
+    await page.screenshot({ path: '../docs/audit/lot6/wizard_1440x900_offline_fullpage.png', fullPage: true });
 
     await context.setOffline(false);
   });

@@ -1,0 +1,49 @@
+@startuml 10-seq-authentification
+!include _style.puml
+title Séquence — Connexion, jeton d'accès et rotation du jeton de rafraîchissement
+autonumber
+actor "Utilisateur" as U
+participant "PWA\n(AuthContext / apiClient)" as UI
+participant "API (AuthController)" as API
+database "PostgreSQL" as DB
+
+U -> UI : Saisit e-mail et mot de passe
+UI -> API : POST /api/auth/login
+API -> DB : Charge l'utilisateur, vérifie le mot de passe
+API -> DB : Enregistre le hash SHA-256 du jeton de rafraîchissement
+API --> UI : Jeton d'accès JWT (15 min)\n+ cookie httpOnly SameSite=Strict (7 jours,\npath /api/auth/refresh)
+UI -> UI : Jeton d'accès en mémoire seulement\nIndicateur sa_session=1 (localStorage)
+
+== Appel protégé ==
+UI -> API : Requête avec Authorization: Bearer
+alt jeton valide
+  API --> UI : 200
+else 401 (jeton expiré)
+  UI -> API : POST /api/auth/refresh (cookie envoyé automatiquement)
+  alt jeton de rafraîchissement valide
+    API -> DB : Révoque l'ancien jeton, enregistre le nouveau (rotation)
+    API --> UI : nouveau jeton d'accès + nouveau cookie
+    UI -> API : Rejoue la requête (une seule fois)
+    API --> UI : 200
+  else invalide ou expiré
+    API --> UI : 401
+    UI -> UI : Supprime la session locale
+    UI --> U : Retour à la page de connexion
+  end
+end
+
+== Chargement de l'application ==
+UI -> UI : sa_session=1 ?
+alt oui
+  UI -> API : POST /api/auth/refresh
+else non (visiteur)
+  UI -> UI : Aucun appel réseau (pas d'erreur 401 en console)
+end
+
+== Déconnexion ==
+U -> UI : Se déconnecter
+UI -> API : Demande de déconnexion
+API -> DB : Révoque le jeton de rafraîchissement
+API --> UI : Cookie supprimé
+UI -> UI : Efface le jeton en mémoire et sa_session
+@enduml

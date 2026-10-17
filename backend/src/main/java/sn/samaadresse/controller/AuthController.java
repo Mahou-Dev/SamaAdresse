@@ -2,9 +2,11 @@ package sn.samaadresse.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,7 +30,10 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)")
+    @Operation(
+            summary = "Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)",
+            description = "Crée un compte utilisateur avec hachage BCrypt (coût 12)."
+    )
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Compte créé avec succès", content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
         @ApiResponse(responseCode = "400", description = "Données invalides", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
@@ -40,11 +45,18 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @Operation(summary = "Connexion utilisateur", description = "Retourne l'Access Token dans le corps et pose un Refresh Token en Cookie HTTP-Only. Limité à 5 essais/min.")
+    @Operation(
+            summary = "Connexion utilisateur",
+            description = "Retourne l'Access Token dans le corps et pose un Refresh Token en Cookie HTTP-Only (SameSite=Strict). Limité à 5 essais/min/IP."
+    )
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Connexion réussie", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
+        @ApiResponse(responseCode = "200", description = "Connexion réussie",
+                content = @Content(schema = @Schema(implementation = AuthResponse.class),
+                        examples = @ExampleObject(value = "{\"accessToken\":\"eyJhbGciOiJIUzI1NiJ9...\",\"tokenType\":\"Bearer\",\"expiresIn\":900}"))),
+        @ApiResponse(responseCode = "400", description = "Format de requête invalide", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
         @ApiResponse(responseCode = "401", description = "Identifiants invalides", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "429", description = "Trop de tentatives (Rate Limit)", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "403", description = "Compte désactivé", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "429", description = "Trop de tentatives (Rate Limit 5/min/IP)", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
@@ -57,10 +69,13 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Rafraîchissement silencieux de l'Access Token via Cookie Refresh Token")
+    @Operation(
+            summary = "Rafraîchissement silencieux de l'Access Token via Cookie Refresh Token",
+            description = "Échange le cookie HttpOnly refreshToken contre un nouveau couple Access Token + Refresh Token (rotation)."
+    )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Nouveau token généré avec succès", content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Refresh Token absent ou expiré", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "401", description = "Refresh Token absent, invalide ou expiré", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(
@@ -71,8 +86,11 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @Operation(summary = "Déconnexion utilisateur", description = "Révoque le Refresh Token et efface le cookie")
-    @ApiResponse(responseCode = "200", description = "Déconnexion effectuée")
+    @Operation(summary = "Déconnexion utilisateur", description = "Révoque le Refresh Token en base et efface le cookie HttpOnly")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Déconnexion effectuée",
+                content = @Content(examples = @ExampleObject(value = "{\"message\":\"Déconnexion réussie\"}")))
+    })
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(
         @CookieValue(name = "refreshToken", required = false) String refreshToken,
@@ -82,7 +100,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Déconnexion réussie"));
     }
 
-    @Operation(summary = "Profil de l'utilisateur connecté", description = "Route protégée nécessitant le header Authorization Bearer")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Profil de l'utilisateur connecté", description = "Route protégée nécessitant l'en-tête Authorization Bearer")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Profil récupéré", content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
         @ApiResponse(responseCode = "401", description = "Non authentifié", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -96,10 +115,6 @@ public class AuthController {
     }
 
     private String extractClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
+        return sn.samaadresse.security.ClientIpResolver.resolve(request);
     }
 }

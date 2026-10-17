@@ -1,0 +1,139 @@
+@startuml 02-classes-domaine
+!include _style.puml
+title SamaAdresse — Diagramme de classes (modèle du domaine)
+skinparam nodesep 35
+skinparam ranksep 45
+
+enum Role {
+  PROPRIETAIRE
+  ADMIN
+}
+enum LocationType {
+  MAISON
+  COMMERCE
+  INSTITUTION
+}
+enum AddressStatus {
+  ACTIVE
+  ARCHIVED
+  SUSPENDED
+  SIGNALED
+}
+enum ReportReason {
+  POSITION_INCORRECTE
+  CONTENU_INAPPROPRIE
+  PHOTO_INAPPROPRIEE
+  AUTRE
+}
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+enum ReservedCodeStatus {
+  RESERVED
+  USED
+  EXPIRED
+}
+
+class User {
+  id : UUID
+  fullName : String
+  email : String <<unique>>
+  phoneNumber : String
+  passwordHash : String
+  role : Role
+  enabled : boolean
+  createdAt : Instant
+  updatedAt : Instant
+}
+
+class RefreshToken {
+  id : UUID
+  tokenHash : String <<SHA-256>>
+  expiryDate : Instant
+  revoked : boolean
+  createdAt : Instant
+}
+
+class Address {
+  id : UUID
+  code : String <<unique, immuable>>
+  latitude : double <<immuable>>
+  longitude : double <<immuable>>
+  zone : String
+  quartier : String
+  description : String
+  photoUrl : String
+  locationType : LocationType
+  status : AddressStatus
+  listed : boolean
+  showOwnerName : boolean
+  searchText : String
+  clientRequestId : UUID
+  createdAt : Instant
+  updatedAt : Instant
+  archivedAt : Instant
+  suspendedAt : Instant
+  suspendedReason : String
+}
+
+class AddressReport {
+  id : UUID
+  reason : ReportReason
+  comment : String
+  status : ReportStatus
+  ipHash : String
+  createdAt : Instant
+  resolvedAt : Instant
+}
+
+class AdminAction {
+  id : UUID
+  adminId : UUID
+  adminEmail : String
+  action : String
+  addressId : UUID
+  addressCode : String
+  reportId : UUID
+  reason : String
+  createdAt : Instant
+}
+
+class ReservedCode {
+  id : UUID
+  code : String <<unique>>
+  zone : String
+  quartier : String
+  status : ReservedCodeStatus
+  addressId : UUID
+  createdAt : Instant
+  expiresAt : Instant
+}
+
+class PhotoBlob {
+  id : UUID
+  contentType : String
+  sizeBytes : long
+  data : byte[]
+  createdAt : Instant
+}
+
+User "1" -left-> Role
+User "1" -up- "0..*" RefreshToken
+User "1" -right- "0..*" ReservedCode : réserve >
+User "1" -down- "0..*" Address : possède >
+
+ReservedCode -right-> ReservedCodeStatus
+ReservedCode "0..1" -down- "0..1" Address : utilisé par >
+
+Address -left-> AddressStatus
+Address -right-> LocationType
+Address "0..1" -down- "0..1" PhotoBlob : photo (base)
+Address "1" -down- "0..*" AddressReport : fait l'objet de >
+Address "0..1" -down- "0..*" AdminAction : concerne <
+
+AddressReport -down-> ReportReason
+AddressReport -down-> ReportStatus
+AddressReport "0..1" -left- "0..*" AdminAction : traite <
+@enduml

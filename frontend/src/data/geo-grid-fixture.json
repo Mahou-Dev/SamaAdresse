@@ -1,0 +1,649 @@
+[ {
+  "id" : "zig-kbg-1",
+  "description" : "Boucotte centre",
+  "latitude" : 12.5738,
+  "longitude" : -16.265,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KBG",
+  "distanceToCenterKm" : 0.133
+}, {
+  "id" : "zig-kbg-2",
+  "description" : "Boucotte nord",
+  "latitude" : 12.578,
+  "longitude" : -16.262,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KBG",
+  "distanceToCenterKm" : 0.466
+}, {
+  "id" : "zig-esc-1",
+  "description" : "Escale débarcadère",
+  "latitude" : 12.5852,
+  "longitude" : -16.2684,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "ESC",
+  "distanceToCenterKm" : 0.1
+}, {
+  "id" : "zig-esc-2",
+  "description" : "Escale est",
+  "latitude" : 12.588,
+  "longitude" : -16.2645,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "ESC",
+  "distanceToCenterKm" : 0.466
+}, {
+  "id" : "zig-til-1",
+  "description" : "Tilène marché",
+  "latitude" : 12.5654,
+  "longitude" : -16.2948,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "TIL",
+  "distanceToCenterKm" : 0.049
+}, {
+  "id" : "zig-til-2",
+  "description" : "Tilène sud",
+  "latitude" : 12.562,
+  "longitude" : -16.298,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "TIL",
+  "distanceToCenterKm" : 0.466
+}, {
+  "id" : "zig-knd-1",
+  "description" : "Kandé nord",
+  "latitude" : 12.5542,
+  "longitude" : -16.2731,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KND",
+  "distanceToCenterKm" : 0.2
+}, {
+  "id" : "zig-knd-2",
+  "description" : "Kandé sud",
+  "latitude" : 12.548,
+  "longitude" : -16.28,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KND",
+  "distanceToCenterKm" : 0.956
+}, {
+  "id" : "zig-nem-1",
+  "description" : "Néma Kadialang",
+  "latitude" : 12.5583,
+  "longitude" : -16.2455,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "NEM",
+  "distanceToCenterKm" : 0.104
+}, {
+  "id" : "zig-nem-2",
+  "description" : "Néma sud",
+  "latitude" : 12.551,
+  "longitude" : -16.252,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "NEM",
+  "distanceToCenterKm" : 1.049
+}, {
+  "id" : "dkr-plt-1",
+  "description" : "Plateau Place de l'Indépendance",
+  "latitude" : 14.6698,
+  "longitude" : -17.4332,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "PLT",
+  "distanceToCenterKm" : 0.568
+}, {
+  "id" : "dkr-plt-2",
+  "description" : "Plateau Palais Présidentiel",
+  "latitude" : 14.661,
+  "longitude" : -17.431,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "PLT",
+  "distanceToCenterKm" : 0.619
+}, {
+  "id" : "dkr-med-1",
+  "description" : "Médina rue 6",
+  "latitude" : 14.685,
+  "longitude" : -17.448,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "MED",
+  "distanceToCenterKm" : 0.352
+}, {
+  "id" : "dkr-med-2",
+  "description" : "Médina Tilène Dakar",
+  "latitude" : 14.689,
+  "longitude" : -17.452,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "MED",
+  "distanceToCenterKm" : 0.754
+}, {
+  "id" : "dkr-alm-1",
+  "description" : "Almadies pointe",
+  "latitude" : 14.743,
+  "longitude" : -17.525,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-alm-2",
+  "description" : "Almadies ambassades",
+  "latitude" : 14.739,
+  "longitude" : -17.518,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-yof-1",
+  "description" : "Yoff village",
+  "latitude" : 14.761,
+  "longitude" : -17.468,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-yof-2",
+  "description" : "Yoff plage BCEAO",
+  "latitude" : 14.755,
+  "longitude" : -17.475,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-ngg-1",
+  "description" : "Ngor île / côte",
+  "latitude" : 14.753,
+  "longitude" : -17.515,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-ngg-2",
+  "description" : "Ngor village",
+  "latitude" : 14.749,
+  "longitude" : -17.512,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-ouk-1",
+  "description" : "Ouakam monument Renaissance",
+  "latitude" : 14.722,
+  "longitude" : -17.495,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-ouk-2",
+  "description" : "Ouakam cité Mamelles",
+  "latitude" : 14.718,
+  "longitude" : -17.491,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-gdj-1",
+  "description" : "Grand Dakar rond-point Jet d'Eau",
+  "latitude" : 14.708,
+  "longitude" : -17.452,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "MED",
+  "distanceToCenterKm" : 2.844
+}, {
+  "id" : "dkr-gdj-2",
+  "description" : "Grand Dakar nord",
+  "latitude" : 14.712,
+  "longitude" : -17.448,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "zig-edge-kbg-ne",
+  "description" : "Boucotte coin NE",
+  "latitude" : 12.5795,
+  "longitude" : -16.2605,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KBG",
+  "distanceToCenterKm" : 0.699
+}, {
+  "id" : "zig-edge-kbg-sw",
+  "description" : "Boucotte coin SW",
+  "latitude" : 12.5685,
+  "longitude" : -16.2715,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KBG",
+  "distanceToCenterKm" : 1.01
+}, {
+  "id" : "zig-edge-esc-nw",
+  "description" : "Escale coin NW",
+  "latitude" : 12.5895,
+  "longitude" : -16.2745,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "ESC",
+  "distanceToCenterKm" : 0.91
+}, {
+  "id" : "zig-edge-til-nw",
+  "description" : "Tilène coin NW",
+  "latitude" : 12.5715,
+  "longitude" : -16.3025,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "TIL",
+  "distanceToCenterKm" : 1.089
+}, {
+  "id" : "zig-edge-knd-se",
+  "description" : "Kandé coin SE",
+  "latitude" : 12.5455,
+  "longitude" : -16.2655,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KND",
+  "distanceToCenterKm" : 1.088
+}, {
+  "id" : "zig-edge-nem-ne",
+  "description" : "Néma coin NE",
+  "latitude" : 12.5645,
+  "longitude" : -16.2355,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "NEM",
+  "distanceToCenterKm" : 1.292
+}, {
+  "id" : "dkr-edge-plt-s",
+  "description" : "Plateau cap Manuel",
+  "latitude" : 14.654,
+  "longitude" : -17.43,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "PLT",
+  "distanceToCenterKm" : 1.336
+}, {
+  "id" : "dkr-edge-alm-w",
+  "description" : "Almadies extrême ouest",
+  "latitude" : 14.746,
+  "longitude" : -17.53,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-edge-yof-n",
+  "description" : "Yoff nord aéroport",
+  "latitude" : 14.764,
+  "longitude" : -17.465,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-edge-med-w",
+  "description" : "Médina corniche ouest",
+  "latitude" : 14.682,
+  "longitude" : -17.456,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "MED",
+  "distanceToCenterKm" : 0.648
+}, {
+  "id" : "zig-fallback-1",
+  "description" : "Zone Ziguinchor près Boucotte (<3km)",
+  "latitude" : 12.581,
+  "longitude" : -16.255,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KBG",
+  "distanceToCenterKm" : 1.274
+}, {
+  "id" : "zig-fallback-2",
+  "description" : "Zone Ziguinchor est (<3km Néma)",
+  "latitude" : 12.56,
+  "longitude" : -16.23,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "NEM",
+  "distanceToCenterKm" : 1.652
+}, {
+  "id" : "zig-fallback-3",
+  "description" : "Zone Ziguinchor sud (<3km Kandé)",
+  "latitude" : 12.542,
+  "longitude" : -16.27,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KND",
+  "distanceToCenterKm" : 1.199
+}, {
+  "id" : "zig-fallback-4",
+  "description" : "Zone Ziguinchor ouest (<3km Tilène)",
+  "latitude" : 12.565,
+  "longitude" : -16.308,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "TIL",
+  "distanceToCenterKm" : 1.411
+}, {
+  "id" : "dkr-fallback-1",
+  "description" : "Zone Dakar autoroute ouest (<3km)",
+  "latitude" : 14.73,
+  "longitude" : -17.46,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-fallback-2",
+  "description" : "Zone Dakar est VDN (<3km)",
+  "latitude" : 14.715,
+  "longitude" : -17.47,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-fallback-3",
+  "description" : "Zone Dakar Hann (<3km Grand Dakar)",
+  "latitude" : 14.72,
+  "longitude" : -17.44,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-thies",
+  "description" : "Thiès centre ville",
+  "latitude" : 14.791,
+  "longitude" : -16.925,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-mbour",
+  "description" : "Mbour Petite Côte",
+  "latitude" : 14.422,
+  "longitude" : -16.963,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-saint-louis",
+  "description" : "Saint-Louis île",
+  "latitude" : 16.024,
+  "longitude" : -16.501,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "SL",
+  "expectedQuartier" : "NDR",
+  "distanceToCenterKm" : 0.39
+}, {
+  "id" : "oos-touba",
+  "description" : "Touba grande mosquée",
+  "latitude" : 14.863,
+  "longitude" : -15.875,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-kaolack",
+  "description" : "Kaolack centre",
+  "latitude" : 14.15,
+  "longitude" : -16.08,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-ziguinchor-rural-1",
+  "description" : "Enampore Casamance (>3km ZIG)",
+  "latitude" : 12.51,
+  "longitude" : -16.45,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-ziguinchor-rural-2",
+  "description" : "Nyassia (>3km ZIG)",
+  "latitude" : 12.46,
+  "longitude" : -16.35,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-ziguinchor-rural-3",
+  "description" : "Oussouye (>3km ZIG)",
+  "latitude" : 12.485,
+  "longitude" : -16.545,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-cap-skirring",
+  "description" : "Cap Skirring plage",
+  "latitude" : 12.418,
+  "longitude" : -16.745,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-bignona",
+  "description" : "Bignona centre",
+  "latitude" : 12.81,
+  "longitude" : -16.23,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-fatick",
+  "description" : "Fatick centre",
+  "latitude" : 14.33,
+  "longitude" : -16.41,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-kolda",
+  "description" : "Kolda haute Casamance",
+  "latitude" : 12.88,
+  "longitude" : -14.95,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "oos-tamba",
+  "description" : "Tambacounda Sénégal oriental",
+  "latitude" : 13.77,
+  "longitude" : -13.67,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-paris",
+  "description" : "Paris France",
+  "latitude" : 48.8566,
+  "longitude" : 2.3522,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-tokyo",
+  "description" : "Tokyo Japon",
+  "latitude" : 35.6762,
+  "longitude" : 139.6503,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-equator",
+  "description" : "Océan Atlantique golfe de Guinée",
+  "latitude" : 0.0,
+  "longitude" : 0.0,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-banjul",
+  "description" : "Banjul Gambie (hors Sénégal lat)",
+  "latitude" : 13.4549,
+  "longitude" : -16.579,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-north",
+  "description" : "Mauritanie nord (>17°N)",
+  "latitude" : 18.05,
+  "longitude" : -15.97,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-south",
+  "description" : "Guinée-Bissau sud (<12°N)",
+  "latitude" : 11.85,
+  "longitude" : -15.58,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-west",
+  "description" : "Plein Océan Atlantique (<-17.6°O)",
+  "latitude" : 14.7,
+  "longitude" : -18.2,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "inv-east",
+  "description" : "Mali (< -11°O c-à-d > -11°)",
+  "latitude" : 14.5,
+  "longitude" : -10.5,
+  "expectedStatus" : "INVALID_COORDINATES",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "zig-extra-1",
+  "description" : "Boucotte sud-est",
+  "latitude" : 12.57,
+  "longitude" : -16.262,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KBG",
+  "distanceToCenterKm" : 0.644
+}, {
+  "id" : "zig-extra-2",
+  "description" : "Tilène est",
+  "latitude" : 12.567,
+  "longitude" : -16.29,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "TIL",
+  "distanceToCenterKm" : 0.586
+}, {
+  "id" : "zig-extra-3",
+  "description" : "Escale centre",
+  "latitude" : 12.584,
+  "longitude" : -16.27,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "ESC",
+  "distanceToCenterKm" : 0.293
+}, {
+  "id" : "zig-extra-4",
+  "description" : "Kandé ouest",
+  "latitude" : 12.552,
+  "longitude" : -16.277,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "KND",
+  "distanceToCenterKm" : 0.492
+}, {
+  "id" : "zig-extra-5",
+  "description" : "Néma ouest",
+  "latitude" : 12.556,
+  "longitude" : -16.25,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "ZIG",
+  "expectedQuartier" : "NEM",
+  "distanceToCenterKm" : 0.568
+}, {
+  "id" : "dkr-extra-1",
+  "description" : "Plateau port",
+  "latitude" : 14.675,
+  "longitude" : -17.431,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "PLT",
+  "distanceToCenterKm" : 1.192
+}, {
+  "id" : "dkr-extra-2",
+  "description" : "Médina nord",
+  "latitude" : 14.692,
+  "longitude" : -17.447,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "MED",
+  "distanceToCenterKm" : 1.105
+}, {
+  "id" : "dkr-extra-3",
+  "description" : "Ouakam est",
+  "latitude" : 14.725,
+  "longitude" : -17.488,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+}, {
+  "id" : "dkr-extra-4",
+  "description" : "Grand Dakar sud",
+  "latitude" : 14.702,
+  "longitude" : -17.455,
+  "expectedStatus" : "RESOLVED",
+  "expectedZone" : "DKR",
+  "expectedQuartier" : "MED",
+  "distanceToCenterKm" : 2.234
+}, {
+  "id" : "dkr-extra-5",
+  "description" : "Yoff est",
+  "latitude" : 14.758,
+  "longitude" : -17.46,
+  "expectedStatus" : "OUT_OF_ZONE",
+  "expectedZone" : null,
+  "expectedQuartier" : null,
+  "distanceToCenterKm" : null
+} ]
