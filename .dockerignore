@@ -1,0 +1,25 @@
+# Dépendances et artefacts de build
+**/node_modules
+**/target
+frontend/dist
+frontend/.vite
+frontend/playwright-report*
+frontend/test-results
+frontend/vitest-report.json
+
+# Secrets et environnement local
+.env
+.env.*
+!.env.example
+
+# Fichiers d'audit, captures et archives
+docs/
+samaadresse-uml/
+*.zip
+*.log
+uploads/
+uploads-e2e/
+backend/uploads/
+backend/uploads-e2e/
+.git
+.github

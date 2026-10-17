@@ -35,6 +35,9 @@ class AddressPhotoTest {
     private AddressRepository addressRepository;
 
     @Mock
+    private sn.samaadresse.repository.ReservedCodeRepository reservedCodeRepository;
+
+    @Mock
     private UserRepository userRepository;
 
     @Mock
@@ -57,7 +60,7 @@ class AddressPhotoTest {
     void setUp() {
         ImageMagicBytesValidator magicBytesValidator = new ImageMagicBytesValidator();
         fileStorageService = new FileStorageService(tempDir.toString(), magicBytesValidator);
-        addressService = new AddressService(addressRepository, userRepository, geoGridService, addressCodeGenerator, fileStorageService);
+        addressService = new AddressService(addressRepository, reservedCodeRepository, userRepository, geoGridService, addressCodeGenerator, fileStorageService);
 
         ownerUser = User.builder()
                 .id(UUID.randomUUID())

@@ -1,0 +1,525 @@
+[
+  {
+    "page": "landing",
+    "finalUrl": "http://127.0.0.1:4173/",
+    "perf": 94,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "lcp": "2.3 s",
+    "cls": "0.02",
+    "tbt": "200 ms",
+    "failingCount": 10,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.9
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.92
+      },
+      {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "score": 0.89
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.61
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.95
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  },
+  {
+    "page": "login",
+    "finalUrl": "http://127.0.0.1:4173/login",
+    "perf": 97,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "lcp": "2.3 s",
+    "cls": "0.004",
+    "tbt": "20 ms",
+    "failingCount": 9,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.9
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.93
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.99
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.98
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  },
+  {
+    "page": "register",
+    "finalUrl": "http://127.0.0.1:4173/register",
+    "perf": 97,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "lcp": "2.3 s",
+    "cls": "0.004",
+    "tbt": "90 ms",
+    "failingCount": 10,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.9
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.93
+      },
+      {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "score": 0.99
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.93
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.97
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  },
+  {
+    "page": "public_address",
+    "finalUrl": "http://127.0.0.1:4173/a/ZIG-KBG-4271",
+    "perf": 90,
+    "a11y": 100,
+    "bp": 96,
+    "seo": 100,
+    "lcp": "2.9 s",
+    "cls": "0.005",
+    "tbt": "200 ms",
+    "failingCount": 14,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.88
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.79
+      },
+      {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "score": 0.89
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.89
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.89
+      },
+      {
+        "id": "image-size-responsive",
+        "title": "Serves images with low resolution",
+        "score": 0
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "cache-insight",
+        "title": "Use efficient cache lifetimes",
+        "score": 0.5
+      },
+      {
+        "id": "image-delivery-insight",
+        "title": "Improve image delivery",
+        "score": 0
+      },
+      {
+        "id": "lcp-discovery-insight",
+        "title": "LCP request discovery",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  },
+  {
+    "page": "directory",
+    "finalUrl": "http://127.0.0.1:4173/annuaire",
+    "perf": 95,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "lcp": "2.6 s",
+    "cls": "0.059",
+    "tbt": "40 ms",
+    "failingCount": 10,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.88
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.86
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.98
+      },
+      {
+        "id": "cumulative-layout-shift",
+        "title": "Cumulative Layout Shift",
+        "score": 0.98
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.95
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  },
+  {
+    "page": "addresses_mine",
+    "finalUrl": "http://127.0.0.1:4173/addresses/mine",
+    "perf": 84,
+    "a11y": 100,
+    "bp": 100,
+    "seo": 100,
+    "lcp": "3.2 s",
+    "cls": "0.173",
+    "tbt": "90 ms",
+    "failingCount": 15,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.9
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.72
+      },
+      {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "score": 0.99
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.97
+      },
+      {
+        "id": "cumulative-layout-shift",
+        "title": "Cumulative Layout Shift",
+        "score": 0.69
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.94
+      },
+      {
+        "id": "layout-shifts",
+        "title": "Avoid large layout shifts",
+        "score": 0
+      },
+      {
+        "id": "label-content-name-mismatch",
+        "title": "Elements with visible text labels do not have matching accessible names.",
+        "score": 0
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "cls-culprits-insight",
+        "title": "Layout shift culprits",
+        "score": 0
+      },
+      {
+        "id": "forced-reflow-insight",
+        "title": "Forced reflow",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  },
+  {
+    "page": "addresses_new",
+    "finalUrl": "http://127.0.0.1:4173/addresses/new",
+    "perf": 71,
+    "a11y": 100,
+    "bp": 96,
+    "seo": 100,
+    "lcp": "7.1 s",
+    "cls": "0",
+    "tbt": "230 ms",
+    "failingCount": 17,
+    "failingAudits": [
+      {
+        "id": "first-contentful-paint",
+        "title": "First Contentful Paint",
+        "score": 0.9
+      },
+      {
+        "id": "largest-contentful-paint",
+        "title": "Largest Contentful Paint",
+        "score": 0.05
+      },
+      {
+        "id": "speed-index",
+        "title": "Speed Index",
+        "score": 0.97
+      },
+      {
+        "id": "total-blocking-time",
+        "title": "Total Blocking Time",
+        "score": 0.87
+      },
+      {
+        "id": "max-potential-fid",
+        "title": "Max Potential First Input Delay",
+        "score": 0.78
+      },
+      {
+        "id": "interactive",
+        "title": "Time to Interactive",
+        "score": 0.51
+      },
+      {
+        "id": "image-size-responsive",
+        "title": "Serves images with low resolution",
+        "score": 0
+      },
+      {
+        "id": "label-content-name-mismatch",
+        "title": "Elements with visible text labels do not have matching accessible names.",
+        "score": 0
+      },
+      {
+        "id": "unused-javascript",
+        "title": "Reduce unused JavaScript",
+        "score": 0
+      },
+      {
+        "id": "llms-txt",
+        "title": "llms.txt does not follow recommendations",
+        "score": 0
+      },
+      {
+        "id": "ard-schema",
+        "title": "`ai-catalog.json` schema is invalid",
+        "score": 0
+      },
+      {
+        "id": "cache-insight",
+        "title": "Use efficient cache lifetimes",
+        "score": 0.5
+      },
+      {
+        "id": "forced-reflow-insight",
+        "title": "Forced reflow",
+        "score": 0
+      },
+      {
+        "id": "lcp-breakdown-insight",
+        "title": "LCP breakdown",
+        "score": 0
+      },
+      {
+        "id": "lcp-discovery-insight",
+        "title": "LCP request discovery",
+        "score": 0
+      },
+      {
+        "id": "network-dependency-tree-insight",
+        "title": "Network dependency tree",
+        "score": 0
+      },
+      {
+        "id": "render-blocking-insight",
+        "title": "Render-blocking requests",
+        "score": 0
+      }
+    ]
+  }
+]

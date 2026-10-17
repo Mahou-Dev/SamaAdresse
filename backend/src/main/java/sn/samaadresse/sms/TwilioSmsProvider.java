@@ -14,19 +14,22 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Duration;
+import java.util.regex.Pattern;
 
 /**
  * Envoi via l'API REST Twilio (Programmable Messaging).
  * <p>
  * POST {apiBaseUrl}/2010-04-01/Accounts/{AccountSid}/Messages.json
- * (form-urlencoded : To, From, Body ; authentification Basic AccountSid:AuthToken).
+ * (form-urlencoded : To, From ou MessagingServiceSid, Body ; authentification Basic AccountSid:AuthToken).
  * <p>
- * Variables requises : TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER.
+ * Variables requises : TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM (ou TWILIO_FROM_NUMBER).
  */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "sms.provider", havingValue = "twilio")
 public class TwilioSmsProvider implements SmsProvider {
+
+    private static final Pattern E164_PATTERN = Pattern.compile("^\\+[1-9]\\d{7,14}$");
 
     private final SmsProperties.Twilio config;
     private final RestClient restClient;
@@ -37,7 +40,7 @@ public class TwilioSmsProvider implements SmsProvider {
                 || !StringUtils.hasText(config.getAuthToken())
                 || !StringUtils.hasText(config.getFromNumber())) {
             throw new IllegalStateException(
-                    "SMS_PROVIDER=twilio mais TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN ou TWILIO_FROM_NUMBER est manquant.");
+                    "SMS_PROVIDER=twilio mais TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN ou TWILIO_FROM est manquant.");
         }
 
         Duration timeout = properties.getTimeout();
@@ -54,9 +57,23 @@ public class TwilioSmsProvider implements SmsProvider {
 
     @Override
     public SmsResult send(String toE164, String message) {
+        String maskedTo = PhoneMasker.mask(toE164);
+        if (toE164 == null || !E164_PATTERN.matcher(toE164.trim()).matches()) {
+            log.warn("[SMS-TWILIO] Numéro destinataire invalide refusé ({})", maskedTo);
+            throw new SmsProviderException("Numéro destinataire invalide (format E.164 requis)");
+        }
+        if (!StringUtils.hasText(message)) {
+            throw new SmsProviderException("Le corps du SMS ne peut pas être vide");
+        }
+
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("To", toE164);
-        form.add("From", config.getFromNumber());
+        form.add("To", toE164.trim());
+        String fromOrService = config.getFromNumber().trim();
+        if (fromOrService.startsWith("MG")) {
+            form.add("MessagingServiceSid", fromOrService);
+        } else {
+            form.add("From", fromOrService);
+        }
         form.add("Body", message);
 
         try {
@@ -68,11 +85,13 @@ public class TwilioSmsProvider implements SmsProvider {
                     .body(JsonNode.class);
 
             String sid = body != null && body.hasNonNull("sid") ? body.get("sid").asText() : null;
+            log.info("[SMS-TWILIO] SMS accepté vers {} (sid={})", maskedTo, sid);
             return SmsResult.accepted(sid);
         } catch (RestClientResponseException e) {
-            // Le corps de la réponse Twilio peut contenir des détails : logs serveur uniquement
+            log.warn("[SMS-TWILIO] Échec d'envoi vers {} (HTTP {})", maskedTo, e.getStatusCode().value());
             throw new SmsProviderException("Twilio a refusé l'envoi (HTTP " + e.getStatusCode().value() + ")", e);
         } catch (RestClientException e) {
+            log.warn("[SMS-TWILIO] Erreur réseau vers {} ({})", maskedTo, e.getClass().getSimpleName());
             throw new SmsProviderException("Twilio injoignable : " + e.getClass().getSimpleName(), e);
         }
     }

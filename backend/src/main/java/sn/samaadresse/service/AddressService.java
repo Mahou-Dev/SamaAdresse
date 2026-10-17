@@ -12,11 +12,14 @@ import sn.samaadresse.dto.AddressResponse;
 import sn.samaadresse.dto.CreateAddressRequest;
 import sn.samaadresse.dto.PublicAddressResponse;
 import sn.samaadresse.dto.UpdateAddressRequest;
+import sn.samaadresse.domain.entity.ReservedCode;
+import sn.samaadresse.domain.enums.ReservedCodeStatus;
 import sn.samaadresse.dto.UserProfileResponse;
 import sn.samaadresse.exception.AddressNotFoundException;
 import sn.samaadresse.exception.AddressUnavailableException;
 import sn.samaadresse.exception.InvalidAddressOperationException;
 import sn.samaadresse.repository.AddressRepository;
+import sn.samaadresse.repository.ReservedCodeRepository;
 import sn.samaadresse.repository.UserRepository;
 
 import java.time.Instant;
@@ -29,6 +32,7 @@ import java.util.UUID;
 public class AddressService {
 
     private final AddressRepository addressRepository;
+    private final ReservedCodeRepository reservedCodeRepository;
     private final UserRepository userRepository;
     private final GeoGridService geoGridService;
     private final AddressCodeGenerator addressCodeGenerator;
@@ -36,11 +40,59 @@ public class AddressService {
 
     @Transactional
     public AddressResponse createAddress(CreateAddressRequest request, User currentUser) {
+        // 0. Vérification d'idempotence si clientRequestId fourni
+        if (request.getClientRequestId() != null) {
+            Optional<Address> existing = addressRepository.findByOwnerAndClientRequestId(currentUser, request.getClientRequestId());
+            if (existing.isPresent()) {
+                AddressResponse resp = mapToAddressResponse(existing.get());
+                resp.setIdempotentReplay(true);
+                return resp;
+            }
+        }
+
         // 1. Résolution de la zone et du quartier via les coordonnées GPS
         GeoQuartier quartier = geoGridService.resolveQuartier(request.getLatitude(), request.getLongitude());
 
-        // 2. Génération du code court unique immuable ZONE-QUARTIER-XXXX
-        String generatedCode = addressCodeGenerator.generateCode(quartier.getZoneCode(), quartier.getCode());
+        // 2. Traitement du reservedCode (si fourni) ou génération d'un nouveau code
+        String finalCode;
+        boolean codeChanged = false;
+        String previousCode = null;
+        ReservedCode matchedReservation = null;
+
+        if (request.getReservedCode() != null && !request.getReservedCode().isBlank()) {
+            String candidate = request.getReservedCode().trim().toUpperCase();
+            Optional<ReservedCode> resOpt = reservedCodeRepository.findByCode(candidate);
+            String expectedPrefix = (quartier.getZoneCode() + "-" + quartier.getCode() + "-").toUpperCase();
+
+            boolean validReservation = false;
+            if (resOpt.isPresent()) {
+                ReservedCode res = resOpt.get();
+                boolean belongsToUser = res.getUser().getId().equals(currentUser.getId());
+                boolean isActive = res.getStatus() == ReservedCodeStatus.RESERVED;
+                boolean notExpired = res.getExpiresAt().isAfter(Instant.now());
+                boolean prefixMatches = candidate.startsWith(expectedPrefix);
+                boolean codeAvailable = !addressRepository.existsByCode(candidate);
+
+                if (belongsToUser && isActive && notExpired && prefixMatches && codeAvailable) {
+                    validReservation = true;
+                    matchedReservation = res;
+                }
+            }
+
+            if (validReservation) {
+                finalCode = candidate;
+                codeChanged = false;
+                previousCode = null;
+            } else {
+                finalCode = addressCodeGenerator.generateCode(quartier.getZoneCode(), quartier.getCode());
+                codeChanged = true;
+                previousCode = candidate;
+            }
+        } else {
+            finalCode = addressCodeGenerator.generateCode(quartier.getZoneCode(), quartier.getCode());
+            codeChanged = false;
+            previousCode = null;
+        }
 
         boolean listed = Boolean.TRUE.equals(request.getListed());
         boolean showOwnerName = Boolean.TRUE.equals(request.getShowOwnerName());
@@ -48,7 +100,8 @@ public class AddressService {
 
         // 3. Construction et enregistrement de l'entité
         Address address = Address.builder()
-                .code(generatedCode)
+                .code(finalCode)
+                .clientRequestId(request.getClientRequestId())
                 .latitude(request.getLatitude())
                 .longitude(request.getLongitude())
                 .zone(quartier.getZoneCode())
@@ -64,7 +117,16 @@ public class AddressService {
 
         Address savedAddress = addressRepository.save(address);
 
-        return mapToAddressResponse(savedAddress);
+        if (matchedReservation != null) {
+            matchedReservation.setStatus(ReservedCodeStatus.USED);
+            matchedReservation.setAddressId(savedAddress.getId());
+            reservedCodeRepository.save(matchedReservation);
+        }
+
+        AddressResponse response = mapToAddressResponse(savedAddress);
+        response.setCodeChanged(codeChanged);
+        response.setPreviousCode(previousCode);
+        return response;
     }
 
     @Transactional
@@ -399,6 +461,7 @@ public class AddressService {
                 .moderationNotice(address.getStatus() == AddressStatus.SUSPENDED ? "Suspendue par la modération" : null)
                 .createdAt(address.getCreatedAt())
                 .owner(ownerProfile)
+                .clientRequestId(address.getClientRequestId())
                 .build();
     }
 

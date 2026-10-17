@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "check:size": "node scripts/check-size.mjs",
+    "sync:geogrid": "cp ../backend/src/main/resources/geo-grid.json src/data/geo-grid.json",
     "db:reset-demo": "bash ../scripts/db-reset-demo.sh",
     "lint": "oxlint",
     "preview": "vite preview"

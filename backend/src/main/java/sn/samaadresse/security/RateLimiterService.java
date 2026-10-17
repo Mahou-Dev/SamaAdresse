@@ -38,6 +38,24 @@ public class RateLimiterService {
         }
     }
 
+    public void checkHourlyRateLimit(String prefix, String identifier, int requestsPerHour) {
+        String safeId = (identifier == null || identifier.isBlank()) ? "anonymous" : identifier.trim();
+        String key = prefix + ":" + safeId;
+
+        Bucket bucket = cache.computeIfAbsent(key, k -> Bucket.builder()
+                .addLimit(Bandwidth.builder()
+                        .capacity(requestsPerHour)
+                        .refillIntervally(requestsPerHour, Duration.ofHours(1))
+                        .build())
+                .build());
+
+        ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
+        if (!probe.isConsumed()) {
+            long retryAfter = Math.max(1L, (probe.getNanosToWaitForRefill() + 999_999_999L) / 1_000_000_000L);
+            throw new RateLimitExceededException("Limite de réservations atteinte (" + requestsPerHour + " par heure). Veuillez patienter avant de renouveler vos codes.", retryAfter);
+        }
+    }
+
     public void reset() {
         cache.clear();
     }

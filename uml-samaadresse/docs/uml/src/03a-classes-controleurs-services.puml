@@ -2,41 +2,47 @@
 !include _style.puml
 title SamaAdresse — Classes : contrôleurs REST et services (backend)
 left to right direction
-skinparam linetype ortho
-note as N0
-  Brouillon à valider contre le code (noms exacts des classes).
-  <<à confirmer>> = dépend des Lots 6 et 7.
-end note
+set namespaceSeparator none
+skinparam nodesep 22
+skinparam ranksep 70
 
-package "Contrôleurs REST" {
+package "Contrôleurs REST (sn.samaadresse.controller)" {
   class AuthController
   class AddressController
-  class PublicAddressController
-  class DirectoryController <<à confirmer>>
-  class RouteController <<à confirmer>>
-  class ReservationController <<à confirmer>>
+  class AddressShareController
+  class DirectoryController
+  class RouteController
+  class ReservedCodeController
   class PublicReportController
   class AdminModerationController
+  class PhotoController
+  class HealthController
 }
-package "Services" {
+
+package "Services métier (sn.samaadresse.service)" {
   class AuthService
   class AddressService
-  class ShareService
   class QrCodeService
-  class DirectoryService <<à confirmer>>
-  class RouteService <<à confirmer>>
-  class ReservationService <<à confirmer>>
+  class AddressShareService
+  class RouteService
+  class ReservedCodeService
   class ModerationService
+  interface PhotoStorage
 }
 
 AuthController --> AuthService
 AddressController --> AddressService
-AddressController --> ShareService
-PublicAddressController --> AddressService
-PublicAddressController --> QrCodeService
-DirectoryController --> DirectoryService
+AddressController --> QrCodeService
+DirectoryController --> AddressService
+AddressShareController --> AddressShareService
 RouteController --> RouteService
-ReservationController --> ReservationService
+ReservedCodeController --> ReservedCodeService
 PublicReportController --> ModerationService
 AdminModerationController --> ModerationService
+PhotoController --> PhotoStorage
+
+note bottom of HealthController
+  GET /api/health
+  (sans accès base de données)
+end note
 @enduml

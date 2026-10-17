@@ -153,6 +153,7 @@ class AuthAndSecurityTest {
         when(userRepository.findByEmail(anyString())).thenReturn(java.util.Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
         DemoDataSeeder seeder = new DemoDataSeeder(userRepository, passwordEncoder);
+        seeder.setDemoPassword("UnitTestDemoPass123!");
         seeder.run(new DefaultApplicationArguments());
         verify(userRepository, atLeast(2)).save(any(User.class));
     }

@@ -45,4 +45,10 @@ public class CreateAddressRequest {
 
     @Schema(description = "Indique si le nom du propriétaire est affiché publiquement", example = "false")
     private Boolean showOwnerName;
+
+    @Schema(description = "Code réservé hors ligne optionnel", example = "ZIG-KBG-1234")
+    private String reservedCode;
+
+    @Schema(description = "Identifiant idempotent unique côté client pour déduplication", example = "123e4567-e89b-12d3-a456-426614174000")
+    private java.util.UUID clientRequestId;
 }

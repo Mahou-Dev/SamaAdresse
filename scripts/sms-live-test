@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# scripts/sms-live-test — Test d'envoi SMS réel via Twilio (exécution manuelle)
+# ==============================================================================
+# Usage :
+#   TWILIO_ACCOUNT_SID="AC..." TWILIO_AUTH_TOKEN="..." TWILIO_FROM="+1..." \
+#   ./scripts/sms-live-test +221771234567
+#
+# Variables optionnelles :
+#   BASE_URL (défaut : http://localhost:8082)
+#   DEMO_EMAIL (défaut : demo@samaadresse.sn)
+#   DEMO_PASSWORD (requis si appel via le backend SamaAdresse)
+# ==============================================================================
+set -euo pipefail
+
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 <NUMERO_E164>"
+  echo "Exemple: TWILIO_ACCOUNT_SID=AC... TWILIO_AUTH_TOKEN=... TWILIO_FROM=+1... $0 +221771234567"
+  exit 1
+fi
+
+TO_NUMBER="$1"
+TWILIO_FROM_VAL="${TWILIO_FROM:-${TWILIO_FROM_NUMBER:-}}"
+TWILIO_API_BASE="${TWILIO_API_BASE_URL:-https://api.twilio.com}"
+
+if [[ ! "$TO_NUMBER" =~ ^\+[1-9][0-9]{7,14}$ ]]; then
+  echo "Erreur : Le numéro destinataire doit être au format E.164 (ex: +221771234567)."
+  exit 1
+fi
+
+if [ -z "${TWILIO_ACCOUNT_SID:-}" ] || [ -z "${TWILIO_AUTH_TOKEN:-}" ] || [ -z "$TWILIO_FROM_VAL" ]; then
+  echo "Erreur : Les variables TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN et TWILIO_FROM doivent être définies dans l'environnement."
+  exit 1
+fi
+
+MASKED_TO="${TO_NUMBER:0:6}****${TO_NUMBER: -2}"
+MESSAGE_BODY="SamaAdresse ZIG-KBG-4271 (Boucotte - Kangourou) : https://samaadresse.onrender.com/a/ZIG-KBG-4271"
+
+echo "Envoi d'un SMS de test via Twilio vers $MASKED_TO..."
+
+if [[ "$TWILIO_FROM_VAL" == MG* ]]; then
+  FROM_PARAM="MessagingServiceSid=$TWILIO_FROM_VAL"
+else
+  FROM_PARAM="From=$TWILIO_FROM_VAL"
+fi
+
+HTTP_RESP=$(curl -sS -w "\n%{http_code}" -X POST \
+  "$TWILIO_API_BASE/2010-04-01/Accounts/$TWILIO_ACCOUNT_SID/Messages.json" \
+  -u "$TWILIO_ACCOUNT_SID:$TWILIO_AUTH_TOKEN" \
+  --data-urlencode "To=$TO_NUMBER" \
+  --data-urlencode "$FROM_PARAM" \
+  --data-urlencode "Body=$MESSAGE_BODY")
+
+HTTP_BODY=$(echo "$HTTP_RESP" | sed '$d')
+HTTP_STATUS=$(echo "$HTTP_RESP" | tail -n 1)
+
+echo "Statut HTTP Twilio : $HTTP_STATUS"
+if [ "$HTTP_STATUS" = "201" ] || [ "$HTTP_STATUS" = "200" ]; then
+  SID=$(echo "$HTTP_BODY" | python3 -c "import sys, json; print(json.load(sys.stdin).get('sid', 'N/A'))" 2>/dev/null || echo "N/A")
+  STATUS=$(echo "$HTTP_BODY" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', 'N/A'))" 2>/dev/null || echo "N/A")
+  echo "Succès : SMS accepté par Twilio (sid=$SID, status=$STATUS, destinataire=$MASKED_TO)"
+  exit 0
+else
+  echo "Échec d'envoi Twilio (HTTP $HTTP_STATUS) :"
+  echo "$HTTP_BODY"
+  exit 1
+fi

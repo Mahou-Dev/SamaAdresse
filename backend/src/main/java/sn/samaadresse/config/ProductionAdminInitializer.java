@@ -15,13 +15,11 @@ import sn.samaadresse.domain.enums.Role;
 import sn.samaadresse.repository.UserRepository;
 
 /**
- * Initialiseur d'administrateur en production (profil !dev).
+ * Initialiseur d'administrateur et validateur de configuration en production (profil !dev).
  * <p>
- * En environnement de production, l'administrateur initial est configuré
- * STRICTEMENT via les variables d'environnement ADMIN_EMAIL et ADMIN_PASSWORD,
- * SANS AUCUNE VALEUR PAR DÉFAUT.
- * Si l'une des deux variables est absente ou vide, aucun administrateur n'est créé.
- * </p>
+ * - Vérifie que FRONTEND_BASE_URL commence par https:// (ou http://localhost pour le test Docker local).
+ * - Si ADMIN_EMAIL et ADMIN_PASSWORD sont définis, exige ADMIN_PASSWORD >= 12 caractères
+ *   et crée l'administrateur de manière idempotente sans jamais écraser un compte existant.
  */
 @Slf4j
 @Component
@@ -38,17 +36,27 @@ public class ProductionAdminInitializer implements ApplicationRunner {
     @Value("${admin.password:}")
     private String adminPassword;
 
+    @Value("${frontend.base.url:}")
+    private String frontendBaseUrl;
+
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        validateFrontendBaseUrl(frontendBaseUrl);
+
         if (!StringUtils.hasText(adminEmail) || !StringUtils.hasText(adminPassword)) {
             log.info("[ADMIN-INIT] Variables ADMIN_EMAIL ou ADMIN_PASSWORD non définies. Aucun administrateur initial créé.");
             return;
         }
 
+        String trimmedPassword = adminPassword.trim();
+        if (trimmedPassword.length() < 12) {
+            throw new IllegalStateException("ADMIN_PASSWORD doit contenir au moins 12 caractères.");
+        }
+
         String normalizedEmail = adminEmail.trim().toLowerCase();
         if (userRepository.existsByEmail(normalizedEmail)) {
-            log.info("[ADMIN-INIT] L'administrateur initial '{}' existe déjà en base de données.", normalizedEmail);
+            log.info("[ADMIN-INIT] L'administrateur initial '{}' existe déjà en base de données (non écrasé).", normalizedEmail);
             return;
         }
 
@@ -56,12 +64,26 @@ public class ProductionAdminInitializer implements ApplicationRunner {
                 .fullName("Administrateur")
                 .email(normalizedEmail)
                 .phoneNumber("+221700000000")
-                .passwordHash(passwordEncoder.encode(adminPassword.trim()))
+                .passwordHash(passwordEncoder.encode(trimmedPassword))
                 .role(Role.ADMIN)
                 .enabled(true)
                 .build();
 
         userRepository.save(admin);
         log.info("[ADMIN-INIT] Administrateur initial de production créé avec succès pour : {}", normalizedEmail);
+    }
+
+    public static void validateFrontendBaseUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return; // Géré par Spring si injecté en tant que requis
+        }
+        String trimmed = url.trim();
+        if (trimmed.startsWith("https://")
+                || trimmed.startsWith("http://localhost:")
+                || trimmed.equals("http://localhost")
+                || trimmed.startsWith("http://127.0.0.1:")) {
+            return;
+        }
+        throw new IllegalStateException("En production, FRONTEND_BASE_URL doit commencer par https:// (reçu : " + trimmed + ")");
     }
 }

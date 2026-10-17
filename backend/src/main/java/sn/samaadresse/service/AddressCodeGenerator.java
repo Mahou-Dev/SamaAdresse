@@ -21,19 +21,33 @@ import java.security.SecureRandom;
  *    Le code est fixé de manière immuable dès sa première génération.
  */
 @Service
-@RequiredArgsConstructor
 public class AddressCodeGenerator {
 
     private final AddressRepository addressRepository;
+    private final sn.samaadresse.repository.ReservedCodeRepository reservedCodeRepository;
     private final SecureRandom random = new SecureRandom();
     private static final int MAX_RETRY_ATTEMPTS = 50;
+
+    public AddressCodeGenerator(AddressRepository addressRepository) {
+        this(addressRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public AddressCodeGenerator(AddressRepository addressRepository,
+                                sn.samaadresse.repository.ReservedCodeRepository reservedCodeRepository) {
+        this.addressRepository = addressRepository;
+        this.reservedCodeRepository = reservedCodeRepository;
+    }
 
     public String generateCode(String zoneCode, String quartierCode) {
         for (int attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
             int suffixNumber = 1000 + random.nextInt(9000); // Génère un nombre entre 1000 et 9999
             String code = String.format("%s-%s-%04d", zoneCode, quartierCode, suffixNumber);
 
-            if (!addressRepository.existsByCode(code)) {
+            boolean addressExists = addressRepository.existsByCode(code);
+            boolean reservedExists = reservedCodeRepository != null && reservedCodeRepository.existsByCode(code);
+
+            if (!addressExists && !reservedExists) {
                 return code;
             }
         }

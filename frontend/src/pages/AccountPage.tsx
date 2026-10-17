@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { useOnlineStatus } from '../context/OnlineStatusContext';
 import { usePwaInstall } from '../utils/usePwaInstall';
+import { getDraftsCount } from '../utils/offlineDb';
 import {
   User,
   Mail,
@@ -16,6 +17,7 @@ import {
   Download,
   CheckCircle2,
   Smartphone,
+  AlertCircle,
 } from 'lucide-react';
 
 export const AccountPage: React.FC = () => {
@@ -26,6 +28,8 @@ export const AccountPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [visitedCodes, setVisitedCodes] = useState<string[]>([]);
+  const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
+  const [pendingDraftsCount, setPendingDraftsCount] = useState<number>(0);
 
   useEffect(() => {
     try {
@@ -38,7 +42,22 @@ export const AccountPage: React.FC = () => {
     }
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = async () => {
+    try {
+      const count = await getDraftsCount();
+      if (count > 0) {
+        setPendingDraftsCount(count);
+        setShowLogoutConfirmModal(true);
+        return;
+      }
+    } catch {
+      // ignore
+    }
+    await confirmLogout();
+  };
+
+  const confirmLogout = async () => {
+    setShowLogoutConfirmModal(false);
     await logout();
     showToast('Déconnexion effectuée avec succès.', 'info');
     navigate('/');
@@ -69,7 +88,7 @@ export const AccountPage: React.FC = () => {
 
           {visitedCodes.length > 0 && (
             <div className="pt-3 border-t border-[#E6DDD0] text-left">
-              <span className="text-[11px] font-semibold text-[#5C4D44] uppercase tracking-wider block mb-2">
+              <span className="text-[11px] font-semibold text-[#5C4D44] block mb-2">
                 Fiches consultées disponibles hors ligne :
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -246,7 +265,7 @@ export const AccountPage: React.FC = () => {
         <div className="pt-2">
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-[#991B1B]/40 bg-[#FFFFFF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
           >
             <LogOut className="w-4 h-4 text-[#991B1B]" />
@@ -254,6 +273,47 @@ export const AccountPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {showLogoutConfirmModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="logout-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+        >
+          <div className="bg-[#FFFFFF] rounded-2xl border border-[#8C8272] shadow-xl p-6 max-w-md w-[calc(100vw-32px)] space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#FEF2F2] border border-[#DC2626]/30 flex items-center justify-center text-[#991B1B] shrink-0">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <h2 id="logout-dialog-title" className="text-base font-bold text-[#231A15]">
+                Adresses en attente d'envoi
+              </h2>
+            </div>
+            <p className="text-xs sm:text-sm text-[#5C4D44] leading-relaxed">
+              {pendingDraftsCount === 1
+                ? "1 adresse enregistrée sur cet appareil n'est pas encore envoyée. Elle sera conservée mais associée à ce compte lors de votre prochaine connexion."
+                : `${pendingDraftsCount} adresses enregistrées sur cet appareil ne sont pas encore envoyées. Elles seront conservées mais associées à ce compte lors de votre prochaine connexion.`}
+            </p>
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowLogoutConfirmModal(false)}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-[#8C8272] text-[#231A15] hover:bg-[#F2ECE1] text-xs font-bold transition min-h-[44px]"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={confirmLogout}
+                className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold transition min-h-[44px]"
+              >
+                Confirmer la déconnexion
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

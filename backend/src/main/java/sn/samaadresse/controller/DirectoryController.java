@@ -63,13 +63,6 @@ public class DirectoryController {
     }
 
     private String extractClientIp(HttpServletRequest request) {
-        if (request == null) {
-            return "0.0.0.0";
-        }
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "0.0.0.0";
+        return sn.samaadresse.security.ClientIpResolver.resolve(request);
     }
 }

@@ -4,7 +4,7 @@ title Séquence — Création d'une adresse (en ligne)
 autonumber
 actor "Propriétaire" as O
 participant "PWA (React)" as UI
-participant "API (Spring Boot)" as API
+participant "API (AddressController)" as API
 participant "GeoGridService" as GEO
 database "PostgreSQL" as DB
 participant "PhotoStorage" as PS
@@ -15,35 +15,35 @@ alt précision > 50 m
   UI --> O : Avertissement « Précision GPS faible (± N m) »
 end
 O -> UI : Étape 2 : type de lieu + description
-O -> UI : Étape 3 : photo (facultative)
+O -> UI : Étape 3 : photo (facultative) + visibilité annuaire
 UI -> UI : Compression (1600 px, JPEG 0,8)
-O -> UI : Valider
-UI -> API : POST /api/addresses\n(Bearer, latitude, longitude, description, type, clientRequestId)
-API -> API : Vérifie le JWT et le rôle
+O -> UI : Étape 4 : Valider
+UI -> API : POST /api/addresses\n(Bearer, latitude, longitude, description, locationType, listed, showOwnerName, clientRequestId)
+API -> API : Vérifie le JWT et le rôle (PROPRIETAIRE)
 API -> GEO : resolve(latitude, longitude)
 GEO -> GEO : Boîte de zone → boîtes de quartier\n(recouvrement : centre le plus proche)\nsinon repli ≤ 3 km (Haversine)
 alt hors zone couverte
   GEO --> API : aucune zone
   API --> UI : 422 « Coordonnées hors zone couverte »
-  UI --> O : Retour à l'étape 1 avec message
+  UI --> O : Retour à l'étape 1 avec message actionnable
 else zone trouvée
   GEO --> API : zone, quartier
   loop jusqu'à code unique
-    API -> API : Tirage sécurisé des 4 chiffres\ncode = ZIG-KBG-####
+    API -> API : Tirage sécurisé des 4 chiffres\ncode = ZIG-KBG-#### (AddressCodeGenerator)
     API -> DB : INSERT adresse (code unique)
   end
   DB --> API : adresse enregistrée
-  API --> UI : 201 adresse (code immuable)
+  API --> UI : 201 AddressResponse (code immuable)
   opt une photo a été choisie
-    UI -> API : POST photo (multipart)
-    API -> API : Contrôle des octets (JPEG/PNG/WebP)\n≤ 5 Mo, redimensionnement 800 px, nom UUID
-    API -> PS : save(photo)
-    PS --> API : référence
-    API -> DB : UPDATE photoUrl
-    API --> UI : 200
+    UI -> API : POST /api/addresses/{id}/photo (multipart)
+    API -> API : Contrôle des octets (JPEG/PNG/WebP)\n≤ 5 Mo, redimensionnement 800 px (FileStorageService)
+    API -> PS : save(bytes, contentType)
+    PS --> API : identifiant UUID
+    API -> DB : UPDATE photoUrl (/uploads/{uuid}.jpg)
+    API --> UI : 200 AddressResponse
   end
-  UI -> API : Demande du QR (PNG, ZXing)
-  API --> UI : QR vers FRONTEND_BASE_URL/a/{code}
+  UI -> API : GET /api/addresses/{code}/qrcode?size=512 (ZXing)
+  API --> UI : PNG du QR vers FRONTEND_BASE_URL/a/{code}
   UI --> O : Plaque + QR + partage
 end
 @enduml
