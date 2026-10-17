@@ -184,7 +184,7 @@ export const EditAddressPage: React.FC = () => {
         </Link>
       </div>
 
-      <div className="pb-4 border-b border-[#E6DDD0]">
+      <div className="pb-4 border-b border-[#766B5B]">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
           Modifier l'adresse
         </h1>
@@ -194,7 +194,7 @@ export const EditAddressPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="p-10 text-center rounded-xl bg-[#FFFFFF] border border-[#D4CEBF] space-y-3">
+        <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3">
           <Loader2 className="w-7 h-7 animate-spin text-[#1D528F] mx-auto" />
           <p className="text-xs text-[#5C4D44]">Chargement de l'adresse...</p>
         </div>
@@ -206,7 +206,7 @@ export const EditAddressPage: React.FC = () => {
       ) : (
         <form onSubmit={handleSave} className="space-y-6">
           {/* Encart Code et Position en lecture seule avec explication obligatoire */}
-          <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1] border border-[#8C8272] space-y-4">
+          <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1] border border-[#766B5B] space-y-4">
             <div className="w-full flex justify-center">
               <AddressPlate
                 code={address.code}
@@ -218,14 +218,14 @@ export const EditAddressPage: React.FC = () => {
               />
             </div>
 
-            <div className="p-3 rounded-lg bg-[#FBF9F5] border border-[#D4CEBF] text-xs">
+            <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] text-xs">
               <span className="text-[#5C4D44] block text-[11px] font-semibold">Position enregistrée :</span>
               <span className="font-mono font-bold text-[#231A15]">
                 {address.latitude.toFixed(6)}°N, {address.longitude.toFixed(6)}°O
               </span>
             </div>
 
-            <div className="flex items-start gap-2.5 text-xs text-[#231A15] bg-[#FBF9F5] p-3 rounded-lg border border-[#D4CEBF]">
+            <div className="flex items-start gap-2.5 text-xs text-[#231A15] bg-[#F2ECE1] p-3 rounded-lg border border-[#766B5B]">
               <Lock className="w-4 h-4 text-[#8A3112] shrink-0 mt-0.5" />
               <p className="leading-relaxed font-medium">
                 Le code et la position ne peuvent pas changer. Pour déplacer ce lieu, archivez cette adresse et créez-en une nouvelle.
@@ -234,7 +234,7 @@ export const EditAddressPage: React.FC = () => {
           </div>
 
           {/* Section champs modifiables */}
-          <div className="p-5 sm:p-6 rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5">
+          <div className="p-5 sm:p-6 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5">
             <div className="space-y-2">
               <span className="block text-xs sm:text-sm font-bold text-[#231A15]">
                 Type de lieu
@@ -266,21 +266,21 @@ export const EditAddressPage: React.FC = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ex. : Portail bleu face à la boulangerie..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] text-sm text-[#231A15] placeholder:text-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-sm text-[#231A15] placeholder:text-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
               />
             </div>
 
             {/* Section repliable Visibilité dans l'annuaire */}
-            <details className="group border border-[#8C8272]/40 rounded-xl p-3.5 bg-[#FFFFFF] text-xs">
+            <details className="group border border-[#766B5B] rounded-xl p-3.5 bg-[#FBF7EF] text-xs">
               <summary className="font-semibold text-[#1D528F] cursor-pointer hover:underline list-none flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-[#1D528F]" />
                   <span>Visibilité dans l'annuaire</span>
                 </div>
-                <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#8C8272]" />
+                <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#5C4D44]" />
               </summary>
 
-              <div className="mt-3 pt-3 border-t border-[#E6DDD0] space-y-3">
+              <div className="mt-3 pt-3 border-t border-[#766B5B] space-y-3">
                 <div className="flex items-start gap-2.5">
                   <input
                     id="edit-directory-listed"
@@ -290,7 +290,7 @@ export const EditAddressPage: React.FC = () => {
                       setListed(e.target.checked);
                       if (!e.target.checked) setShowOwnerName(false);
                     }}
-                    className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#8C8272] rounded focus:ring-[#1D528F]"
+                    className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#766B5B] rounded focus:ring-[#1D528F]"
                   />
                   <div>
                     <label htmlFor="edit-directory-listed" className="font-bold text-[#231A15] cursor-pointer">
@@ -309,7 +309,7 @@ export const EditAddressPage: React.FC = () => {
                       type="checkbox"
                       checked={showOwnerName}
                       onChange={(e) => setShowOwnerName(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#8C8272] rounded focus:ring-[#1D528F]"
+                      className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#766B5B] rounded focus:ring-[#1D528F]"
                     />
                     <div>
                       <label htmlFor="edit-directory-show-owner" className="font-bold text-[#231A15] cursor-pointer">
@@ -325,7 +325,7 @@ export const EditAddressPage: React.FC = () => {
             </details>
 
             {/* Photo de façade : remplacer ou supprimer */}
-            <div className="space-y-3 pt-2 border-t border-[#E6DDD0]">
+            <div className="space-y-3 pt-2 border-t border-[#766B5B]">
               <span className="block text-xs sm:text-sm font-bold text-[#231A15]">
                 Photo de façade
               </span>
@@ -340,7 +340,7 @@ export const EditAddressPage: React.FC = () => {
 
               {photoSrc ? (
                 <div className="space-y-3">
-                  <div className="relative rounded-xl overflow-hidden border border-[#8C8272] h-48 sm:h-56 bg-[#F2ECE1]">
+                  <div className="relative rounded-xl overflow-hidden border border-[#766B5B] h-48 sm:h-56 bg-[#F2ECE1]">
                     <img
                       src={photoSrc}
                       alt={`Façade ${address.code}`}
@@ -352,7 +352,7 @@ export const EditAddressPage: React.FC = () => {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={photoUploading || photoDeleting}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
                     >
                       {photoUploading ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -366,7 +366,7 @@ export const EditAddressPage: React.FC = () => {
                       type="button"
                       onClick={handleRemovePhoto}
                       disabled={photoUploading || photoDeleting}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#991B1B]/40 bg-[#FFFFFF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#991B1B]/40 bg-[#FBF7EF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
                     >
                       {photoDeleting ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -378,16 +378,16 @@ export const EditAddressPage: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#D4CEBF] flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="p-4 rounded-xl bg-[#F2ECE1] border border-[#766B5B] flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 text-xs text-[#5C4D44]">
-                    <ImageIcon className="w-4 h-4 text-[#8C8272] shrink-0" />
+                    <ImageIcon className="w-4 h-4 text-[#5C4D44] shrink-0" />
                     <span>Aucune photo associée à cette adresse.</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={photoUploading}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target shrink-0"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target shrink-0"
                   >
                     {photoUploading ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -417,10 +417,10 @@ export const EditAddressPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#E6DDD0]">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#766B5B]">
               <Link
                 to="/addresses/mine"
-                className="px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition touch-target inline-flex items-center"
+                className="px-4 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition touch-target inline-flex items-center"
               >
                 Annuler
               </Link>

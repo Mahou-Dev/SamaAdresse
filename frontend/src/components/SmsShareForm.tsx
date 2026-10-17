@@ -127,12 +127,12 @@ export const SmsShareForm: React.FC<SmsShareFormProps> = ({ addressCode }) => {
               inputMode="tel"
               aria-invalid={!!fieldError}
               aria-describedby={fieldError ? 'sms-phone-error' : undefined}
-              className={`w-full px-4 py-2.5 rounded-xl border font-mono text-sm text-[#231A15] bg-[#FFFFFF] transition
+              className={`w-full px-4 py-2.5 rounded-xl border font-mono text-sm text-[#231A15] bg-[#FBF7EF] transition
                 focus:outline-none focus:ring-2 focus:ring-[#1D528F]/30
                 disabled:opacity-60 disabled:cursor-not-allowed
                 ${fieldError
                   ? 'border-[#DC2626] focus:ring-[#DC2626]/20'
-                  : 'border-[#D4CEBF] hover:border-[#1D528F]/40'
+                  : 'border-[#766B5B] hover:border-[#1D528F]'
                 }`}
             />
           </div>
@@ -159,7 +159,7 @@ export const SmsShareForm: React.FC<SmsShareFormProps> = ({ addressCode }) => {
           </p>
         )}
 
-        <p className="text-[11px] text-[#8C7B70]">
+        <p className="text-[11px] text-[#5C4D44]">
           Mobiles uniquement (70, 75, 76, 77, 78). Format E.164 : +221 suivi de 9 chiffres.
         </p>
       </form>

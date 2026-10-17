@@ -303,19 +303,19 @@ export const PublicAddressPage: React.FC = () => {
       {loading ? (
         /* Squelette dimensionné pour CLS < 0.1 */
         <div className="space-y-6" aria-label="Chargement de la fiche publique">
-          <div className="w-full h-40 sm:h-48 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] animate-pulse" />
+          <div className="w-full h-40 sm:h-48 rounded-xl bg-[#F2ECE1] border border-[#766B5B] animate-pulse" />
           <div className="flex justify-center gap-3">
             <div className="h-11 w-56 rounded-lg bg-[#E6DDD0] animate-pulse" />
             <div className="h-11 w-32 rounded-lg bg-[#E6DDD0] animate-pulse" />
           </div>
-          <div className="w-full aspect-video max-h-64 sm:max-h-80 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] animate-pulse" />
-          <div className="w-full h-24 rounded-xl bg-[#FFFFFF] border border-[#D4CEBF] animate-pulse" />
-          <div className="w-full h-64 sm:h-80 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] animate-pulse" />
+          <div className="w-full aspect-video max-h-64 sm:max-h-80 rounded-xl bg-[#F2ECE1] border border-[#766B5B] animate-pulse" />
+          <div className="w-full h-24 rounded-xl bg-[#FBF7EF] border border-[#766B5B] animate-pulse" />
+          <div className="w-full h-64 sm:h-80 rounded-xl bg-[#F2ECE1] border border-[#766B5B] animate-pulse" />
         </div>
       ) : errorStatus === 410 ? (
         /* Fiche publique archivée ou suspendue (410 Gone) : aucune plaque ni donnée */
-        <div className="p-8 sm:p-10 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-[#5C4D44] flex items-center justify-center mx-auto">
+        <div className="p-8 sm:p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-4">
+          <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-[#5C4D44] flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
           </div>
           <div className="space-y-1.5">
@@ -337,8 +337,8 @@ export const PublicAddressPage: React.FC = () => {
         </div>
       ) : (!isOnline && !address) ? (
         /* Repli sobre : fiche non consultée auparavant hors ligne */
-        <div className="p-8 sm:p-10 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5 max-w-lg mx-auto">
-          <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-[#8A3112] flex items-center justify-center mx-auto">
+        <div className="p-8 sm:p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5 max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-[#8A3112] flex items-center justify-center mx-auto">
             <WifiOff className="w-6 h-6" />
           </div>
           <div className="space-y-1.5">
@@ -356,7 +356,7 @@ export const PublicAddressPage: React.FC = () => {
               const visited: string[] = JSON.parse(localStorage.getItem('visited_address_codes') || '[]');
               if (visited.length === 0) return null;
               return (
-                <div className="p-3.5 rounded-xl bg-[#FBF9F5] border border-[#D4CEBF] text-left space-y-2">
+                <div className="p-3.5 rounded-xl bg-[#FBF7EF] border border-[#766B5B] text-left space-y-2">
                   <span className="text-xs font-semibold text-[#5C4D44] block">
                     Fiches déjà enregistrées hors ligne
                   </span>
@@ -365,7 +365,7 @@ export const PublicAddressPage: React.FC = () => {
                       <Link
                         key={vCode}
                         to={`/a/${vCode}`}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#FFFFFF] border border-[#8C8272] text-[#1D528F] font-mono text-xs font-bold hover:underline"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#FBF7EF] border border-[#766B5B] text-[#1D528F] font-mono text-xs font-bold hover:underline"
                       >
                         <span>{vCode}</span>
                       </Link>
@@ -388,7 +388,7 @@ export const PublicAddressPage: React.FC = () => {
           </div>
         </div>
       ) : errorMsg ? (
-        <div className="p-8 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272]/30 space-y-4">
+        <div className="p-8 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-4">
           <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] text-[#DC2626] flex items-center justify-center mx-auto">
             <AlertCircle className="w-6 h-6" />
           </div>
@@ -407,7 +407,7 @@ export const PublicAddressPage: React.FC = () => {
         <article className="space-y-6">
           {/* Mention de version hors ligne enregistrée */}
           {!isOnline && (
-            <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#D4CEBF] text-[#5C4D44] text-xs font-medium shadow-[0_1px_0_rgba(35,26,21,0.04)]">
+            <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] text-[#5C4D44] text-xs font-medium shadow-[0_1px_0_rgba(35,26,21,0.04)]">
               <span>
                 Version enregistrée le {code ? localStorage.getItem(`cached_date_${code}`) || new Date().toLocaleDateString('fr-FR') : ''}
               </span>
@@ -445,7 +445,7 @@ export const PublicAddressPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShareOpen(!shareOpen)}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs sm:text-sm font-bold transition shadow-sm cursor-pointer touch-target"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs sm:text-sm font-bold transition shadow-sm cursor-pointer touch-target"
                 aria-expanded={shareOpen}
               >
                 <Share2 className="w-4 h-4 text-[#1D528F]" />
@@ -456,14 +456,14 @@ export const PublicAddressPage: React.FC = () => {
 
           {/* Module de partage dépliable */}
           {shareOpen && (
-            <div className="p-4 rounded-xl border border-[#8C8272]/40 bg-[#FFFFFF] shadow-sm">
+            <div className="p-4 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm">
               <ShareAddress code={address.code} />
             </div>
           )}
 
           {/* 2. PHOTO DE FAÇADE OU ÉTAT VIDE HONNÊTE (Espace réservé aspect-video h-64 sm:h-80 pour CLS < 0.1) */}
           {address.photoUrl && !photoError ? (
-            <div className="relative rounded-xl overflow-hidden border border-[#8C8272]/40 shadow-[0_2px_0_rgba(35,26,21,0.06)] h-64 sm:h-80 w-full aspect-video bg-[#F2ECE1]">
+            <div className="relative rounded-xl overflow-hidden border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] h-64 sm:h-80 w-full aspect-video bg-[#F2ECE1]">
               {!photoLoaded && (
                 <div className="absolute inset-0 bg-[#F2ECE1] animate-pulse flex items-center justify-center text-xs text-[#5C4D44]">
                   Chargement de la photo...
@@ -487,14 +487,14 @@ export const PublicAddressPage: React.FC = () => {
             </div>
           ) : (
             /* État vide honnête sans illustration trompeuse */
-            <div className="p-5 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-center text-xs text-[#5C4D44] flex items-center justify-center gap-2">
-              <ImageIcon className="w-4 h-4 text-[#8C8272] shrink-0" />
+            <div className="p-5 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-center text-xs text-[#5C4D44] flex items-center justify-center gap-2">
+              <ImageIcon className="w-4 h-4 text-[#5C4D44] shrink-0" />
               <span className="font-medium">Pas de photo pour ce lieu</span>
             </div>
           )}
 
           {/* 3. REPÈRE VISUEL & DESCRIPTION */}
-          <div className="p-4 sm:p-5 rounded-xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-1.5">
+          <div className="p-4 sm:p-5 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-1.5">
             <span className="text-xs font-bold text-[#5C4D44] block">
               Repère visuel :
             </span>
@@ -502,7 +502,7 @@ export const PublicAddressPage: React.FC = () => {
               {address.description}
             </p>
             {quartierDisplayName && (
-              <p className="text-xs text-[#5C4D44] pt-1 border-t border-[#E6DDD0] font-medium">
+              <p className="text-xs text-[#5C4D44] pt-1 border-t border-[#766B5B] font-medium">
                 Quartier : <span className="text-[#231A15] font-semibold">{quartierDisplayName}</span> ({zoneDisplayName})
               </p>
             )}
@@ -531,7 +531,7 @@ export const PublicAddressPage: React.FC = () => {
             />
 
             {/* Bloc Itinéraire OpenRouteService */}
-            <div className="p-4 rounded-xl bg-[#FFFFFF] border border-[#8C8272]/40 shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-3">
+            <div className="p-4 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Navigation className="w-4 h-4 text-[#1D528F]" />
@@ -539,7 +539,7 @@ export const PublicAddressPage: React.FC = () => {
                 </div>
 
                 {/* Bascule Voiture / À pied */}
-                <div className="inline-flex rounded-lg border border-[#8C8272]/40 p-0.5 bg-[#FBF9F5] text-xs">
+                <div className="inline-flex rounded-lg border border-[#766B5B] p-0.5 bg-[#FBF7EF] text-xs">
                   <button
                     type="button"
                     onClick={() => handleProfileSwitch('driving-car')}
@@ -609,7 +609,7 @@ export const PublicAddressPage: React.FC = () => {
               {/* Résumé de l'itinéraire calculé */}
               {routeData && (
                 <div className="space-y-3 pt-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-[#F2ECE1] border border-[#D4CEBF]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-[#F2ECE1] border border-[#766B5B]">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-[#1D528F]">
                         {formatDuration(routeData.duration)}
@@ -631,7 +631,7 @@ export const PublicAddressPage: React.FC = () => {
 
                   {/* Étapes détaillées */}
                   {stepsOpen && (
-                    <ol className="p-3 bg-[#FBF9F5] rounded-xl border border-[#D4CEBF] divide-y divide-[#E6DDD0] text-xs space-y-1 list-decimal list-inside">
+                    <ol className="p-3 bg-[#FBF7EF] rounded-xl border border-[#766B5B] divide-y divide-[#766B5B] text-xs space-y-1 list-decimal list-inside">
                       {routeData.steps.map((st, idx) => (
                         <li key={idx} className="py-1.5 flex items-start justify-between gap-2">
                           <span className="text-[#231A15] leading-snug">{st.instruction}</span>
@@ -646,7 +646,7 @@ export const PublicAddressPage: React.FC = () => {
               )}
 
               {/* Repli externe et mention de confidentialité */}
-              <div className="pt-2 border-t border-[#E6DDD0] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#5C4D44]">
+              <div className="pt-2 border-t border-[#766B5B] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#5C4D44]">
                 <span className="italic">Votre position n'est pas enregistrée.</span>
                 <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${address.latitude},${address.longitude}`}
@@ -662,7 +662,7 @@ export const PublicAddressPage: React.FC = () => {
           </div>
 
           {/* Métadonnées discrètes et lien Signaler un problème sous la carte */}
-          <div className="pt-3 border-t border-[#E6DDD0] flex flex-wrap items-center justify-between gap-2 text-xs text-[#5C4D44]">
+          <div className="pt-3 border-t border-[#766B5B] flex flex-wrap items-center justify-between gap-2 text-xs text-[#5C4D44]">
             <div className="flex items-center gap-1.5 font-mono text-[11px]">
               <Calendar className="w-3.5 h-3.5" />
               <span>Créée le {new Date(address.createdAt).toLocaleDateString('fr-FR')}</span>
@@ -695,9 +695,9 @@ export const PublicAddressPage: React.FC = () => {
         >
           <div
             ref={reportModalRef}
-            className="w-full max-w-[calc(100vw-32px)] sm:max-w-md rounded-t-2xl sm:rounded-xl bg-[#FBF9F5] border-t sm:border border-[#8C8272] shadow-lg p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto mx-auto"
+            className="w-full max-w-[calc(100vw-32px)] sm:max-w-md rounded-t-2xl sm:rounded-xl bg-[#FBF7EF] border-t sm:border border-[#766B5B] shadow-lg p-5 sm:p-6 space-y-4 max-h-[90vh] overflow-y-auto mx-auto"
           >
-            <div className="flex items-center justify-between gap-2 border-b border-[#E6DDD0] pb-3">
+            <div className="flex items-center justify-between gap-2 border-b border-[#766B5B] pb-3">
               <h2 id="report-modal-title" className="text-base font-bold text-[#231A15]">
                 Signaler un problème
               </h2>
@@ -739,7 +739,7 @@ export const PublicAddressPage: React.FC = () => {
                       className={`flex items-center gap-2.5 p-2.5 rounded-lg border text-xs font-medium cursor-pointer transition ${
                         reportReason === item.value
                           ? 'border-[#B84A24] bg-[#F2ECE1] text-[#231A15] font-semibold'
-                          : 'border-[#D4CEBF] bg-[#FFFFFF] text-[#231A15] hover:bg-[#F2ECE1]/50'
+                          : 'border-[#766B5B] bg-[#FBF7EF] text-[#231A15] hover:bg-[#F2ECE1]/50'
                       }`}
                     >
                       <input
@@ -771,7 +771,7 @@ export const PublicAddressPage: React.FC = () => {
                     value={reportComment}
                     onChange={(e) => setReportComment(e.target.value)}
                     placeholder="Indiquez brièvement le problème constaté..."
-                    className="w-full px-3 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] text-xs text-[#231A15] placeholder:text-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
+                    className="w-full px-3 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-xs text-[#231A15] placeholder:text-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
                   />
                 </div>
 
@@ -785,11 +785,11 @@ export const PublicAddressPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E6DDD0]">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#766B5B]">
                   <button
                     type="button"
                     onClick={() => setReportOpen(false)}
-                    className="px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition cursor-pointer touch-target"
+                    className="px-4 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition cursor-pointer touch-target"
                   >
                     Annuler
                   </button>
