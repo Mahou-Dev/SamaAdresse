@@ -25,7 +25,7 @@
 # Rapport de Vérification Automatique SamaAdresse (Lot 8)
 
 **Date d'exécution :** 2026-10-17 19:22:57 UTC
-**Branche / Commit :** feature/lot8-deploiement / 78323fa
+**Branche / Commit :** feature/lot8-deploiement / d9f516b
 **Mode d'exécution :** Conteneur Docker de production (`--with-docker`, `http://localhost:8082`)
 
 ## 0. Sécurité Git & Clé ORS hors du dépôt
