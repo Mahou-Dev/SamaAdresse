@@ -48,6 +48,15 @@ public class AddressResponse {
     @Schema(description = "Statut de modération", example = "ACTIVE")
     private AddressStatus status;
 
+    @Schema(description = "Indique si l'adresse figure dans l'annuaire public", example = "true")
+    private Boolean listed;
+
+    @Schema(description = "Indique si le nom du propriétaire est affiché publiquement", example = "false")
+    private Boolean showOwnerName;
+
+    @Schema(description = "Mention de modération affichée au propriétaire si l'adresse est suspendue", example = "Suspendue par la modération")
+    private String moderationNotice;
+
     @Schema(description = "Date de création")
     private Instant createdAt;
 

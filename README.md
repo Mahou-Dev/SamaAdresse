@@ -40,26 +40,27 @@ cd backend
 export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk
 
 # Compilation & vérification du projet
-./mvnw clean compile
+c
 
-# Démarrage de Spring Boot (port 8080 par défaut)
+# Démarrage de Spring Boot (port 8082 par défaut en dev)
 ./mvnw spring-boot:run
 ```
 
 #### Variables d'environnement PostgreSQL (Optionnelles pour le dev local) :
 Le fichier `src/main/resources/application.yml` utilise des variables d'environnement avec valeurs de fallback pour le développement local :
-- `DB_URL` (défaut : `jdbc:postgresql://localhost:5432/samaadresse`)
-- `DB_USER` (défaut : `postgres`)
-- `DB_PASSWORD` (défaut : `postgres`)
+- `DB_URL` (défaut en dev : `jdbc:postgresql://localhost:5434/samaadresse`)
+- `DB_USER` (défaut en dev : `samaadresse`)
+- `DB_PASSWORD` (défaut en dev : `samaadresse_dev`)
+- `GEO_FALLBACK_MAX_DISTANCE_KM` (défaut : `3.0`, rayon de tolérance de rattachement au quartier le plus proche)
 
 Exemple de lancement avec variables personnalisées :
 ```bash
-DB_URL=jdbc:postgresql://localhost:5432/mon_bd DB_USER=myuser DB_PASSWORD=mypass ./mvnw spring-boot:run
+DB_URL=jdbc:postgresql://localhost:5434/mon_bd DB_USER=myuser DB_PASSWORD=mypass ./mvnw spring-boot:run
 ```
 
 #### Endpoints utiles :
-- Healthcheck : [http://localhost:8080/api/health](http://localhost:8080/api/health) (Retourne `{"status":"UP"}`)
-- Documentation Swagger UI : [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- Healthcheck : [http://localhost:8082/api/health](http://localhost:8082/api/health) (Retourne `{"status":"UP"}`)
+- Documentation Swagger UI : [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html)
 
 ---
 
@@ -77,12 +78,21 @@ npm install
 npm run dev
 ```
 
-L'application web/PWA sera accessible sur [http://localhost:5173](http://localhost:5173). Le serveur Vite redirige automatiquement les appels `/api` vers le backend Spring Boot sur `http://localhost:8080`.
+L'application web/PWA sera accessible sur [http://localhost:5173](http://localhost:5173). Le serveur Vite redirige automatiquement les appels `/api` et `/uploads` vers le backend Spring Boot sur `http://localhost:8082`.
+
+#### Variables d'environnement Frontend (dans `.env` ou `.env.local`) :
+- `VITE_TILE_URL` : URL des tuiles cartographiques Leaflet (défaut : OpenStreetMap standard `https://tile.openstreetmap.org/{z}/{x}/{y}.png`).
+- `VITE_TILE_ATTRIBUTION` : Attribution légale de la cartographie (défaut : `&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors`).
+- `VITE_API_BASE_URL` : URL de base du backend si hébergé hors du même domaine (vide par défaut pour utiliser les proxys relatifs Vite `/api` et `/uploads`).
 
 Pour construire la version de production PWA :
 ```bash
 npm run build
 ```
+
+### 🔄 Gestion du rafraîchissement de session (Double Refresh Avoidance)
+Pour prévenir la rotation concurrente et l'invalidation prématurée du refresh token (notamment sous React StrictMode en dev qui monte deux fois les composants, ou lors de requêtes simultanées), `AuthContext.tsx` utilise une référence de verrouillage `initRanRef`. Ce mécanisme garantit qu'un seul appel POST `/api/auth/refresh` est émis à l'initialisation de l'application. Les requêtes réseau partagent le jeton d'accès en mémoire sans déclencher de rejeu concurrent destructeur sur le cookie HttpOnly de rotation.
+
 
 ---
 

@@ -19,6 +19,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+admin:
+  email: ${ADMIN_EMAIL:}
+  password: ${ADMIN_PASSWORD:}
+
 ---
 spring:
   config:
@@ -36,6 +40,83 @@ spring:
     open-in-view: false
     show-sql: true
 
+frontend:
+  base:
+    url: ${FRONTEND_BASE_URL:http://localhost:5173}
+
+jwt:
+  secret: ${JWT_SECRET:dev-secret-key-at-least-32-chars-long-for-hmac-sha256}
+  access-token-expiration-ms: ${JWT_ACCESS_EXP:900000}
+  refresh-token-expiration-ms: ${JWT_REFRESH_EXP:604800000}
+
+sms:
+  provider: ${SMS_PROVIDER:mock}
+  timeout: ${SMS_TIMEOUT:5s}
+  daily-cap: ${SMS_DAILY_CAP:200}
+  user-hourly-limit: ${SMS_USER_HOURLY_LIMIT:5}
+  recipient-daily-limit: ${SMS_RECIPIENT_DAILY_LIMIT:3}
+  twilio:
+    account-sid: ${TWILIO_ACCOUNT_SID:}
+    auth-token: ${TWILIO_AUTH_TOKEN:}
+    from-number: ${TWILIO_FROM_NUMBER:}
+
+upload:
+  dir: ${UPLOAD_DIR:./uploads}
+
+geo:
+  fallback-max-distance-km: ${GEO_FALLBACK_MAX_DISTANCE_KM:3.0}
+
+ors:
+  api-key: ${ORS_API_KEY:}
+  base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}
+
+logging:
+  level:
+    sn.samaadresse: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: e2e
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5434/samaadresse_e2e}
+    username: ${DB_USER:samaadresse}
+    password: ${DB_PASSWORD:samaadresse_dev}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    show-sql: false
+
+frontend:
+  base:
+    url: ${FRONTEND_BASE_URL:http://localhost:5173}
+
+jwt:
+  secret: ${JWT_SECRET:dev-secret-key-at-least-32-chars-long-for-hmac-sha256}
+  access-token-expiration-ms: 900000
+  refresh-token-expiration-ms: 604800000
+
+sms:
+  provider: mock
+
+upload:
+  dir: ${UPLOAD_DIR:./uploads-e2e}
+
+geo:
+  fallback-max-distance-km: 3.0
+
+ors:
+  api-key: ${ORS_API_KEY:}
+  base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}
+
+logging:
+  level:
+    sn.samaadresse: INFO
+
 ---
 spring:
   config:
@@ -52,3 +133,11 @@ spring:
       ddl-auto: validate
     open-in-view: false
     show-sql: false
+
+frontend:
+  base:
+    url: ${FRONTEND_BASE_URL}
+
+ors:
+  api-key: ${ORS_API_KEY:}
+  base-url: ${ORS_BASE_URL:https://api.openrouteservice.org}

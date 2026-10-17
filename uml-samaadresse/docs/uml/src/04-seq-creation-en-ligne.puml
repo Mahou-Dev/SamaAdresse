@@ -1,0 +1,49 @@
+@startuml 04-seq-creation-en-ligne
+!include _style.puml
+title Séquence — Création d'une adresse (en ligne)
+autonumber
+actor "Propriétaire" as O
+participant "PWA (React)" as UI
+participant "API (Spring Boot)" as API
+participant "GeoGridService" as GEO
+database "PostgreSQL" as DB
+participant "PhotoStorage" as PS
+
+O -> UI : Ouvre l'assistant (étape 1/4)
+UI -> UI : Capture GPS (navigator.geolocation)\n+ repère déplaçable
+alt précision > 50 m
+  UI --> O : Avertissement « Précision GPS faible (± N m) »
+end
+O -> UI : Étape 2 : type de lieu + description
+O -> UI : Étape 3 : photo (facultative)
+UI -> UI : Compression (1600 px, JPEG 0,8)
+O -> UI : Valider
+UI -> API : POST /api/addresses\n(Bearer, latitude, longitude, description, type, clientRequestId)
+API -> API : Vérifie le JWT et le rôle
+API -> GEO : resolve(latitude, longitude)
+GEO -> GEO : Boîte de zone → boîtes de quartier\n(recouvrement : centre le plus proche)\nsinon repli ≤ 3 km (Haversine)
+alt hors zone couverte
+  GEO --> API : aucune zone
+  API --> UI : 422 « Coordonnées hors zone couverte »
+  UI --> O : Retour à l'étape 1 avec message
+else zone trouvée
+  GEO --> API : zone, quartier
+  loop jusqu'à code unique
+    API -> API : Tirage sécurisé des 4 chiffres\ncode = ZIG-KBG-####
+    API -> DB : INSERT adresse (code unique)
+  end
+  DB --> API : adresse enregistrée
+  API --> UI : 201 adresse (code immuable)
+  opt une photo a été choisie
+    UI -> API : POST photo (multipart)
+    API -> API : Contrôle des octets (JPEG/PNG/WebP)\n≤ 5 Mo, redimensionnement 800 px, nom UUID
+    API -> PS : save(photo)
+    PS --> API : référence
+    API -> DB : UPDATE photoUrl
+    API --> UI : 200
+  end
+  UI -> API : Demande du QR (PNG, ZXing)
+  API --> UI : QR vers FRONTEND_BASE_URL/a/{code}
+  UI --> O : Plaque + QR + partage
+end
+@enduml

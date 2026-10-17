@@ -1,0 +1,42 @@
+@startuml 03a-classes-controleurs-services
+!include _style.puml
+title SamaAdresse — Classes : contrôleurs REST et services (backend)
+left to right direction
+skinparam linetype ortho
+note as N0
+  Brouillon à valider contre le code (noms exacts des classes).
+  <<à confirmer>> = dépend des Lots 6 et 7.
+end note
+
+package "Contrôleurs REST" {
+  class AuthController
+  class AddressController
+  class PublicAddressController
+  class DirectoryController <<à confirmer>>
+  class RouteController <<à confirmer>>
+  class ReservationController <<à confirmer>>
+  class PublicReportController
+  class AdminModerationController
+}
+package "Services" {
+  class AuthService
+  class AddressService
+  class ShareService
+  class QrCodeService
+  class DirectoryService <<à confirmer>>
+  class RouteService <<à confirmer>>
+  class ReservationService <<à confirmer>>
+  class ModerationService
+}
+
+AuthController --> AuthService
+AddressController --> AddressService
+AddressController --> ShareService
+PublicAddressController --> AddressService
+PublicAddressController --> QrCodeService
+DirectoryController --> DirectoryService
+RouteController --> RouteService
+ReservationController --> ReservationService
+PublicReportController --> ModerationService
+AdminModerationController --> ModerationService
+@enduml

@@ -1,0 +1,122 @@
+@startuml 02-classes-domaine
+!include _style.puml
+title SamaAdresse — Diagramme de classes (modèle du domaine)
+note as N0
+  Brouillon à valider contre le code (noms exacts des attributs).
+  Les classes marquées <<à confirmer>> dépendent des Lots 6 et 7.
+end note
+
+enum Role {
+  USER
+  ADMIN
+}
+enum LocationType {
+  MAISON
+  COMMERCE
+  INSTITUTION
+}
+enum AddressStatus {
+  ACTIVE
+  ARCHIVED
+  SUSPENDED
+}
+enum ReportReason {
+  POSITION_INCORRECTE
+  CONTENU_INAPPROPRIE
+  PHOTO_INAPPROPRIEE
+  AUTRE
+}
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+enum ReservedCodeStatus {
+  RESERVED
+  USED
+  EXPIRED
+}
+
+class User {
+  id : UUID
+  fullName : String
+  email : String <<unique>>
+  phone : String
+  passwordHash : String
+  role : Role
+  createdAt : Instant
+}
+
+class RefreshToken {
+  id : UUID
+  tokenHash : String <<SHA-256>>
+  expiresAt : Instant
+  revoked : boolean
+  createdAt : Instant
+}
+
+class Address {
+  id : UUID
+  code : String <<unique, immuable>>
+  latitude : double <<immuable>>
+  longitude : double <<immuable>>
+  zone : String
+  quartier : String
+  description : String
+  photoUrl : String
+  locationType : LocationType
+  status : AddressStatus
+  listed : boolean
+  showOwnerName : boolean
+  clientRequestId : UUID
+  createdAt : Instant
+}
+
+class Report {
+  id : UUID
+  reason : ReportReason
+  comment : String
+  status : ReportStatus
+  reporterKeyHash : String
+  createdAt : Instant
+}
+
+class AdminAction {
+  id : UUID
+  action : String
+  reason : String
+  createdAt : Instant
+}
+
+class ReservedCode <<à confirmer>> {
+  code : String <<unique>>
+  zone : String
+  quartier : String
+  status : ReservedCodeStatus
+  createdAt : Instant
+  expiresAt : Instant
+}
+
+class PhotoBlob <<à confirmer>> {
+  uuid : UUID
+  contentType : String
+  data : byte[]
+}
+
+User "1" -- "0..*" Address : possède >
+User "1" -- "0..*" RefreshToken
+User "1" -- "0..*" ReservedCode : réserve >
+Address "1" -- "0..*" Report : fait l'objet de >
+User "1" -- "0..*" AdminAction : effectue >
+AdminAction "0..*" -- "0..1" Address : concerne >
+Report "0..*" -- "0..1" AdminAction : traité par >
+ReservedCode "0..1" -- "0..1" Address : utilisé par >
+Address "0..1" -- "0..1" PhotoBlob : photo (stockage base)
+
+User --> Role
+Address --> LocationType
+Address --> AddressStatus
+Report --> ReportReason
+Report --> ReportStatus
+ReservedCode --> ReservedCodeStatus
+@enduml

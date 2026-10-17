@@ -1,0 +1,40 @@
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Outfit
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam ArrowColor #231A15
+skinparam ActorBorderColor #231A15
+skinparam ActorBackgroundColor #F2ECE1
+skinparam usecase {
+  BorderColor #1D528F
+  BackgroundColor #FBF9F5
+  ArrowColor #5C4D44
+}
+skinparam rectangle {
+  BorderColor #8C8272
+  BackgroundColor #FFFFFF
+}
+skinparam package {
+  BorderColor #B84A24
+  FontColor #8A3112
+}
+skinparam class {
+  BorderColor #1D528F
+  BackgroundColor #FBF9F5
+  HeaderBackgroundColor #E8EEF6
+  ArrowColor #231A15
+}
+skinparam sequence {
+  ParticipantBorderColor #1D528F
+  ParticipantBackgroundColor #FBF9F5
+  LifeLineBorderColor #8C8272
+  ArrowColor #231A15
+  GroupBorderColor #B84A24
+  GroupBackgroundColor #FBF9F5
+  BoxBorderColor #8C8272
+}
+skinparam note {
+  BackgroundColor #F2ECE1
+  BorderColor #8C8272
+}

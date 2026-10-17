@@ -1,0 +1,30 @@
+@startuml 08-seq-partage-sms
+!include _style.puml
+title Séquence — Partage de la fiche par SMS
+autonumber
+actor "Propriétaire" as O
+participant "PWA (React)" as UI
+participant "API (ShareService)" as API
+participant "RateLimiter" as RL
+participant "SmsProvider\n(mock / Twilio / SendFlash)" as SP
+participant "Opérateur" as OP
+
+O -> UI : Saisit le numéro du destinataire
+UI -> UI : Contrôle du format mobile\n^\+221(70|75|76|77|78)[0-9]{7}$
+UI -> API : Demande d'envoi (adresse, numéro)
+API -> API : Vérifie que l'adresse appartient\nà l'utilisateur
+API -> RL : Trois niveaux de limitation\n(utilisateur, destinataire haché SHA-256, global)
+alt limite atteinte
+  RL --> API : refus
+  API --> UI : 429
+  UI --> O : « Trop d'envois, réessayez plus tard »
+else autorisé
+  API -> API : Message GSM-7 ≤ 160 caractères\navec FRONTEND_BASE_URL/a/{code}
+  API -> SP : send(numéro, message)
+  SP -> OP : Envoi (mode sandbox)
+  OP --> SP : accusé
+  SP --> API : succès
+  API --> UI : 200
+  UI --> O : « SMS envoyé »
+end
+@enduml

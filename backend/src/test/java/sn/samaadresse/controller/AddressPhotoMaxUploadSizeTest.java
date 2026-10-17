@@ -38,10 +38,16 @@ class AddressPhotoMaxUploadSizeTest {
     private AddressService addressService;
 
     @MockBean
+    private sn.samaadresse.service.QrCodeService qrCodeService;
+
+    @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @MockBean
     private JwtProvider jwtProvider;
+
+    @MockBean
+    private sn.samaadresse.security.RateLimiterService rateLimiterService;
 
     @Test
     @WithMockUser(username = "owner@samaadresse.sn", roles = {"PROPRIETAIRE"})

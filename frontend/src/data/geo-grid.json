@@ -1,0 +1,102 @@
+{
+  "zones": [
+    {
+      "code": "ZIG",
+      "name": "Ziguinchor",
+      "latMin": 12.5000,
+      "latMax": 12.6500,
+      "lonMin": -16.3500,
+      "lonMax": -16.2000
+    },
+    {
+      "code": "DKR",
+      "name": "Dakar",
+      "latMin": 14.6000,
+      "latMax": 14.8500,
+      "lonMin": -17.5500,
+      "lonMax": -17.2500
+    },
+    {
+      "code": "SL",
+      "name": "Saint-Louis",
+      "latMin": 15.9500,
+      "latMax": 16.1000,
+      "lonMin": -16.5500,
+      "lonMax": -16.4000
+    }
+  ],
+  "quartiers": [
+    {
+      "code": "KBG",
+      "name": "Boucotte - Kangourou",
+      "zoneCode": "ZIG",
+      "latMin": 12.5600,
+      "latMax": 12.5900,
+      "lonMin": -16.2800,
+      "lonMax": -16.2500
+    },
+    {
+      "code": "ESC",
+      "name": "Escale Center",
+      "zoneCode": "ZIG",
+      "latMin": 12.5750,
+      "latMax": 12.5950,
+      "lonMin": -16.2750,
+      "lonMax": -16.2600
+    },
+    {
+      "code": "KND",
+      "name": "Kandé - Lyndiane",
+      "zoneCode": "ZIG",
+      "latMin": 12.5400,
+      "latMax": 12.5650,
+      "lonMin": -16.2850,
+      "lonMax": -16.2600
+    },
+    {
+      "code": "TIL",
+      "name": "Tilène",
+      "zoneCode": "ZIG",
+      "latMin": 12.5500,
+      "latMax": 12.5800,
+      "lonMin": -16.3100,
+      "lonMax": -16.2800
+    },
+    {
+      "code": "NEM",
+      "name": "Nema - Kadialang",
+      "zoneCode": "ZIG",
+      "latMin": 12.5450,
+      "latMax": 12.5700,
+      "lonMin": -16.2600,
+      "lonMax": -16.2300
+    },
+    {
+      "code": "MED",
+      "name": "Médina",
+      "zoneCode": "DKR",
+      "latMin": 14.6700,
+      "latMax": 14.6950,
+      "lonMin": -17.4600,
+      "lonMax": -17.4400
+    },
+    {
+      "code": "PLT",
+      "name": "Dakar Plateau",
+      "zoneCode": "DKR",
+      "latMin": 14.6550,
+      "latMax": 14.6750,
+      "lonMin": -17.4450,
+      "lonMax": -17.4250
+    },
+    {
+      "code": "NDR",
+      "name": "Île de Ndar",
+      "zoneCode": "SL",
+      "latMin": 16.0150,
+      "latMax": 16.0350,
+      "lonMin": -16.5050,
+      "lonMax": -16.4900
+    }
+  ]
+}

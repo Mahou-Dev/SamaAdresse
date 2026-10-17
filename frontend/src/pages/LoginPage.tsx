@@ -40,21 +40,33 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF9F5] text-[#231A15] flex flex-col justify-between p-4 sm:p-8 font-sans">
+    <div className="flex-1 flex flex-col justify-center p-4 sm:p-8 font-sans">
       <main className="max-w-md mx-auto w-full pt-8 pb-12 flex-1 flex flex-col justify-center">
-        {/* Header Logo */}
-        <Link to="/" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#F2ECE1] border border-[#E6DDD0] text-[#1D528F] font-bold text-xs w-fit mx-auto mb-6 hover:bg-[#E6DDD0] transition">
-          <MapPin className="w-4 h-4 text-[#B84A24]" />
-          <span>SamaAdresse • Accueil</span>
+        {/* Brand Logo Cliquable */}
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 mx-auto mb-6 group focus-visible:outline-2 focus-visible:outline-[#1D528F] rounded-lg p-1"
+        >
+          <div className="w-9 h-9 rounded-lg bg-[#1D528F] flex items-center justify-center text-white shadow-[0_2px_0_rgba(35,26,21,0.12)]">
+            <MapPin className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <span className="font-extrabold text-xl text-[#231A15] tracking-tight block leading-tight">
+              SamaAdresse
+            </span>
+            <span className="text-[11px] font-medium text-[#5C4D44] block">
+              Ziguinchor et Dakar, Sénégal
+            </span>
+          </div>
         </Link>
 
         {/* Title */}
         <div className="text-center mb-8 space-y-2">
           <h1 className="text-3xl font-extrabold tracking-tight text-[#231A15]">
-            Espace Utilisateur
+            Espace personnel
           </h1>
           <p className="text-sm text-[#5C4D44]">
-            Connectez-vous pour gérer et partager vos plaques d'adresse
+            Connectez-vous pour gérer et partager vos adresses
           </p>
         </div>
 
@@ -71,7 +83,7 @@ export const LoginPage: React.FC = () => {
             {/* Email Field */}
             <div className="space-y-1.5">
               <label htmlFor="email" className="block text-xs font-bold text-[#231A15]">
-                Adresse Email
+                Adresse e-mail
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5C4D44]">
@@ -110,8 +122,9 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#5C4D44] hover:text-[#231A15] transition"
-                  tabIndex={-1}
+                  aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#5C4D44] hover:text-[#231A15] transition cursor-pointer"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -132,7 +145,7 @@ export const LoginPage: React.FC = () => {
               ) : (
                 <>
                   <LogIn className="w-5 h-5" />
-                  <span>Se Connecter</span>
+                  <span>Se connecter</span>
                 </>
               )}
             </button>
@@ -147,10 +160,6 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
       </main>
-
-      <footer className="text-center text-xs text-[#5C4D44] py-4">
-        © 2026 SamaAdresse — Plateforme Nationale d'Adressage Géolocalisé
-      </footer>
     </div>
   );
 };

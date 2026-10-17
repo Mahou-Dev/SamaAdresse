@@ -84,10 +84,65 @@ public class FileStorageService {
         Path targetLocation = this.rootPath.resolve(uniqueFilename).normalize();
 
         try {
+            // Optimisation serveur : si image > 800px, redimensionner à largeur max 800px
+            try (InputStream in = file.getInputStream()) {
+                java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(in);
+                if (original != null && original.getWidth() > 800) {
+                    int newWidth = 800;
+                    int newHeight = (int) Math.round(((double) original.getHeight() / original.getWidth()) * newWidth);
+                    java.awt.image.BufferedImage resized = new java.awt.image.BufferedImage(
+                            newWidth,
+                            newHeight,
+                            original.getType() == 0 ? java.awt.image.BufferedImage.TYPE_INT_RGB : original.getType()
+                    );
+                    java.awt.Graphics2D g2d = resized.createGraphics();
+                    g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+                    g2d.dispose();
+
+                    String formatName = extension.replace(".", "").toLowerCase();
+                    if ("jpg".equals(formatName)) {
+                        formatName = "jpeg";
+                    }
+                    boolean written = javax.imageio.ImageIO.write(resized, formatName, targetLocation.toFile());
+                    if (written) {
+                        return "/uploads/" + uniqueFilename;
+                    }
+                }
+            } catch (Exception ignored) {
+                // Repli direct sur copie standard si décodage ImageIO échoue
+            }
+
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
             return "/uploads/" + uniqueFilename;
         } catch (IOException e) {
             throw new RuntimeException("Erreur d'écriture du fichier d'image sur le disque.", e);
+        }
+    }
+
+    /**
+     * Supprime le fichier photo du disque s'il existe.
+     *
+     * @param photoUrl L'URL relative (ex: "/uploads/f47ac10b-58cc-4372-a567-0e02b2c3d479.jpg")
+     */
+    public void deleteFile(String photoUrl) {
+        if (photoUrl == null || photoUrl.isBlank()) {
+            return;
+        }
+        String filename = photoUrl.startsWith("/uploads/")
+                ? photoUrl.substring("/uploads/".length())
+                : photoUrl;
+        if (filename.isBlank() || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            return;
+        }
+        Path targetLocation = this.rootPath.resolve(filename).normalize();
+        if (!targetLocation.startsWith(this.rootPath)) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(targetLocation);
+        } catch (IOException ignored) {
+            // Ignoré silencieusement si le fichier n'est plus accessible
         }
     }
 

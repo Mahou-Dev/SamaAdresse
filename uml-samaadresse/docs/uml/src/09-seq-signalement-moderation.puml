@@ -1,0 +1,45 @@
+@startuml 09-seq-signalement-moderation
+!include _style.puml
+title Séquence — Signalement puis modération
+autonumber
+actor "Visiteur" as V
+participant "PWA (React)" as UI
+participant "API" as API
+participant "ReportRateLimiter" as RL
+database "PostgreSQL" as DB
+actor "Administrateur" as A
+actor "Propriétaire" as O
+
+== Signalement public (anonyme) ==
+V -> UI : « Signaler un problème » (motif + précisions ≤ 300 caractères)
+UI -> API : POST /api/public/addresses/{code}/reports
+API -> RL : 3 par heure par IP,\n1 par adresse et par IP / 24 h\n(clé hachée SHA-256)
+alt limite atteinte
+  API --> UI : 429
+else accepté
+  API -> DB : Signalement OPEN
+  API --> UI : 202 (message neutre)
+  UI --> V : « Merci, votre signalement a été transmis. »
+end
+
+== Modération (ROLE_ADMIN) ==
+A -> UI : Ouvre /admin
+UI -> API : GET /api/admin/reports?status=OPEN
+API -> API : Vérifie ROLE_ADMIN (403 sinon)
+API --> UI : liste des signalements
+A -> UI : Examine un signalement
+alt Suspendre l'adresse
+  A -> UI : Saisit le motif (obligatoire)
+  UI -> API : POST /api/admin/addresses/{id}/suspend
+  API -> DB : Adresse SUSPENDED, signalement RESOLVED
+  API -> DB : Journal d'audit (qui, action, motif, date)
+  API --> UI : 200
+  note right of API : La fiche publique répond 410.\nLa mise en cache hors ligne est purgée\nà la prochaine requête.
+  O -> UI : Ouvre « Mes adresses »
+  UI --> O : « Suspendue par la modération »\n(sans bouton Restaurer)
+else Classer sans suite
+  UI -> API : PATCH /api/admin/reports/{id} (DISMISSED)
+  API -> DB : Signalement DISMISSED + audit
+  API --> UI : 200
+end
+@enduml

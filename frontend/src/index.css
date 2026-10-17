@@ -1,33 +1,146 @@
+/* ==============================================================================
+ * SamaAdresse — Système Visuel & Tokens de Design (Lot 1)
+ * ==============================================================================
+ * Typographie : Outfit (12/14/16/18/22/28/36), JetBrains Mono (Codes d'adresses).
+ * Palette : Sable #FBF9F5, Sienne #F2ECE1, Ombre #231A15, Ocre #B84A24,
+ *           Bleu #1D528F, Manguier #2A6B44, Bordures de champs #8C8272.
+ * Ratios de contraste WCAG mesurés :
+ *   - Texte principal #231A15 sur Sable #FBF9F5 : 16.24:1 (AAA)
+ *   - Texte secondaire #5C4D44 sur Sable #FBF9F5 : 7.68:1 (AAA)
+ *   - Bordures de champ #8C8272 sur Sable #FBF9F5 : 3.60:1 (>= 3:1)
+ *   - Action principale #B84A24 sur Blanc #FFFFFF : 5.19:1 (AA)
+ *   - Liens & Info #1D528F sur Sable #FBF9F5 : 7.52:1 (AAA)
+ *   - Succès #2A6B44 sur Sable #FBF9F5 : 6.08:1 (AA)
+ *   - Code d'adresse plat #1D528F sur Blanc #FFFFFF : 7.91:1 (AAA >= 7:1)
+ * ============================================================================== */
+
 @import "tailwindcss";
 
-@theme {
-  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/outfit-latin.woff2') format('woff2');
+}
 
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+@theme {
+  --font-sans: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Échelle Typographique stricte */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.375rem;    /* 22px */
+  --text-2xl: 1.75rem;    /* 28px */
+  --text-3xl: 2.25rem;    /* 36px */
+
+  /* Palette de Couleurs Sémantiques */
   --color-sable: #FBF9F5;
   --color-sienne: #F2ECE1;
   --color-sienne-dark: #E6DDD0;
+  --color-border-field: #8C8272;
+  --color-border-subtle: #D4CEBF;
   --color-ombre: #231A15;
   --color-ombre-light: #5C4D44;
-  --color-ombre-muted: #8C7B70;
+  --color-ombre-muted: #76685E;
   --color-ocre: #B84A24;
-  --color-ocre-hover: #963919;
+  --color-ocre-hover: #9A3816;
   --color-bleu: #1D528F;
   --color-bleu-hover: #153C6B;
   --color-manguier: #2A6B44;
+  --color-manguier-hover: #215435;
+  --color-ocre-accessible-on-beige: #8A3112;
+  --color-placeholder: #63564D;
+
+  /* Rayons de courbure */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Ombres franches décalées (sans flou diffus) */
+  --shadow-crisp-sm: 0 2px 0 rgba(35, 26, 21, 0.08);
+  --shadow-crisp-md: 0 4px 0 rgba(35, 26, 21, 0.12);
+  --shadow-plate: inset 0 1px 2px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(29, 82, 143, 0.15), 0 2px 0 rgba(35, 26, 21, 0.08);
 }
 
 @layer base {
   body {
-    background-color: #FBF9F5;
-    color: #231A15;
+    background-color: var(--color-sable);
+    color: var(--color-ombre);
     min-height: 100vh;
-    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    /* Motif de fond discret en grille cartographique (opacité ~3.5%) */
+    background-image: radial-gradient(circle at 1px 1px, rgba(35, 26, 21, 0.035) 1px, transparent 0);
+    background-size: 24px 24px;
   }
 
   ::selection {
-    background-color: #B84A24;
+    background-color: var(--color-ocre);
     color: #FFFFFF;
+  }
+
+  /* Cibles tactiles et focus clavier visible */
+  a, button, input, select, textarea {
+    touch-action: manipulation;
+  }
+
+  ::placeholder,
+  input::placeholder,
+  textarea::placeholder {
+    color: #63564D;
+    opacity: 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-bleu);
+    outline-offset: 2px;
+  }
+}
+
+/* Filtre réchauffant pour harmoniser le fond de carte Leaflet avec la charte Terre & Enseigne */
+.leaflet-tile-pane {
+  filter: sepia(0.25) saturate(0.85);
+}
+
+/* Cible tactile minimale recommandée */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Accessibilité : respect du paramètre prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Styles d'impression pour plaques */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    background-image: none !important;
+    color: #000000 !important;
+  }
+
+  header, nav, footer, .no-print {
+    display: none !important;
   }
 }

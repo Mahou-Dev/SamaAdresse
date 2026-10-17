@@ -194,4 +194,35 @@ class AddressServiceTest {
         assertEquals("ESC", resolved.getCode(), "Le quartier Escale (ESC) doit être sélectionné car son centre est plus proche du point que Boucotte (KBG)");
         assertEquals("Escale Center", resolved.getName());
     }
+
+    @Test
+    @DisplayName("7. Résolution position réelle Ziguinchor (12.549680, -16.288404) : Fallback par proximité résout vers KND")
+    void testResolveQuartier_RealZiguinchorPosition_FallbackToKND() {
+        // Point (12.549680, -16.288404) : dans la zone ZIG, hors boîtes directes (TIL à 12.5500, KND à -16.2850)
+        // Centre de KND à 1.754 km (< 3 km fallback max) -> attribué à KND (Kandé - Lyndiane)
+        double realLat = 12.549680;
+        double realLon = -16.288404;
+
+        sn.samaadresse.domain.model.GeoQuartier resolved = geoGridService.resolveQuartier(realLat, realLon);
+
+        assertNotNull(resolved);
+        assertEquals("ZIG", resolved.getZoneCode());
+        assertEquals("KND", resolved.getCode(), "Le quartier KND (Kandé - Lyndiane) doit être résolu par proximité (< 3 km)");
+        assertEquals("Kandé - Lyndiane", resolved.getName());
+    }
+
+    @Test
+    @DisplayName("8. Rejet d'un point à plus de 10 km de tout quartier dans la zone ZIG -> OutofZoneException 422")
+    void testResolveQuartier_PointAt10KmFromAnyQuartier_Throws422() {
+        // Point (12.6450, -16.3450) : dans la zone ZIG mais à 10.42 km du quartier le plus proche (> 3 km fallback max)
+        double isolatedLat = 12.6450;
+        double isolatedLon = -16.3450;
+
+        OutofZoneException exception = assertThrows(
+                OutofZoneException.class,
+                () -> geoGridService.resolveQuartier(isolatedLat, isolatedLon)
+        );
+
+        assertEquals("Coordonnées hors zone couverte", exception.getMessage());
+    }
 }

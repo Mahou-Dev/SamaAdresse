@@ -31,6 +31,8 @@ import java.util.List;
 public class AddressController {
 
     private final AddressService addressService;
+    private final sn.samaadresse.service.QrCodeService qrCodeService;
+    private final sn.samaadresse.security.RateLimiterService rateLimiterService;
 
     @PostMapping(consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
@@ -109,11 +111,42 @@ public class AddressController {
             @ApiResponse(responseCode = "200", description = "Adresse trouvée",
                     content = @Content(schema = @Schema(implementation = PublicAddressResponse.class))),
             @ApiResponse(responseCode = "404", description = "Adresse non trouvée ou inactive",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "429", description = "Limite de requêtes dépassée (60 req/min/IP)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<PublicAddressResponse> getPublicAddressByCode(@PathVariable String code) {
+    public ResponseEntity<PublicAddressResponse> getPublicAddressByCode(
+            @PathVariable String code,
+            jakarta.servlet.http.HttpServletRequest servletRequest
+    ) {
+        String clientIp = extractClientIp(servletRequest);
+        rateLimiterService.checkRateLimit("public_address", clientIp, 60);
         PublicAddressResponse address = addressService.getPublicAddressByCode(code.toUpperCase());
         return ResponseEntity.ok(address);
+    }
+
+    @GetMapping("/{code}/qrcode")
+    @Operation(summary = "Générer le QR code d'une adresse publique", description = "Génère à la volée une image PNG du QR Code (300x300 px) encodant l'URL publique complète de la fiche adresse.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Image PNG du QR code générée",
+                    content = @Content(mediaType = "image/png")),
+            @ApiResponse(responseCode = "404", description = "Adresse non trouvée ou inactive",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<byte[]> getAddressQrCode(@PathVariable String code) {
+        String cleanCode = code.toUpperCase();
+        byte[] qrBytes = qrCodeService.generateAddressQrCode(cleanCode);
+
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.IMAGE_PNG);
+        headers.setContentDisposition(
+                org.springframework.http.ContentDisposition.inline()
+                        .filename("samaadresse-" + cleanCode + ".png")
+                        .build()
+        );
+        headers.setCacheControl(org.springframework.http.CacheControl.maxAge(java.time.Duration.ofDays(1)).cachePublic());
+
+        return new ResponseEntity<>(qrBytes, headers, HttpStatus.OK);
     }
 
     @GetMapping("/mine")
@@ -130,5 +163,91 @@ public class AddressController {
         String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
         List<AddressResponse> addresses = addressService.getUserAddressesByEmail(currentUserEmail);
         return ResponseEntity.ok(addresses);
+    }
+
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Mettre à jour la description ou le type d'une adresse (propriétaire uniquement)", description = "Le code et la position sont immuables (400 si fournis ou si l'adresse est archivée/suspendue).")
+    public ResponseEntity<AddressResponse> updateAddress(
+            @PathVariable java.util.UUID id,
+            @Valid @RequestBody sn.samaadresse.dto.UpdateAddressRequest request,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse updated = addressService.updateAddress(id, request, currentUserEmail);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PatchMapping("/{id}/visibility")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Modifier la visibilité d'une adresse dans l'annuaire (propriétaire uniquement)", description = "Réservé au propriétaire de l'adresse (403 sinon). Met à jour les options de publication dans l'annuaire.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Visibilité mise à jour avec succès",
+                    content = @Content(schema = @Schema(implementation = AddressResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès refusé - vous n'êtes pas le propriétaire",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Adresse non trouvée",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<AddressResponse> updateVisibility(
+            @PathVariable java.util.UUID id,
+            @RequestBody sn.samaadresse.dto.UpdateVisibilityRequest request,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse updated = addressService.updateVisibility(id, request, currentUserEmail);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}/photo")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Supprimer la photo de façade d'une adresse (propriétaire uniquement)", description = "Retire la photo de l'adresse et supprime le fichier du disque.")
+    public ResponseEntity<AddressResponse> deleteAddressPhoto(
+            @PathVariable java.util.UUID id,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse updated = addressService.deleteAddressPhoto(id, currentUserEmail);
+        return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping("/{id}/archive")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Archiver une adresse (propriétaire uniquement)", description = "Passe le statut de l'adresse à ARCHIVED. La fiche publique et le QR code renvoient alors 410 Gone.")
+    public ResponseEntity<AddressResponse> archiveAddress(
+            @PathVariable java.util.UUID id,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse archived = addressService.archiveAddress(id, currentUserEmail);
+        return ResponseEntity.ok(archived);
+    }
+
+    @PostMapping("/{id}/restore")
+    @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Restaurer une adresse archivée (propriétaire uniquement)", description = "Réactive une adresse ARCHIVED vers ACTIVE. Interdit (400) si l'adresse est SUSPENDED.")
+    public ResponseEntity<AddressResponse> restoreAddress(
+            @PathVariable java.util.UUID id,
+            Principal principal
+    ) {
+        String currentUserEmail = principal != null ? principal.getName() : SecurityContextHolder.getContext().getAuthentication().getName();
+        AddressResponse restored = addressService.restoreAddress(id, currentUserEmail);
+        return ResponseEntity.ok(restored);
+    }
+
+    private String extractClientIp(jakarta.servlet.http.HttpServletRequest request) {
+        if (request == null) {
+            return "0.0.0.0";
+        }
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "0.0.0.0";
     }
 }

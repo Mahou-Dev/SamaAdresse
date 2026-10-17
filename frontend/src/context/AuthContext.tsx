@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   customFetch,
   setMemoryAccessToken,
+  hasSessionIndicator,
+  setSessionIndicator,
+  clearSessionIndicator,
+  SA_SESSION_KEY,
 } from '../api/apiClient';
 import type { UserProfile, AuthResponseData } from '../api/apiClient';
 
@@ -20,31 +24,57 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(() => hasSessionIndicator());
+  const initRanRef = useRef(false);
 
-  const updateAccessToken = (token: string | null) => {
+  const updateAccessToken = useCallback((token: string | null) => {
     setMemoryAccessToken(token);
     setAccessTokenState(token);
-  };
+  }, []);
 
   useEffect(() => {
+    if (initRanRef.current) return;
+    initRanRef.current = true;
+
+    // 0.2 : Ne pas appeler /api/auth/refresh au chargement si aucune session n'a existé (sa_session=1 absent)
+    if (!hasSessionIndicator()) {
+      setLoading(false);
+      return;
+    }
+
     const initAuth = async () => {
       try {
         const data = await customFetch<AuthResponseData>('/api/auth/refresh', {
           method: 'POST',
         });
+        setSessionIndicator();
         updateAccessToken(data.accessToken);
         setUser(data.user);
       } catch {
-        updateAccessToken(null);
-        setUser(null);
+        if (typeof navigator === 'undefined' || navigator.onLine) {
+          clearSessionIndicator();
+          updateAccessToken(null);
+          setUser(null);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [updateAccessToken]);
+
+  // Synchronisation inter-onglets : la déconnexion dans un onglet supprime la session dans les autres
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === SA_SESSION_KEY && event.newValue !== '1') {
+        updateAccessToken(null);
+        setUser(null);
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [updateAccessToken]);
 
   const login = async (email: string, password: string) => {
     const data = await customFetch<AuthResponseData>('/api/auth/login', {
@@ -52,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       body: JSON.stringify({ email, password }),
     });
 
+    setSessionIndicator();
     updateAccessToken(data.accessToken);
     setUser(data.user);
   };
@@ -69,10 +100,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       // ignore
     } finally {
+      clearSessionIndicator();
       updateAccessToken(null);
       setUser(null);
     }
-  }, []);
+  }, [updateAccessToken]);
 
   return (
     <AuthContext.Provider

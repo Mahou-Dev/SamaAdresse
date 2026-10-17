@@ -1,0 +1,75 @@
+@startuml 03b-classes-services-infrastructure
+!include _style.puml
+title SamaAdresse — Classes : services, infrastructure et persistance (backend)
+left to right direction
+skinparam linetype ortho
+note as N0
+  Brouillon à valider contre le code (noms exacts des classes).
+end note
+
+package "Services" {
+  class AuthService
+  class JwtService
+  class AddressService
+  class GeoGridService {
+    +resolve(lat, lon) : ZoneQuartier
+  }
+  class CodeGenerator {
+    +generate(zone, quartier) : String
+  }
+  class ShareService {
+    +sendSms(code, phone)
+  }
+  class RouteService <<à confirmer>>
+  class ReservationService <<à confirmer>>
+  class ModerationService
+}
+package "Infrastructure" {
+  interface SmsProvider {
+    +send(to, message)
+  }
+  class MockSmsProvider
+  class TwilioSmsProvider
+  class SendFlashSmsProvider
+  interface PhotoStorage {
+    +save(bytes) : String
+    +delete(name)
+  }
+  class LocalDiskPhotoStorage
+  class DatabasePhotoStorage <<à confirmer>>
+  class RateLimiter
+  class OpenRouteServiceClient <<à confirmer>>
+}
+package "Persistance (JPA)" {
+  interface UserRepository
+  interface AddressRepository
+  interface RefreshTokenRepository
+  interface ReportRepository
+  interface AdminActionRepository
+  interface ReservedCodeRepository <<à confirmer>>
+}
+
+AuthService --> JwtService
+AuthService --> UserRepository
+AuthService --> RefreshTokenRepository
+AddressService --> GeoGridService
+AddressService --> CodeGenerator
+AddressService --> PhotoStorage
+AddressService --> AddressRepository
+AddressService --> ReservationService
+CodeGenerator --> AddressRepository
+ShareService --> SmsProvider
+ShareService --> RateLimiter
+RouteService --> OpenRouteServiceClient
+RouteService --> AddressRepository
+ReservationService --> ReservedCodeRepository
+ModerationService --> ReportRepository
+ModerationService --> AdminActionRepository
+ModerationService --> AddressRepository
+
+SmsProvider <|.. MockSmsProvider
+SmsProvider <|.. TwilioSmsProvider
+SmsProvider <|.. SendFlashSmsProvider
+PhotoStorage <|.. LocalDiskPhotoStorage
+PhotoStorage <|.. DatabasePhotoStorage
+@enduml

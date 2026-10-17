@@ -1,6 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <rect width="512" height="512" rx="128" fill="#0F172A"/>
-  <circle cx="256" cy="256" r="180" stroke="#10B981" stroke-width="24"/>
-  <path d="M256 120V392M120 256H392" stroke="#F59E0B" stroke-width="20" stroke-linecap="round"/>
-  <circle cx="256" cy="256" r="48" fill="#EF4444"/>
+  <rect width="512" height="512" rx="112" fill="#1D528F" stroke="#153C6B" stroke-width="12"/>
+  <!-- Pin Shadow / Glow -->
+  <ellipse cx="256" cy="420" rx="60" ry="16" fill="#153C6B" opacity="0.4"/>
+  <!-- Pin Body (White) -->
+  <path d="M256 96 C185.3 96 128 153.3 128 224 C128 316 256 416 256 416 C256 416 384 316 384 224 C384 153.3 326.7 96 256 96 Z" fill="#FFFFFF"/>
+  <!-- Pin Inner Ocre Circle -->
+  <circle cx="256" cy="224" r="64" fill="#B84A24"/>
+  <!-- Pin Center Dot -->
+  <circle cx="256" cy="224" r="28" fill="#FFFFFF"/>
 </svg>

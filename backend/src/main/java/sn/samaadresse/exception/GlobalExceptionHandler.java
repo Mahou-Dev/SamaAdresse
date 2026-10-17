@@ -56,7 +56,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler({InvalidCredentialsException.class, BadCredentialsException.class})
+    @ExceptionHandler({
+        InvalidCredentialsException.class,
+        BadCredentialsException.class,
+        org.springframework.security.core.AuthenticationException.class
+    })
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(
         RuntimeException ex, HttpServletRequest request
     ) {
@@ -64,7 +68,7 @@ public class GlobalExceptionHandler {
             .timestamp(Instant.now())
             .status(HttpStatus.UNAUTHORIZED.value())
             .error("Unauthorized")
-            .message(ex.getMessage() != null ? ex.getMessage() : "Identifiants invalides")
+            .message(ex.getMessage() != null ? ex.getMessage() : "Authentification requise")
             .path(request.getRequestURI())
             .build();
 
@@ -113,7 +117,40 @@ public class GlobalExceptionHandler {
             .path(request.getRequestURI())
             .build();
 
-        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(response);
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+            .header(org.springframework.http.HttpHeaders.RETRY_AFTER, String.valueOf(ex.getRetryAfterSeconds()))
+            .body(response);
+    }
+
+    @ExceptionHandler(SmsDeliveryException.class)
+    public ResponseEntity<ErrorResponse> handleSmsDelivery(
+        SmsDeliveryException ex, HttpServletRequest request
+    ) {
+        // Le détail technique (ex.getMessage(), cause) est déjà journalisé côté service : jamais exposé au client
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_GATEWAY.value())
+            .error("Bad Gateway")
+            .message("Le service SMS est momentanément indisponible. Veuillez réessayer plus tard.")
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableBody(
+        Exception ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Bad Request")
+            .message("Corps de requête absent ou JSON invalide")
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(OutofZoneException.class)
@@ -191,10 +228,56 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler(AddressUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleAddressUnavailable(
+        AddressUnavailableException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.GONE.value())
+            .error("Gone")
+            .message("Cette adresse n'est plus disponible.")
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.GONE).body(response);
+    }
+
+    @ExceptionHandler(InvalidAddressOperationException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAddressOperation(
+        InvalidAddressOperationException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Bad Request")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(
         AccessDeniedException ex, HttpServletRequest request
     ) {
+        org.springframework.security.core.Authentication auth =
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean anonymous = auth == null
+            || !auth.isAuthenticated()
+            || auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken;
+        if (anonymous) {
+            ErrorResponse unauthorized = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("Unauthorized")
+                .message("Authentification requise")
+                .path(request.getRequestURI())
+                .build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(unauthorized);
+        }
+
         ErrorResponse response = ErrorResponse.builder()
             .timestamp(Instant.now())
             .status(HttpStatus.FORBIDDEN.value())
@@ -204,6 +287,36 @@ public class GlobalExceptionHandler {
             .build();
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(NoRouteFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoRouteFound(
+        NoRouteFoundException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+            .error("Unprocessable Entity")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
+    }
+
+    @ExceptionHandler(RoutingServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleRoutingServiceUnavailable(
+        RoutingServiceUnavailableException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.SERVICE_UNAVAILABLE.value())
+            .error("Service Unavailable")
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
     }
 
     @ExceptionHandler(Exception.class)

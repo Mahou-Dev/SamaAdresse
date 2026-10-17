@@ -15,6 +15,36 @@ export interface AuthResponseData {
   user: UserProfile;
 }
 
+export const SA_SESSION_KEY = 'sa_session';
+
+export const hasSessionIndicator = (): boolean => {
+  try {
+    return typeof window !== 'undefined' && window.localStorage.getItem(SA_SESSION_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+export const setSessionIndicator = (): void => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(SA_SESSION_KEY, '1');
+    }
+  } catch {
+    // ignore storage errors
+  }
+};
+
+export const clearSessionIndicator = (): void => {
+  try {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(SA_SESSION_KEY);
+    }
+  } catch {
+    // ignore storage errors
+  }
+};
+
 let inMemoryAccessToken: string | null = null;
 
 export const setMemoryAccessToken = (token: string | null) => {
@@ -57,7 +87,14 @@ export async function customFetch<T = any>(
 
   const response = await fetch(endpoint, config);
 
-  if (response.status === 401 && !isRetry && endpoint !== '/api/auth/login' && endpoint !== '/api/auth/refresh') {
+  if (
+    response.status === 401 &&
+    !isRetry &&
+    hasSessionIndicator() &&
+    endpoint !== '/api/auth/login' &&
+    endpoint !== '/api/auth/register' &&
+    endpoint !== '/api/auth/refresh'
+  ) {
     try {
       const refreshRes = await fetch('/api/auth/refresh', {
         method: 'POST',
@@ -68,9 +105,14 @@ export async function customFetch<T = any>(
       if (refreshRes.ok) {
         const authData: AuthResponseData = await refreshRes.json();
         setMemoryAccessToken(authData.accessToken);
+        setSessionIndicator();
         return customFetch<T>(endpoint, options, true);
+      } else {
+        clearSessionIndicator();
+        setMemoryAccessToken(null);
       }
     } catch {
+      clearSessionIndicator();
       setMemoryAccessToken(null);
     }
   }
@@ -82,7 +124,7 @@ export async function customFetch<T = any>(
     } catch {
       errorData = { message: `Erreur HTTP ${response.status}` };
     }
-    throw new ApiError(response.status, errorData.message || 'Une erreur est survenue', errorData);
+    throw new ApiError(response.status, errorData.message || errorData.error || 'Une erreur est survenue', errorData);
   }
 
   if (response.status === 204 || response.headers.get('content-length') === '0') {

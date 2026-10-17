@@ -39,4 +39,10 @@ public class CreateAddressRequest {
     @NotNull(message = "Le type de lieu est obligatoire")
     @Schema(description = "Type de lieu", example = "MAISON")
     private LocationType locationType;
+
+    @Schema(description = "Indique si l'adresse figure dans l'annuaire public", example = "true")
+    private Boolean listed;
+
+    @Schema(description = "Indique si le nom du propriétaire est affiché publiquement", example = "false")
+    private Boolean showOwnerName;
 }
