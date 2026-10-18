@@ -157,10 +157,10 @@ async function captureViews() {
       const page = await context.newPage();
       await login(page, 'demo@samaadresse.sn', demoPassword);
 
-      // Ouvrir le wizard hors ligne
-      await context.setOffline(true);
+      // Ouvrir le wizard puis passer hors ligne
       await page.goto(`${BASE_URL}/addresses/new`);
       await page.waitForSelector('button:has-text("Continuer vers les détails")');
+      await context.setOffline(true);
       await page.click('button:has-text("Continuer vers les détails")');
       await page.waitForSelector('#address-desc');
       await page.fill('#address-desc', 'Maison hors ligne pour capture palette Lot 9');
@@ -181,39 +181,43 @@ async function captureViews() {
       const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
       const page = await context.newPage();
       await login(page, 'demo@samaadresse.sn', demoPassword);
+      await page.goto(`${BASE_URL}/account`);
+      await page.waitForSelector('text=Espace personnel');
 
-      // Créer un brouillon IndexedDB pour déclencher la modale d'avertissement
+      // Créer un brouillon via __offlineDb pour déclencher la modale d'avertissement
       await page.evaluate(async () => {
-        const req = indexedDB.open('SamaAdresseOfflineDB', 1);
-        await new Promise((resolve) => {
-          req.onsuccess = () => {
-            const db = req.result;
-            const tx = db.transaction('offline_drafts', 'readwrite');
-            tx.objectStore('offline_drafts').put({
-              id: 'draft-lot9-capture',
-              code: 'ZIG-KBG-TEMP',
-              latitude: 12.578,
-              longitude: -16.271,
-              description: 'Adresse en attente de synchronisation',
-              locationType: 'MAISON',
-              listed: false,
-              showOwnerName: false,
-              createdAt: new Date().toISOString()
-            });
-            tx.oncomplete = resolve;
-          };
-        });
+        if (window.__offlineDb) {
+          await window.__offlineDb.saveDraft({
+            id: 'draft-lot9-capture',
+            clientRequestId: 'req-lot9-capture',
+            latitude: 12.5800,
+            longitude: -16.2710,
+            zone: 'ZIG',
+            quartier: 'ESC',
+            description: 'Adresse en attente de synchronisation',
+            locationType: 'MAISON',
+            photoBlob: null,
+            reservedCode: 'ZIG-ESC-9999',
+            status: 'PENDING',
+            createdAt: new Date().toISOString(),
+            attempts: 0,
+          });
+        }
       });
 
-      await page.goto(`${BASE_URL}/account`);
-      await page.waitForSelector('button:has-text("Se déconnecter")');
       await page.click('button:has-text("Se déconnecter")');
-      await page.waitForSelector('h2:has-text("Adresses en attente d\'envoi")');
+      await page.waitForSelector('text=Adresses en attente d\'envoi');
       await page.waitForTimeout(400);
 
       const outPath = path.join(OUT_DIR, `modale_deconnexion_${vp.suffix}.png`);
       await page.screenshot({ path: outPath });
       console.log(`  ✓ modale_deconnexion_${vp.suffix}.png`);
+
+      await page.evaluate(async () => {
+        if (window.__offlineDb) {
+          await window.__offlineDb.clearDrafts();
+        }
+      });
       await context.close();
     }
   }

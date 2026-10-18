@@ -148,6 +148,7 @@ jobs:
       - name: Build et démarrage de l'image Docker de production avec PostgreSQL 16
         env:
           PROD_TEST_DB_PASSWORD: ci_prod_test_db_password
+          JWT_SECRET: ci_test_ephemeral_jwt_secret_at_least_32_bytes_long_ok
           DEMO_PASSWORD: CiTestDemoPassword2026!
           ADMIN_PASSWORD: CiTestDemoPassword2026!
           ORS_API_KEY: ""
@@ -163,6 +164,13 @@ jobs:
       - name: Exécution de smoke-prod.sh
         run: ./scripts/smoke-prod.sh http://localhost:8082
 
+      - name: Exécution de la collection Postman via Newman
+        run: |
+          npx --yes newman run docs/api/SamaAdresse.postman_collection.json \
+            --folder "Parcours démo" \
+            --env-var "baseUrl=http://localhost:8082" \
+            --env-var "demoPassword=CiTestDemoPassword2026!"
+
       - name: Installation des dépendances Frontend & Navigateurs Playwright
         working-directory: frontend
         run: |
@@ -175,3 +183,11 @@ jobs:
           PLAYWRIGHT_BASE_URL: http://localhost:8082
           DEMO_PASSWORD: CiTestDemoPassword2026!
         run: npx playwright test
+
+      - name: Affichage des journaux Docker en cas d'échec
+        if: failure()
+        run: docker compose -f docker-compose.prod-test.yml logs
+
+      - name: Arrêt propre des conteneurs
+        if: always()
+        run: docker compose -f docker-compose.prod-test.yml down -v

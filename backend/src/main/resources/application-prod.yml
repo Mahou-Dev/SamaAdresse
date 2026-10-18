@@ -4,7 +4,7 @@
 spring:
   datasource:
     url: ${DB_URL:}
-    username: ${DB_USER:}
+    username: ${DB_USERNAME:}
     password: ${DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
     hikari:
@@ -35,6 +35,7 @@ springdoc:
   api-docs:
     path: /v3/api-docs
     enabled: true
+    version: OPENAPI_3_0
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
@@ -42,9 +43,11 @@ springdoc:
 app:
   cookie:
     secure: ${COOKIE_SECURE:true}
+  security:
+    trusted-proxy-hops: ${TRUSTED_PROXY_HOPS:1}
 
 storage:
-  type: ${PHOTO_STORAGE:${STORAGE_TYPE:db}}
+  type: ${PHOTO_STORAGE:db}
 
 demo:
   seed: ${DEMO_SEED:false}
@@ -72,7 +75,7 @@ sms:
   twilio:
     account-sid: ${TWILIO_ACCOUNT_SID:}
     auth-token: ${TWILIO_AUTH_TOKEN:}
-    from-number: ${TWILIO_FROM:${TWILIO_FROM_NUMBER:}}
+    from-number: ${TWILIO_FROM_NUMBER:}
     api-base-url: ${TWILIO_API_BASE_URL:https://api.twilio.com}
   sendflash:
     api-url: ${SENDFLASH_API_URL:https://api.sendflash.com/v1/sms/send}

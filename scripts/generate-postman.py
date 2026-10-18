@@ -103,10 +103,13 @@ def build_demo_folder():
                         "script": {
                             "type": "text/javascript",
                             "exec": [
-                                "pm.test('Fiche publique résolue (200)', function () {",
+                                "pm.test('Fiche publique résolue avec latitude, longitude et photoUrl (200)', function () {",
                                 "    pm.response.to.have.status(200);",
                                 "    var jsonData = pm.response.json();",
-                                "    pm.expect(jsonData.code).to.eql(pm.collectionVariables.get('demoCode'));",
+                                "    pm.expect(jsonData.code).to.eql('ZIG-KBG-4271');",
+                                "    pm.expect(jsonData.latitude).to.be.a('number');",
+                                "    pm.expect(jsonData.longitude).to.be.a('number');",
+                                "    pm.expect(jsonData.photoUrl).to.be.a('string').and.not.empty;",
                                 "});"
                             ]
                         }
@@ -116,9 +119,9 @@ def build_demo_folder():
                     "method": "GET",
                     "header": [],
                     "url": {
-                        "raw": "{{baseUrl}}/api/addresses/{{demoCode}}",
+                        "raw": "{{baseUrl}}/api/addresses/ZIG-KBG-4271",
                         "host": ["{{baseUrl}}"],
-                        "path": ["api", "addresses", "{{demoCode}}"]
+                        "path": ["api", "addresses", "ZIG-KBG-4271"]
                     }
                 }
             },
@@ -193,8 +196,15 @@ def build_demo_folder():
                         "script": {
                             "type": "text/javascript",
                             "exec": [
-                                "pm.test('Itinéraire calculé (200) ou clé ORS absente (503)', function () {",
+                                "pm.test('Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)', function () {",
                                 "    pm.expect(pm.response.code).to.be.oneOf([200, 503]);",
+                                "    if (pm.response.code === 200) {",
+                                "        var jsonData = pm.response.json();",
+                                "        pm.expect(jsonData.distance).to.be.above(0);",
+                                "        pm.expect(jsonData.duration).to.be.above(0);",
+                                "        pm.expect(jsonData.geometry).to.be.an('object');",
+                                "        pm.expect(jsonData.geometry.coordinates).to.be.an('array').and.not.empty;",
+                                "    }",
                                 "});"
                             ]
                         }
@@ -204,13 +214,13 @@ def build_demo_folder():
                     "method": "GET",
                     "header": [],
                     "url": {
-                        "raw": "{{baseUrl}}/api/public/route?fromLat=12.5835&fromLon=-16.2712&code={{demoCode}}&profile=driving-car",
+                        "raw": "{{baseUrl}}/api/public/route?fromLat=12.5835&fromLon=-16.2712&code=ZIG-KBG-4271&profile=driving-car",
                         "host": ["{{baseUrl}}"],
                         "path": ["api", "public", "route"],
                         "query": [
                             {"key": "fromLat", "value": "12.5835"},
                             {"key": "fromLon", "value": "-16.2712"},
-                            {"key": "code", "value": "{{demoCode}}"},
+                            {"key": "code", "value": "ZIG-KBG-4271"},
                             {"key": "profile", "value": "driving-car"}
                         ]
                     }

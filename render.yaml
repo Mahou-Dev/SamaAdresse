@@ -16,6 +16,8 @@ services:
         value: "20"
       - key: COOKIE_SECURE
         value: "true"
+      - key: TRUSTED_PROXY_HOPS
+        value: "1"
       - key: DEMO_SEED
         value: "true"
       - key: JWT_SECRET
@@ -31,4 +33,10 @@ services:
       - key: DEMO_PASSWORD
         sync: false
       - key: ORS_API_KEY
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_FROM_NUMBER
         sync: false

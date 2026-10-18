@@ -16,7 +16,7 @@ else position obtenue
   UI -> API : GET /api/public/route\n?fromLat&fromLon&code&profile
   API -> API : Départ plausible au Sénégal ?\nLimitation de débit (20/min/IP via ClientIpResolver)
   API -> API : Résout la destination depuis le code\n(adresse ACTIVE ou SIGNALED uniquement)
-  API -> API : Vérifie le cache mémoire (TTL 10 min)
+  API -> API : Vérifie le cache mémoire (TTL 5 min)
   opt absent du cache
     API -> ORS : POST /v2/directions/{profile}/geojson (clé serveur, langue fr)\ndélais 3 s / 5 s
   end

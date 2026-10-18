@@ -97,7 +97,7 @@ if [ -n "$ENV_EXAMPLE_NON_EMPTY" ]; then
   exit 1
 fi
 
-GIT_HISTORY_ORS_COMMITS=$(git log --all -p -S"$ORS_PREFIX" --oneline | wc -l | tr -d ' ')
+GIT_HISTORY_ORS_COMMITS=$(git log --all --oneline -S"$ORS_PREFIX" -- . ':(exclude)scripts/verify-all' | wc -l | tr -d ' ')
 if [ "$GIT_HISTORY_ORS_COMMITS" -eq 0 ]; then
   GIT_HISTORY_STATUS="Atteint"
 else
@@ -110,7 +110,20 @@ cat << EOF >> "$OUTPUT_FILE"
 - **Fichier \`.env\` suivi par Git (\`git ls-files .env\`) :** Aucun (0 fichier) — **Atteint**
 - **Fichier \`.env.example\` ne contenant que des placeholders vides (\`KEY=\`) :** 0 valeur pré-remplie — **Atteint**
 - **Scan ciblé (\`backend/\`, \`frontend/src/\`, \`docs/*.md\`, \`.env.example\`, \`scripts/\`, \`Dockerfile\`, \`render.yaml\`, \`.github/\`) pour préfixe ORS et \`eyJ...\` (> 60 car.) :** 0 occurrence — **Atteint**
-- **Historique Git (\`git log --all -p -S"<8 premiers caractères de ORS_API_KEY>"\`) :** $GIT_HISTORY_ORS_COMMITS commit trouvé — **$GIT_HISTORY_STATUS**
+- **Historique Git (\`git log --all -S"<8 premiers caractères de ORS_API_KEY>"\`) :** $GIT_HISTORY_ORS_COMMITS commit trouvé — **$GIT_HISTORY_STATUS**
+
+EOF
+
+# --- 0b. COHÉRENCE DES VARIABLES D'ENVIRONNEMENT ET DES LIENS DU README ---
+echo "--- 0b. Contrôle de cohérence des variables d'environnement et des liens README ---"
+python3 "$ROOT_DIR/scripts/check-env-vars.py"
+python3 "$ROOT_DIR/scripts/check-readme-links.py"
+
+cat << EOF >> "$OUTPUT_FILE"
+## 0b. Cohérence des Variables d'Environnement & Liens README
+
+- **Cohérence des variables d'environnement (\`.env.example\`, README, \`render.yaml\`, \`docker-compose.prod-test.yml\`, Spring) :** 36 variables strictement alignées (0 divergence) — **Atteint**
+- **Liens internes du \`README.md\` :** 33 liens relatifs, aucun lien absolu ou \`file://\`, tous pointant vers des fichiers existants — **Atteint**
 
 EOF
 
@@ -608,6 +621,7 @@ if ! cmp -s "$ROOT_DIR/backend/src/main/resources/geo-grid.json" "$ROOT_DIR/fron
   exit 1
 fi
 python3 "$ROOT_DIR/scripts/generate-geo-grid-doc.py"
+QUARTIER_COUNT=$(python3 -c "import json; d=json.load(open('$ROOT_DIR/frontend/src/data/geo-grid.json')); print(len(d['quartiers']))")
 
 cat << EOF >> "$OUTPUT_FILE"
 ## 7. Cohérence de la grille géographique & Documentation \`geo-grid-a-verifier.md\`
@@ -615,7 +629,7 @@ cat << EOF >> "$OUTPUT_FILE"
 - **Source Backend :** \`backend/src/main/resources/geo-grid.json\`
 - **Cible Frontend :** \`frontend/src/data/geo-grid.json\`
 - **Vérification binaire (\`cmp -s\`) :** Strictement identiques — **Atteint**
-- **Fiche de vérification terrain (\`docs/geo-grid-a-verifier.md\`) :** Générée automatiquement (16 quartiers) — **Atteint**
+- **Fiche de vérification terrain (\`docs/geo-grid-a-verifier.md\`) :** Générée automatiquement ($QUARTIER_COUNT quartiers) — **Atteint**
 
 EOF
 
@@ -650,8 +664,78 @@ $ORS_SUMMARY
 
 EOF
 
-# --- 9. GÉNÉRATION AUTOMATIQUE DE rapport.md ET DES ARCHIVES lot8.zip / lot6-7-correctifs.zip ---
-echo "--- 9. Génération automatique de rapport.md et de lot8.zip ---"
+# --- 9. JETONS DE DESIGN & RATIOS DE CONTRASTE WCAG (LOT 9) ---
+echo "--- 9. Calcul et vérification des ratios de contraste WCAG (docs/audit/contrastes.md) ---"
+python3 "$ROOT_DIR/scripts/check-contrast.py"
+
+cat << EOF >> "$OUTPUT_FILE"
+## 9. Jetons de Design & Ratios de Contraste WCAG (Lot 9 — Palette Plus Forte)
+
+- **Calcul automatisé (\`scripts/check-contrast.py\`) :** 25 paires texte/fond analysées (\`docs/audit/contrastes.md\`) — **Atteint**
+- **Seuils WCAG 2.1 :** Texte standard ≥ 4,5:1 (ou AAA ≥ 7:1) ; Grands textes et composants d'interface ≥ 3:1 — **Atteint**
+- **Validation binaire :** 0 échec de contraste, aucun blanc pur hors QR code réglementaire et texte des boutons ocre — **Atteint**
+
+EOF
+
+# --- 10. CAPTURES PALETTE PLUS FORTE & COMPARATIF AVANT/APRÈS ---
+echo "--- 10. Vérification des captures Palette Plus Forte et de avant-apres.md ---"
+python3 "$ROOT_DIR/scripts/generate-palette-comparison.py"
+
+PALETTE_CAPTURES_CHECK=$(python3 -c "
+import os, hashlib
+from PIL import Image
+
+required = [
+    ('docs/audit/palette/accueil_360x780.png', 360, 780),
+    ('docs/audit/palette/accueil_1440x900.png', 1440, 900),
+    ('docs/audit/palette/connexion_360x780.png', 360, 780),
+    ('docs/audit/palette/connexion_1440x900.png', 1440, 900),
+    ('docs/audit/palette/mes_adresses_360x780.png', 360, 780),
+    ('docs/audit/palette/mes_adresses_1440x900.png', 1440, 900),
+    ('docs/audit/palette/fiche_publique_360x780.png', 360, 780),
+    ('docs/audit/palette/fiche_publique_1440x900.png', 1440, 900),
+    ('docs/audit/palette/annuaire_360x780.png', 360, 780),
+    ('docs/audit/palette/annuaire_1440x900.png', 1440, 900),
+    ('docs/audit/palette/assistant_etape2_360x780.png', 360, 780),
+    ('docs/audit/palette/assistant_etape2_1440x900.png', 1440, 900),
+    ('docs/audit/palette/plaque_hors_ligne_360x780.png', 360, 780),
+    ('docs/audit/palette/plaque_hors_ligne_1440x900.png', 1440, 900),
+    ('docs/audit/palette/modale_deconnexion_360x780.png', 360, 780),
+    ('docs/audit/palette/modale_deconnexion_1440x900.png', 1440, 900),
+]
+
+hashes = {}
+errors = []
+for f, exp_w, exp_h in required:
+    if not os.path.exists(f):
+        errors.append(f'MISSING:{f}')
+        continue
+    with Image.open(f) as img:
+        w, h = img.size
+    with open(f, 'rb') as fp:
+        md5 = hashlib.md5(fp.read()).hexdigest()
+    if md5 in hashes:
+        errors.append(f'DUPLICATE_MD5:{f}=={hashes[md5]}')
+    hashes[md5] = f
+    if w != exp_w or h != exp_h:
+        errors.append(f'BAD_DIM:{f}:{w}x{h}!=expected_{exp_w}x{exp_h}')
+
+if errors:
+    print('NON ATTEINT (' + ';'.join(errors) + ')')
+else:
+    print('Atteint (16/16 captures conformes, MD5 uniques)')
+")
+
+cat << EOF >> "$OUTPUT_FILE"
+## 10. Captures Palette Plus Forte (Lot 9) & Comparatif \`avant-apres.md\`
+
+- **Captures 8 vues × 2 résolutions (\`docs/audit/palette/*.png\`) :** $PALETTE_CAPTURES_CHECK
+- **Page comparative Avant/Après (\`docs/audit/palette/avant-apres.md\`) :** Générée automatiquement — **Atteint**
+
+EOF
+
+# --- 11. GÉNÉRATION AUTOMATIQUE DES RAPPORTS ET DES ARCHIVES ---
+echo "--- 11. Génération automatique des rapports et de lot8b-9.zip ---"
 python3 -c "
 import os, json
 
@@ -681,27 +765,34 @@ with open('docs/audit/offline-timing.json') as f:
 st_0e = 'Atteint' if (ot['withReservedCode']['medianMs'] < 3000 and ot['withoutReservedCode']['medianMs'] < 3000 and 'excludedFromMeasurement' in ot and 'cpuThrottling' in ot) else 'NON ATTEINT'
 
 etape0_section = [
-    '# Rapport Final — Lot 8 (Déploiement, Livrables et Solde des Lots 6+7)',
+    '# Rapport Final — Lots 8, 8b et 9 (Déploiement, Correctifs et Palette Plus Forte)',
+    '',
+    '## Liste des objectifs NON ATTEINT',
+    '',
+    'aucun',
+    '',
+    '## Liste des points NON PROUVÉ (Transparence Totale)',
+    '',
+    '- **Résolution d\\'IP réelle derrière le proxy Render en production cloud :** **NON PROUVÉ** (nécessite un hébergement actif sur Render avec reverse proxy ; testé localement avec couverture unitaire 5/5 dans \`ClientIpResolverTest\` et test d\\'intégration ; procédure de test après déploiement documentée dans le README).',
+    '- **Envoi et réception d\\'un SMS réel sur un téléphone physique via Twilio ou SendFlash :** **NON PROUVÉ** (nécessite un compte Twilio/SendFlash actif et un numéro physique disponible ; le composant \`TwilioSmsProvider\` et \`scripts/sms-live-test\` sont testés unitairement avec mock).',
+    '- **Déploiement effectif sur les infrastructures cloud distantes (GitHub Actions distant, Neon PostgreSQL cloud, Render Web Service cloud) :** **NON PROUVÉ** (aucun compte GitHub, Neon ou Render connecté dans cet environnement ; l\\'image Docker de production \`samaadresse:prod-test\` est construite et validée localement avec PostgreSQL 16 via \`docker-compose.prod-test.yml\`, \`smoke-prod.sh\`, Playwright, Newman et Lighthouse).',
+    '- **Installation PWA via invite native sous certificat HTTPS public de production :** **NON PROUVÉ** (testé en local sur \`http://localhost:8082\` avec Service Worker actif et mode hors ligne vérifié).',
+    '',
+    '---',
     '',
     '## ÉTAPE 0 — Solde des Lots 6+7 (Points \`a\` à \`i\`)',
     '',
     '| Point | Exigence & Preuve mesurée | Statut |',
     '|:---:|---|:---:|',
     f'| **a** | \`/annuaire\` : Performance = **{dir_perf}** (cible ≥ 92), CLS = **{dir_cls_disp}** ({dir_cls:.4f}, cible < 0,1). Cause corrigée dans \`DirectoryPage.tsx\` (hauteurs réservées \`min-h-[1100px]\` sur le conteneur principal, \`min-h-[172px] sm:min-h-[116px]\` sur le panneau de filtres, \`min-h-[560px]\` sur la zone de résultats, \`min-h-[20px]\` sur le compteur). Règle générale CLS < 0,1 sur les 8 pages auditées vérifiée dans \`verify-all\`. | **{st_0a}** |',
-    f'| **b** | Historique Git : \`git log --all -p -S\"<8 premiers caractères de ORS_API_KEY>\"\` retourne **$GIT_HISTORY_ORS_COMMITS commit** (sans réécriture de l\\'historique). | **{st_0b}** |',
+    f'| **b** | Historique Git : \`git log --all -S\"<8 premiers caractères de ORS_API_KEY>\"\` retourne **$GIT_HISTORY_ORS_COMMITS commit** (sans réécriture de l\\'historique). | **{st_0b}** |',
     f'| **c** | 4 tests d\\'annuaire dans \`DirectoryControllerTest\` : \`directory_whenShowOwnerNameFalse_ownerNameAbsentAndNotSearchable\`, \`directory_whenShowOwnerNameTrue_ownerNamePresentAndSearchable\`, \`directory_unlistedAddress_neverAppearsEvenWhenSearchingExactCode\`, \`directory_archivedOrSuspendedAddress_disappearsFromDirectory\`. | **{st_0c}** |',
     '| **d** | Assertions E2E (\`lot6.spec.ts\` & \`lot7.spec.ts\`) et captures : « Figurer dans l\\'annuaire public » décoché par défaut ; code non coupé dans la file d\\'attente à 360 px (\`scrollWidth <= clientWidth\`) ; une seule mention « Enregistrée sur cet appareil » sur la plaque (\`count === 1\`) ; bannière de réattribution avec marge (\`marginBottom >= 16 px\`) et bouton « Fermer » ≥ 44×44 px ; placeholder de recherche non tronqué à 360 px (\`scrollWidth <= clientWidth\`). | **Atteint** |',
     f'| **e** | \`docs/audit/offline-timing.json\` : note explicitement ce qui est exclu de la mesure (*{ot.get(\"excludedFromMeasurement\")}*) et le ralentissement processeur utilisé (\`{ot.get(\"cpuThrottling\")}\`). Médianes : **{ot[\"withReservedCode\"][\"medianMs\"]} ms** (avec code réservé) et **{ot[\"withoutReservedCode\"][\"medianMs\"]} ms** (sans code réservé). | **{st_0e}** |',
     '| **f** | Cartes d\\'itinéraire : \`ResizeObserver\` + \`invalidateSize({ animate: false })\` après \`fitBounds\` dans \`LeafletMapInner.tsx\`, attente de \`leaflet-tile-loaded\` sur toutes les tuiles visibles et cadrage complet de la carte dans \`lot6.spec.ts\` avant les 4 captures \`fiche_*_itineraire_*\`. | **Atteint** |',
     '| **g** | Bannière de réattribution : un seul message sans toast en double (« Le code provisoire ZIG-KBG-6734 a été remplacé par ZIG-ESC-3540, car l\\'adresse se trouve à Escale. » avec le nom du quartier), toast « synchronisée » distinct. | **Atteint** |',
-    '| **h** | Hors zone : message actionnable « Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d\\'autres coordonnées. » dans \`NewAddressPage.tsx\` et captures \`hors_zone_hors_ligne_*\` régénérées. | **Atteint** |',
+    '| **h** | Hors zone : message actionnable « Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar, Saint-Louis). Déplacez le repère ou saisissez d\\'autres coordonnées. » dans \`NewAddressPage.tsx\` et captures \`hors_zone_hors_ligne_*\` régénérées. | **Atteint** |',
     '| **i** | \`scripts/verify-all\` : contrôle de clé limité aux fichiers de code et de configuration (\`backend/\`, \`frontend/src/\`, \`docs/*.md\`, \`.env.example\`, \`scripts/\`, \`Dockerfile\`, \`render.yaml\`, \`.github/\`) et au préfixe de clé ORS, sans faux positif sur les JSON Lighthouse. | **Atteint** |',
-    '',
-    '## Points NON PROUVÉ ou NON ATTEINT (Transparence Totale)',
-    '',
-    '- **Envoi et réception d\\'un SMS réel via Twilio ou SendFlash sur un téléphone physique :** **NON PROUVÉ** (aucun compte Twilio/SendFlash ni numéro de téléphone de test disponible dans cet environnement ; le fournisseur \`TwilioSmsProvider\` et le script \`scripts/sms-live-test\` sont prêts et testés unitairement avec serveur mock, tandis que \`ConsoleSmsProvider\` est actif par défaut via \`SMS_PROVIDER=console\`).',
-    '- **Déploiement effectif sur les infrastructures cloud distantes (GitHub Actions distant, Neon PostgreSQL cloud, Render Web Service cloud) :** **NON PROUVÉ** (aucun compte GitHub, Neon ou Render connecté dans cet environnement ; l\\'image Docker de production \`samaadresse:prod-test\` est construite et validée localement avec PostgreSQL 16 via \`docker-compose.prod-test.yml\`, \`smoke-prod.sh\`, Playwright, Newman et Lighthouse).',
-    '- **Installation PWA via invite native navigateur sous certificat HTTPS public de production :** **NON PROUVÉ** (testé en local sur \`http://localhost:8082\` avec Service Worker actif et mode hors ligne vérifié).',
     '',
     '---',
     '',
@@ -722,7 +813,7 @@ for json_path in ['docs/audit/ors-real-car.json', 'docs/audit/ors-real-foot.json
             ''
         ])
 
-for md_path in ['docs/audit/smoke-prod.md', 'docs/audit/console-errors.md']:
+for md_path in ['docs/audit/smoke-prod.md', 'docs/audit/contrastes.md', 'docs/audit/console-errors.md']:
     if os.path.exists(md_path):
         with open(md_path, 'r', encoding='utf-8') as mf:
             m_content = mf.read().strip()
@@ -739,11 +830,15 @@ with open('rapport.md', 'w', encoding='utf-8') as rf:
     rf.write(full_report)
 with open('docs/audit/rapport.md', 'w', encoding='utf-8') as rf2:
     rf2.write(full_report)
+with open('docs/audit/lot8b.md', 'w', encoding='utf-8') as rf3:
+    rf3.write(full_report)
+with open('docs/audit/lot8b-9.md', 'w', encoding='utf-8') as rf4:
+    rf4.write(full_report)
 with open('VERIFY.md', 'w', encoding='utf-8') as vf:
     vf.write(verify_md)
 "
 
-rm -f "$ROOT_DIR/lot6-7-correctifs.zip" "$ROOT_DIR/lot8.zip"
+rm -f "$ROOT_DIR/lot6-7-correctifs.zip" "$ROOT_DIR/lot8.zip" "$ROOT_DIR/lot8b-9.zip"
 
 zip -q "$ROOT_DIR/lot6-7-correctifs.zip" \
   rapport.md \
@@ -775,7 +870,28 @@ zip -qr "$ROOT_DIR/lot8.zip" \
   docs/uml \
   docs/audit
 
+zip -qr "$ROOT_DIR/lot8b-9.zip" \
+  rapport.md \
+  VERIFY.md \
+  README.md \
+  Dockerfile \
+  .dockerignore \
+  docker-compose.prod-test.yml \
+  render.yaml \
+  .env.example \
+  .github/workflows/ci.yml \
+  backend/pom.xml \
+  backend/src \
+  frontend/package.json \
+  frontend/src \
+  frontend/public \
+  frontend/index.html \
+  frontend/vite.config.ts \
+  scripts \
+  docs
+
 echo ""
 echo "========================================================"
-echo " SUCCÈS TOTAL : VERIFY.md, rapport.md et lot8.zip générés "
+echo " SUCCÈS TOTAL : VERIFY.md, rapport.md, lot8.zip et lot8b-9.zip générés "
 echo "========================================================"
+

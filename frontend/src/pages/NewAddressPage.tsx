@@ -33,7 +33,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { resolveQuartier } from '../utils/geoGrid';
+import { resolveQuartier, formatOutOfZoneMessage } from '../utils/geoGrid';
 import {
   getDraftsCount,
   saveDraft,
@@ -198,7 +198,7 @@ export const NewAddressPage: React.FC = () => {
     try {
       resolveQuartier(latNum, lonNum);
     } catch {
-      setSubmitError("Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées.");
+      setSubmitError(formatOutOfZoneMessage());
       window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
@@ -239,7 +239,7 @@ export const NewAddressPage: React.FC = () => {
         try {
           quartier = resolveQuartier(latNum, lonNum);
         } catch {
-          setSubmitError("Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées.");
+          setSubmitError(formatOutOfZoneMessage());
           setStep(1);
           setSubmitting(false);
           return;

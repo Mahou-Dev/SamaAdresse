@@ -17,7 +17,7 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     // 1. Visite en ligne
     await page.goto('/');
     await page.waitForSelector('text=ZIG-KBG-4271');
-    await expect(page.locator('text=ZIG-KBG-4271')).toBeVisible();
+    await expect(page.locator('text=ZIG-KBG-4271').first()).toBeVisible();
 
     // Attendre que le Service Worker soit actif et contrôle la page avant de passer hors ligne
     await page.evaluate(async () => {
@@ -42,7 +42,7 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     await page.reload();
 
     // 4. Assertions
-    await expect(page.locator('text=ZIG-KBG-4271')).toBeVisible();
+    await expect(page.locator('text=ZIG-KBG-4271').first()).toBeVisible();
     const fontLoadedOffline = await page.evaluate(async () => {
       await document.fonts.ready;
       await document.fonts.load("16px Outfit");

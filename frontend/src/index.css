@@ -122,6 +122,15 @@
     opacity: 1;
   }
 
+  /* Suppression de l'icône de suppression native WebKit pour les champs de recherche */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration,
+  input[type="search"]::-webkit-search-results-button,
+  input[type="search"]::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    display: none;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-bleu);
     outline-offset: 2px;

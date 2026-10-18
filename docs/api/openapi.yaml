@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.1
 info:
   title: SamaAdresse API
   description: "API REST de la plateforme citoyenne d'adressage numérique par géolocalisation\
@@ -219,7 +219,8 @@ paths:
       tags:
       - Administration & Modération
       summary: Réinitialiser les limiteurs de débit
-      description: Vide le cache des limiteurs de débit en mémoire.
+      description: Vide le cache des limiteurs de débit en mémoire (profils dev et
+        e2e uniquement).
       operationId: resetRateLimits
       responses:
         "200":
@@ -373,8 +374,8 @@ paths:
                   $ref: "#/components/schemas/CreateAddressRequest"
                 photo:
                   type: string
-                  format: binary
                   description: "Fichier image optionnel (JPEG/PNG/WebP, max 5 Mo)"
+                  format: binary
           application/json:
             schema:
               $ref: "#/components/schemas/CreateAddressRequest"
@@ -482,14 +483,14 @@ paths:
         content:
           multipart/form-data:
             schema:
+              required:
+              - file
               type: object
               properties:
                 file:
                   type: string
-                  format: binary
                   description: Fichier image (JPEG/PNG/WebP)
-              required:
-              - file
+                  format: binary
       responses:
         "200":
           description: Photo uploadée et adresse mise à jour
@@ -1324,25 +1325,25 @@ paths:
 components:
   schemas:
     CreateReportRequest:
+      required:
+      - reason
       type: object
-      description: Requête de signalement anonyme d'une adresse publique
       properties:
         reason:
           type: string
           description: Motif du signalement
+          example: POSITION_INCORRECTE
           enum:
           - POSITION_INCORRECTE
           - CONTENU_INAPPROPRIE
           - PHOTO_INAPPROPRIEE
           - AUTRE
-          example: POSITION_INCORRECTE
         comment:
-          type: string
-          description: Commentaire optionnel (max 300 caractères)
           maxLength: 300
           minLength: 0
-      required:
-      - reason
+          type: string
+          description: Commentaire optionnel (max 300 caractères)
+      description: Requête de signalement anonyme d'une adresse publique
     ReportCreatedResponse:
       type: object
       properties:
@@ -1370,6 +1371,11 @@ components:
           additionalProperties:
             type: string
     RegisterRequest:
+      required:
+      - email
+      - fullName
+      - password
+      - phoneNumber
       type: object
       properties:
         fullName:
@@ -1377,16 +1383,11 @@ components:
         email:
           type: string
         phoneNumber:
-          type: string
           pattern: "^\\+221(70|75|76|77|78|33)[0-9]{7}$"
-        password:
           type: string
+        password:
           pattern: "^(?=.*[0-9])(?=.*[A-Z]).{8,}$"
-      required:
-      - email
-      - fullName
-      - password
-      - phoneNumber
+          type: string
     UserProfileResponse:
       type: object
       properties:
@@ -1409,6 +1410,7 @@ components:
         createdAt:
           type: string
           format: date-time
+      description: Propriétaire de l'adresse
     AuthResponse:
       type: object
       properties:
@@ -1422,45 +1424,44 @@ components:
         user:
           $ref: "#/components/schemas/UserProfileResponse"
     LoginRequest:
+      required:
+      - email
+      - password
       type: object
       properties:
         email:
           type: string
         password:
           type: string
-      required:
-      - email
-      - password
     SuspendAddressRequest:
+      required:
+      - reason
       type: object
       properties:
         reason:
-          type: string
           maxLength: 500
           minLength: 0
-      required:
-      - reason
+          type: string
     AddressResponse:
       type: object
-      description: Représentation complète d'une adresse géolocalisée
       properties:
         id:
           type: string
-          format: uuid
           description: ID unique de l'adresse
+          format: uuid
         code:
           type: string
           description: Code court d'adresse géolocalisée
           example: ZIG-KBG-4271
         latitude:
           type: number
-          format: double
           description: Latitude GPS
+          format: double
           example: 12.5738
         longitude:
           type: number
-          format: double
           description: Longitude GPS
+          format: double
           example: -16.265
         zone:
           type: string
@@ -1477,24 +1478,24 @@ components:
         photoUrl:
           type: string
           description: URL de la photo (si présente)
-          example: null
+          example: "null"
         locationType:
           type: string
           description: Type de lieu
+          example: MAISON
           enum:
           - MAISON
           - COMMERCE
           - INSTITUTION
-          example: MAISON
         status:
           type: string
           description: Statut de modération
+          example: ACTIVE
           enum:
           - ACTIVE
           - ARCHIVED
           - SUSPENDED
           - SIGNALED
-          example: ACTIVE
         listed:
           type: boolean
           description: Indique si l'adresse figure dans l'annuaire public
@@ -1510,11 +1511,10 @@ components:
           example: Suspendue par la modération
         createdAt:
           type: string
-          format: date-time
           description: Date de création
+          format: date-time
         owner:
           $ref: "#/components/schemas/UserProfileResponse"
-          description: Propriétaire de l'adresse
         codeChanged:
           type: boolean
           description: Indique si le code réservé fourni a dû être remplacé par un
@@ -1526,42 +1526,47 @@ components:
           example: ZIG-KBG-1234
         clientRequestId:
           type: string
-          format: uuid
           description: Identifiant de requête client idempotent
+          format: uuid
           example: 123e4567-e89b-12d3-a456-426614174000
+      description: Représentation complète d'une adresse géolocalisée
     CreateAddressRequest:
+      required:
+      - description
+      - latitude
+      - locationType
+      - longitude
       type: object
-      description: Requête de création d'adresse géolocalisée
       properties:
         latitude:
-          type: number
-          format: double
-          description: "Latitude GPS (ex: 12.5738 pour Boucotte Ziguinchor)"
-          example: 12.5738
           maximum: 90
           minimum: -90
-        longitude:
           type: number
+          description: "Latitude GPS (ex: 12.5738 pour Boucotte Ziguinchor)"
           format: double
-          description: "Longitude GPS (ex: -16.2650 pour Boucotte Ziguinchor)"
-          example: -16.265
+          example: 12.5738
+        longitude:
           maximum: 180
           minimum: -180
+          type: number
+          description: "Longitude GPS (ex: -16.2650 pour Boucotte Ziguinchor)"
+          format: double
+          example: -16.265
         description:
+          maxLength: 500
+          minLength: 0
           type: string
           description: Repère visuel ou description humaine de la concession
           example: "Maison familiale au toit rouge, 3e concession à gauche après la\
             \ Grande Mosquée"
-          maxLength: 500
-          minLength: 0
         locationType:
           type: string
           description: Type de lieu
+          example: MAISON
           enum:
           - MAISON
           - COMMERCE
           - INSTITUTION
-          example: MAISON
         listed:
           type: boolean
           description: Indique si l'adresse figure dans l'annuaire public
@@ -1576,28 +1581,23 @@ components:
           example: ZIG-KBG-1234
         clientRequestId:
           type: string
-          format: uuid
           description: Identifiant idempotent unique côté client pour déduplication
+          format: uuid
           example: 123e4567-e89b-12d3-a456-426614174000
-      required:
-      - description
-      - latitude
-      - locationType
-      - longitude
+      description: Requête de création d'adresse géolocalisée
     ShareSmsRequest:
+      required:
+      - phoneNumber
       type: object
-      description: Demande d'envoi par SMS du lien de la fiche adresse
       properties:
         phoneNumber:
+          pattern: "^\\+221(70|75|76|77|78)[0-9]{7}$"
           type: string
           description: Numéro mobile sénégalais au format E.164
           example: "+221771234503"
-          pattern: "^\\+221(70|75|76|77|78)[0-9]{7}$"
-      required:
-      - phoneNumber
+      description: Demande d'envoi par SMS du lien de la fiche adresse
     ShareSmsResponse:
       type: object
-      description: Résultat de l'envoi du SMS de partage
       properties:
         status:
           type: string
@@ -1605,15 +1605,14 @@ components:
         maskedPhone:
           type: string
           example: +221 77 *** ** 03
+      description: Résultat de l'envoi du SMS de partage
     ReservedCodeResponse:
       type: object
-      description: Réponse représentant un code d'adresse réservé pour création hors
-        ligne
       properties:
         id:
           type: string
-          format: uuid
           description: Identifiant unique de la réservation
+          format: uuid
         code:
           type: string
           description: Code réservé au format ZONE-QUARTIER-XXXX
@@ -1629,20 +1628,24 @@ components:
         status:
           type: string
           description: Statut de la réservation
+          example: RESERVED
           enum:
           - RESERVED
           - USED
           - EXPIRED
-          example: RESERVED
         createdAt:
           type: string
-          format: date-time
           description: Date et heure de création de la réservation
+          format: date-time
         expiresAt:
           type: string
-          format: date-time
           description: Date et heure d'expiration (30 jours)
+          format: date-time
+      description: Réponse représentant un code d'adresse réservé pour création hors
+        ligne
     UpdateReportStatusRequest:
+      required:
+      - status
       type: object
       properties:
         status:
@@ -1652,11 +1655,9 @@ components:
           - RESOLVED
           - DISMISSED
         reason:
-          type: string
           maxLength: 500
           minLength: 0
-      required:
-      - status
+          type: string
     AdminReportResponse:
       type: object
       properties:
@@ -1712,14 +1713,12 @@ components:
           - SIGNALED
     UpdateAddressRequest:
       type: object
-      description: Requête de mise à jour partielle d'une adresse (description et
-        type de lieu uniquement ; code et position immuables)
       properties:
         description:
-          type: string
-          description: Nouvelle description / repère visuel (max 500 caractères)
           maxLength: 500
           minLength: 0
+          type: string
+          description: Nouvelle description / repère visuel (max 500 caractères)
         locationType:
           type: string
           description: "Nouveau type de lieu (MAISON, COMMERCE, INSTITUTION)"
@@ -1735,9 +1734,10 @@ components:
           type: boolean
           description: Indique si le nom du propriétaire est affiché publiquement
           example: false
+      description: Requête de mise à jour partielle d'une adresse (description et
+        type de lieu uniquement ; code et position immuables)
     UpdateVisibilityRequest:
       type: object
-      description: Demande de modification de la visibilité d'une adresse dans l'annuaire
       properties:
         listed:
           type: boolean
@@ -1747,9 +1747,9 @@ components:
           type: boolean
           description: Indique si le nom du propriétaire doit être affiché publiquement
           example: false
+      description: Demande de modification de la visibilité d'une adresse dans l'annuaire
     GeoJsonLineString:
       type: object
-      description: Géométrie GeoJSON LineString pour le tracé cartographique
       properties:
         type:
           type: string
@@ -1760,34 +1760,35 @@ components:
           description: "Liste ordonnée de coordonnées [longitude, latitude]"
           items:
             type: array
+            description: "Liste ordonnée de coordonnées [longitude, latitude]"
             items:
               type: number
+              description: "Liste ordonnée de coordonnées [longitude, latitude]"
               format: double
+      description: Géométrie GeoJSON LineString pour le tracé cartographique
     RouteResponse:
       type: object
-      description: Réponse d'itinéraire calculé depuis la position de l'utilisateur
       properties:
         distance:
           type: number
-          format: double
           description: Distance totale en mètres
+          format: double
           example: 3420.5
         duration:
           type: number
-          format: double
           description: Durée estimée en secondes
+          format: double
           example: 720.0
         geometry:
           $ref: "#/components/schemas/GeoJsonLineString"
-          description: Tracé géographique GeoJSON LineString
         steps:
           type: array
           description: Étapes textuelles de l'itinéraire (max 15)
           items:
             $ref: "#/components/schemas/RouteStep"
+      description: Réponse d'itinéraire calculé depuis la position de l'utilisateur
     RouteStep:
       type: object
-      description: Étape textuelle d'un itinéraire
       properties:
         instruction:
           type: string
@@ -1795,17 +1796,17 @@ components:
           example: Prendre à droite sur Rue du Commerce
         distance:
           type: number
-          format: double
           description: Distance du tronçon en mètres
+          format: double
           example: 250.0
         duration:
           type: number
-          format: double
           description: Durée estimée du tronçon en secondes
+          format: double
           example: 45.0
+      description: Étape textuelle d'un itinéraire
     DirectoryItemResponse:
       type: object
-      description: Entrée publique de l'annuaire SamaAdresse
       properties:
         code:
           type: string
@@ -1822,11 +1823,11 @@ components:
         locationType:
           type: string
           description: Type de lieu
+          example: COMMERCE
           enum:
           - MAISON
           - COMMERCE
           - INSTITUTION
-          example: COMMERCE
         description:
           type: string
           description: Description résumée (max 120 caractères)
@@ -1837,13 +1838,14 @@ components:
           example: /uploads/façade.jpg
         createdAt:
           type: string
-          format: date-time
           description: Date d'enregistrement
+          format: date-time
         ownerName:
           type: string
           description: Nom du propriétaire (uniquement si explicitement autorisé par
             ce dernier)
           example: Mamadou Diallo
+      description: Entrée publique de l'annuaire SamaAdresse
     PageDirectoryItemResponse:
       type: object
       properties:
@@ -1937,7 +1939,6 @@ components:
           type: boolean
     PublicAddressResponse:
       type: object
-      description: Représentation publique minimale d'une adresse géolocalisée
       properties:
         code:
           type: string
@@ -1945,13 +1946,13 @@ components:
           example: ZIG-KBG-4271
         latitude:
           type: number
-          format: double
           description: Latitude GPS
+          format: double
           example: 12.5738
         longitude:
           type: number
-          format: double
           description: Longitude GPS
+          format: double
           example: -16.265
         zone:
           type: string
@@ -1968,19 +1969,20 @@ components:
         locationType:
           type: string
           description: Type de lieu
+          example: MAISON
           enum:
           - MAISON
           - COMMERCE
           - INSTITUTION
-          example: MAISON
         photoUrl:
           type: string
           description: URL de la photo de façade de l'adresse
           example: /uploads/123e4567-e89b-12d3-a456-426614174000.jpg
         createdAt:
           type: string
-          format: date-time
           description: Date de création
+          format: date-time
+      description: Représentation publique minimale d'une adresse géolocalisée
   securitySchemes:
     bearerAuth:
       type: http

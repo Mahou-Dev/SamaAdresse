@@ -51,10 +51,14 @@ public class DemoDataSeeder implements ApplicationRunner {
     public static final UUID DEMO_PHOTO_2_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     public static final UUID DEMO_PHOTO_3_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
 
+    private static final java.util.regex.Pattern REGULATORY_CODE_PATTERN =
+            java.util.regex.Pattern.compile("^[A-Z]{2,3}-[A-Z]{3}-[0-9]{4}$");
+
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
     private final PhotoStorage photoStorage;
+    private final sn.samaadresse.service.GeoGridService geoGridService;
 
     @Value("${demo.seed:false}")
     private boolean demoSeedExplicit;
@@ -63,7 +67,16 @@ public class DemoDataSeeder implements ApplicationRunner {
     private String demoPassword;
 
     public DemoDataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this(userRepository, null, passwordEncoder, null);
+        this(userRepository, null, passwordEncoder, null, null);
+    }
+
+    public DemoDataSeeder(
+            UserRepository userRepository,
+            AddressRepository addressRepository,
+            PasswordEncoder passwordEncoder,
+            PhotoStorage photoStorage
+    ) {
+        this(userRepository, addressRepository, passwordEncoder, photoStorage, null);
     }
 
     @Autowired
@@ -71,12 +84,14 @@ public class DemoDataSeeder implements ApplicationRunner {
             UserRepository userRepository,
             @Autowired(required = false) AddressRepository addressRepository,
             PasswordEncoder passwordEncoder,
-            @Autowired(required = false) PhotoStorage photoStorage
+            @Autowired(required = false) PhotoStorage photoStorage,
+            @Autowired(required = false) sn.samaadresse.service.GeoGridService geoGridService
     ) {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.passwordEncoder = passwordEncoder;
         this.photoStorage = photoStorage;
+        this.geoGridService = geoGridService;
     }
 
     public void setDemoPassword(String demoPassword) {
@@ -194,10 +209,14 @@ public class DemoDataSeeder implements ApplicationRunner {
                         null, false, false, mamadou),
                 new DemoAddrDef("ZIG-TIL-3099", 12.5690, -16.2890, "ZIG", "TIL",
                         LocationType.MAISON, "Maison à étage crépie ocre face au grand baobab",
-                        null, false, false, fatou)
+                        null, false, false, fatou),
+                new DemoAddrDef("ZIG-KND-8319", 12.5515, -16.2750, "ZIG", "KND",
+                        LocationType.COMMERCE, "Atelier de couture et confection de boubous traditionnels",
+                        null, false, false, mamadou)
         );
 
         for (DemoAddrDef def : defs) {
+            validateCodeAndGrid(def.code(), def.zone(), def.quartier());
             if (!addressRepository.existsByCode(def.code())) {
                 String search = AddressService.computeSearchText(
                         def.desc(), def.quartier(), def.showOwner(), def.owner().getFullName()
@@ -221,6 +240,25 @@ public class DemoDataSeeder implements ApplicationRunner {
                         .build();
                 addressRepository.save(addr);
                 log.info("[SEED-DEMO] Adresse de démonstration créée : {}", def.code());
+            }
+        }
+    }
+
+    public void validateCodeAndGrid(String code, String expectedZone, String expectedQuartier) {
+        if (code == null || !REGULATORY_CODE_PATTERN.matcher(code).matches()) {
+            throw new IllegalArgumentException("Code d'adresse non conforme au format réglementaire (attendu ZONE-QUARTIER-XXXX) : " + code);
+        }
+        String[] parts = code.split("-");
+        String zone = parts[0];
+        String quartier = parts[1];
+        if (!zone.equalsIgnoreCase(expectedZone) || !quartier.equalsIgnoreCase(expectedQuartier)) {
+            throw new IllegalArgumentException("Incohérence entre le code (" + code + ") et la zone/quartier (" + expectedZone + "/" + expectedQuartier + ")");
+        }
+        if (geoGridService != null) {
+            boolean exists = geoGridService.getAllQuartiers().stream()
+                    .anyMatch(q -> q.getCode().equalsIgnoreCase(quartier) && q.getZoneCode().equalsIgnoreCase(zone));
+            if (!exists) {
+                throw new IllegalArgumentException("Le quartier " + quartier + " de la zone " + zone + " n'existe pas dans la grille géographique.");
             }
         }
     }

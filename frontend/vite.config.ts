@@ -20,6 +20,8 @@ export default defineConfig({
         'pwa-192x192.png',
         'pwa-512x512.png',
         'pwa-512x512-maskable.png',
+        'icons/icon-192.png',
+        'icons/icon-512.png',
         'fonts/outfit-latin.woff2',
         'fonts/jetbrains-mono-latin.woff2',
       ],
