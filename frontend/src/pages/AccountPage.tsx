@@ -73,8 +73,8 @@ export const AccountPage: React.FC = () => {
   if (!isOnline) {
     return (
       <div className="flex-1 max-w-md mx-auto w-full px-4 py-12 flex flex-col justify-center items-center text-center font-sans">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-4">
-          <div className="w-12 h-12 rounded-full bg-[#F2ECE1] border border-[#D4CEBF] flex items-center justify-center text-[#8A3112] mx-auto">
+        <div className="max-w-md w-full p-6 sm:p-8 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-4">
+          <div className="w-12 h-12 rounded-full bg-[#F2ECE1] border border-[#766B5B] flex items-center justify-center text-[#8A3112] mx-auto">
             <WifiOff className="w-6 h-6" />
           </div>
           <div className="space-y-1">
@@ -87,7 +87,7 @@ export const AccountPage: React.FC = () => {
           </div>
 
           {visitedCodes.length > 0 && (
-            <div className="pt-3 border-t border-[#E6DDD0] text-left">
+            <div className="pt-3 border-t border-[#766B5B] text-left">
               <span className="text-[11px] font-semibold text-[#5C4D44] block mb-2">
                 Fiches consultées disponibles hors ligne :
               </span>
@@ -96,7 +96,7 @@ export const AccountPage: React.FC = () => {
                   <Link
                     key={c}
                     to={`/a/${c}`}
-                    className="inline-block px-2.5 py-1 text-xs font-mono font-bold bg-[#F2ECE1] text-[#231A15] rounded border border-[#D4CEBF] hover:border-[#8C8272] transition"
+                    className="inline-block px-2.5 py-1 text-xs font-mono font-bold bg-[#F2ECE1] text-[#231A15] rounded border border-[#766B5B] hover:border-[#231A15] transition"
                   >
                     {c}
                   </Link>
@@ -108,7 +108,7 @@ export const AccountPage: React.FC = () => {
           <div className="pt-2">
             <Link
               to="/"
-              className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition"
             >
               Retour à l'accueil
             </Link>
@@ -121,7 +121,7 @@ export const AccountPage: React.FC = () => {
   if (!isAuthenticated || !user) {
     return (
       <div className="flex-1 max-w-md mx-auto w-full px-4 py-12 flex flex-col justify-center items-center text-center font-sans">
-        <div className="w-14 h-14 rounded-2xl bg-[#F2ECE1] border border-[#D4CEBF] flex items-center justify-center text-[#1D528F] mb-4">
+        <div className="w-14 h-14 rounded-2xl bg-[#F2ECE1] border border-[#766B5B] flex items-center justify-center text-[#1D528F] mb-4">
           <User className="w-7 h-7" />
         </div>
         <h1 className="text-2xl font-extrabold text-[#231A15] tracking-tight mb-2">
@@ -140,7 +140,7 @@ export const AccountPage: React.FC = () => {
           </Link>
           <Link
             to="/register"
-            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#231A15] text-xs sm:text-sm font-bold transition touch-target"
+            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs sm:text-sm font-bold transition touch-target"
           >
             <span>Créer un compte</span>
             <ArrowRight className="w-4 h-4 text-[#5C4D44]" />
@@ -152,7 +152,7 @@ export const AccountPage: React.FC = () => {
 
   return (
     <div className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-8 font-sans space-y-6">
-      <div className="pb-4 border-b border-[#E6DDD0]">
+      <div className="pb-4 border-b border-[#766B5B]">
         <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
           Espace personnel
         </h1>
@@ -161,8 +161,8 @@ export const AccountPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="p-5 sm:p-6 rounded-xl border border-[#8C8272] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5">
-        <div className="flex items-center gap-3 pb-4 border-b border-[#E6DDD0]">
+      <div className="p-5 sm:p-6 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5">
+        <div className="flex items-center gap-3 pb-4 border-b border-[#766B5B]">
           <div className="w-12 h-12 rounded-full bg-[#1D528F] text-white flex items-center justify-center text-lg font-bold">
             {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
           </div>
@@ -178,7 +178,7 @@ export const AccountPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-          <div className="p-3 rounded-lg bg-[#FBF9F5] border border-[#D4CEBF] space-y-1">
+          <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] space-y-1">
             <span className="text-[#5C4D44] text-[11px] flex items-center gap-1.5 font-medium">
               <Mail className="w-3.5 h-3.5 text-[#1D528F]" />
               <span>Adresse e-mail</span>
@@ -186,7 +186,7 @@ export const AccountPage: React.FC = () => {
             <p className="font-semibold text-[#231A15] break-all">{user.email}</p>
           </div>
 
-          <div className="p-3 rounded-lg bg-[#FBF9F5] border border-[#D4CEBF] space-y-1">
+          <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] space-y-1">
             <span className="text-[#5C4D44] text-[11px] flex items-center gap-1.5 font-medium">
               <Phone className="w-3.5 h-3.5 text-[#1D528F]" />
               <span>Numéro de téléphone</span>
@@ -196,7 +196,7 @@ export const AccountPage: React.FC = () => {
         </div>
 
         {/* Section PWA : Installer l'application */}
-        <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#D4CEBF] space-y-2.5">
+        <div className="p-4 rounded-xl bg-[#F2ECE1] border border-[#766B5B] space-y-2.5">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
@@ -228,7 +228,7 @@ export const AccountPage: React.FC = () => {
           </div>
 
           {!isInstalled && !canInstall && (
-            <div className="text-[11px] text-[#5C4D44] bg-[#FFFFFF] p-2.5 rounded-lg border border-[#E6DDD0]">
+            <div className="text-[11px] text-[#5C4D44] bg-[#FBF7EF] p-2.5 rounded-lg border border-[#766B5B]">
               {isIos ? (
                 <p>
                   Pour installer l'application sur iPhone ou iPad : appuyez sur le bouton <strong>Partager</strong> dans Safari, puis sélectionnez <strong>« Sur l'écran d'accueil »</strong>.
@@ -243,7 +243,7 @@ export const AccountPage: React.FC = () => {
         </div>
 
         {user.role === 'ADMIN' && (
-          <div className="p-4 rounded-xl bg-[#F2ECE1] border border-[#8C8272] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 rounded-xl bg-[#F2ECE1] border border-[#766B5B] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-0.5">
               <span className="text-xs font-bold text-[#231A15] block">
                 Administration et modération
@@ -254,7 +254,7 @@ export const AccountPage: React.FC = () => {
             </div>
             <Link
               to="/admin"
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-[#1D528F] bg-[#FFFFFF] hover:bg-[#FBF9F5] text-[#1D528F] text-xs font-bold transition cursor-pointer touch-target shrink-0"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-[#1D528F] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer touch-target shrink-0"
             >
               <span>Accéder à la modération</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -266,7 +266,7 @@ export const AccountPage: React.FC = () => {
           <button
             type="button"
             onClick={handleLogoutClick}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-[#991B1B]/40 bg-[#FFFFFF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-[#991B1B]/40 bg-[#FBF7EF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
           >
             <LogOut className="w-4 h-4 text-[#991B1B]" />
             <span>Se déconnecter</span>
@@ -281,7 +281,7 @@ export const AccountPage: React.FC = () => {
           aria-labelledby="logout-dialog-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
         >
-          <div className="bg-[#FFFFFF] rounded-2xl border border-[#8C8272] shadow-xl p-6 max-w-md w-[calc(100vw-32px)] space-y-4">
+          <div className="bg-[#FBF7EF] rounded-2xl border border-[#766B5B] shadow-xl p-6 max-w-md w-[calc(100vw-32px)] space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#FEF2F2] border border-[#DC2626]/30 flex items-center justify-center text-[#991B1B] shrink-0">
                 <AlertCircle className="w-5 h-5" />
@@ -299,7 +299,7 @@ export const AccountPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirmModal(false)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-[#8C8272] text-[#231A15] hover:bg-[#F2ECE1] text-xs font-bold transition min-h-[44px]"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-[#231A15] hover:bg-[#F2ECE1] text-xs font-bold transition min-h-[44px]"
               >
                 Annuler
               </button>

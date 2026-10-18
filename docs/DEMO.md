@@ -23,9 +23,9 @@ Ce document décrit le scénario minuté de soutenance de **SamaAdresse**, le pl
    - **Propriétaire de démonstration** : `demo@samaadresse.sn` / mot de passe défini par la variable d'environnement `DEMO_PASSWORD`.
    - **Administrateur (modération)** : adresse e-mail définie par `ADMIN_EMAIL` (défaut `admin@samaadresse.sn`) / mot de passe défini par `ADMIN_PASSWORD`.
    - **Adresses de démonstration pré-chargées (`DEMO_SEED=true`)** :
-     - `ZIG-KBG-4271` (Kandé Banéto, Ziguinchor — Maison familiale au toit rouge)
+     - `ZIG-KBG-4271` (Boucotte - Kangourou, Ziguinchor — Maison familiale au toit rouge)
      - `ZIG-ESC-1042` (Escale, Ziguinchor — Boutique d'alimentation générale)
-     - `ZIG-lyn-8319` (Lyndiane, Ziguinchor — Atelier de couture, non listé dans l'annuaire)
+     - `ZIG-KND-8319` (Kandé - Lyndiane, Ziguinchor — Atelier de couture, non listé dans l'annuaire)
 
 ---
 
@@ -34,14 +34,14 @@ Ce document décrit le scénario minuté de soutenance de **SamaAdresse**, le pl
 ### Minute 0:00 – 1:00 : Problème d'adressage & Consultation publique (`/a/ZIG-KBG-4271`)
 - **Action** : Ouvrir la page d'accueil (`/`), saisir le code `ZIG-KBG-4271` (ou scanner le QR code avec un téléphone) pour afficher la fiche publique `/a/ZIG-KBG-4271`.
 - **Points à montrer** :
-  - Plaque d'enseigne `ZIG-KBG-4271` (Zone Ziguinchor · Quartier Kandé Banéto), repère de terrain, photo de façade servie depuis PostgreSQL (`bytea`, `ETag` + cache immuable 1 an) et carte Leaflet centrée sur le point.
+  - Plaque d'enseigne `ZIG-KBG-4271` (Zone Ziguinchor · Quartier Boucotte - Kangourou), repère de terrain, photo de façade servie depuis PostgreSQL (`bytea`, `ETag` + cache immuable 1 an) et carte Leaflet centrée sur le point.
   - Cliquer sur **« Itinéraire depuis ma position »** : afficher le tracé réel OpenRouteService sur la carte en mode **Voiture** puis **À pied**, avec la distance, la durée et la liste des étapes de navigation en français, sans jamais exposer la clé API côté navigateur ni stocker la position du visiteur.
 
 ### Minute 1:00 – 2:15 : Annuaire public opt-in & Respect de la vie privée (`/annuaire`)
 - **Action** : Ouvrir `/annuaire`.
 - **Points à montrer** :
-  - Filtrer par quartier `Kandé Banéto` ou type `Commerce`, puis rechercher `Boutique` ou `ZIG-ESC-1042` (recherche tolérante aux accents et aux tirets).
-  - Montrer que `ZIG-lyn-8319` (`listed = false`) n'apparaît jamais dans l'annuaire, même en tapant son code exact.
+  - Filtrer par quartier `Boucotte - Kangourou` ou type `Commerce`, puis rechercher `Boutique` ou `ZIG-ESC-1042` (recherche tolérante aux accents et aux tirets).
+  - Montrer que `ZIG-KND-8319` (`listed = false`) n'apparaît jamais dans l'annuaire, même en tapant son code exact.
   - Montrer que le nom du propriétaire n'est affiché et cherchable que lorsque ce dernier a explicitement activé `showOwnerName = true` (`ZIG-KBG-4271`), et qu'il est absent de la réponse JSON pour `ZIG-ESC-1042` (`showOwnerName = false`).
 
 ### Minute 2:15 – 3:45 : Connexion, Création hors ligne & Synchronisation (`/addresses/new` et `/addresses/mine`)
@@ -115,12 +115,12 @@ Avant stockage, chaque image est vérifiée par ses octets magiques (JPEG, PNG, 
 **Réponse** : Le Service Worker (`frontend/src/sw.ts`) utilise une stratégie `NetworkFirst` (délai de repli de 3 secondes) sur `/api/addresses/{code}` complétée par un plugin personnalisé `fetchAndEvictOnGonePlugin`. Lorsque le serveur répond `410 Gone` (adresse `ARCHIVED` ou `SUSPENDED`), le plugin supprime immédiatement l'entrée correspondante du cache Workbox `public-addresses-cache` et renvoie la réponse `410` à l'interface, empêchant qu'une fiche révoquée reste consultable hors ligne.
 
 ### Q10. Comment l'application évite-t-elle les abus sur les routes publiques (signalements, itinéraires, SMS, connexion) derrière un proxy inverse comme Render ?
-**Réponse** : `ClientIpResolver` extrait l'adresse IP réelle du client en lisant en priorité `True-Client-IP`, `CF-Connecting-IP`, puis le premier élément de `X-Forwarded-For`. Les limiteurs en mémoire (`RateLimiterService`, `ReportRateLimiter`, `SmsRateLimiter`) appliquent des quotas glissants : 5 tentatives/min/IP sur `/api/auth/login`, 20 req/min/IP sur `/api/public/route`, 30 req/min/IP sur `/api/public/directory`, 3 signalements/h/IP et 1 signalement/24h par couple `(adresse, IP hachée SHA-256)`, et 3 niveaux de plafond sur les SMS (5/h/utilisateur, 3/24h/destinataire haché SHA-256, plafond quotidien global `SMS_DAILY_CAP`).
+**Réponse** : `ClientIpResolver` n'accorde aucune confiance aux en-têtes falsifiables par le client : l'en-tête `True-Client-IP` est strictement ignoré et le premier élément de `X-Forwarded-For` n'est jamais utilisé. En production derrière Render (`TRUSTED_PROXY_HOPS = 1`), le résolveur lit en priorité `CF-Connecting-IP` (garanti par l'infrastructure Cloudflare Edge de Render) ou l'adresse ajoutée par le dernier proxy de confiance dans `X-Forwarded-For` (`taille - TRUSTED_PROXY_HOPS`). Sans proxy (`TRUSTED_PROXY_HOPS = 0` en dev), seule l'adresse distante directe (`request.getRemoteAddr()`) est utilisée. Les limiteurs en mémoire (`RateLimiterService`, `ReportRateLimiter`, `SmsRateLimiter`) appliquent des quotas glissants : 5 tentatives/min/IP sur `/api/auth/login`, 20 req/min/IP sur `/api/public/route`, 30 req/min/IP sur `/api/public/directory`, 3 signalements/h/IP et 1 signalement/24h par couple `(adresse, IP hachée SHA-256)`. Sur les SMS, la protection combine 3 niveaux atomiques : 5 SMS/h par utilisateur connecté, 3 SMS/24h par numéro destinataire (haché SHA-256), et le plafond quotidien global de la plateforme `SMS_DAILY_CAP` (200 en dev, 20 en prod).
 
 ### Q11. Comment avez-vous éliminé le décalage de mise en page (CLS) sur `/addresses/mine` et `/annuaire` et optimisé le LCP sur `/addresses/new` ?
 **Réponse** :
-- Sur `/addresses/mine` et `/annuaire`, les décalages provenaient de l'apparition asynchrone de la barre de filtres, du compteur de résultats et des cartes d'adresses qui repoussaient le pied de page (`footer`). Nous avons réservé les hauteurs minimales des conteneurs (`min-h`), utilisé des squelettes de chargement de même géométrie que les cartes finales et fixé les dimensions `width`/`height` explicites des vignettes et icônes, ramenant le CLS à `0.000`.
-- Sur `/addresses/new`, la carte Leaflet est chargée par import dynamique (`React.lazy`) avec un conteneur de hauteur fixe réservée, ce qui maintient le chunk JS d'entrée sous les 85 Ko gzip et le LCP sous 2,2 secondes.
+- Sur `/addresses/mine` et `/annuaire`, les décalages provenaient de l'apparition asynchrone de la barre de filtres, du compteur de résultats et des cartes d'adresses qui repoussaient le pied de page (`footer`). Nous avons réservé les hauteurs minimales des conteneurs (`min-h-[1100px]`, `min-h-[172px] sm:min-h-[116px]`), utilisé des squelettes de chargement de même géométrie que les cartes finales et fixé les dimensions `width`/`height` explicites des vignettes et icônes, ramenant le CLS mesuré à `0.000` (objectif < 0,1).
+- Sur `/addresses/new`, la carte Leaflet est chargée par import dynamique (`React.lazy`) avec un conteneur de hauteur fixe réservée, ce qui maintient le chunk JS d'entrée à 102.45 Ko gzip (objectif ≤ 105 Ko, plafond ≤ 125 Ko) et le LCP mesuré à 2.6 secondes (2585 ms, cible < 3 s).
 
 ### Q12. Pourquoi l'adresse de départ d'un itinéraire n'est-elle jamais envoyée directement par le navigateur à OpenRouteService ?
-**Réponse** : Appeler OpenRouteService depuis le navigateur exposerait la clé `ORS_API_KEY` dans le bundle JavaScript public et permettrait à n'importe qui d'épuiser le quota de l'API. En passant par `GET /api/public/route`, la clé reste uniquement en variable d'environnement serveur, le backend vérifie que le point de départ est au Sénégal, applique le limiteur de débit (20/min/IP), met en cache les résultats pendant 10 minutes et ne journalise jamais les coordonnées de départ du visiteur.
+**Réponse** : Appeler OpenRouteService depuis le navigateur exposerait la clé `ORS_API_KEY` dans le bundle JavaScript public et permettrait à n'importe qui d'épuiser le quota de l'API. En passant par `GET /api/public/route`, la clé reste uniquement en variable d'environnement serveur, le backend vérifie que le point de départ est au Sénégal, applique le limiteur de débit (20/min/IP), met en cache les résultats pendant 5 minutes (`RouteService`) et ne journalise jamais les coordonnées de départ du visiteur.

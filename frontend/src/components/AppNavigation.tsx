@@ -19,21 +19,21 @@ export const AppNavigation: React.FC = () => {
       {/* =========================================================================
        * 1. Navigation Desktop (>= 768 px) : Barre supérieure sobre et fixe
        * ========================================================================= */}
-      <header className="sticky top-0 z-40 w-full bg-[#FBF9F5]/95 backdrop-blur-xs border-b border-[#E6DDD0] transition-colors">
+      <header className="sticky top-0 z-40 w-full bg-[#12304F] border-b border-[#766B5B] transition-colors">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Logo cliquable */}
           <Link
             to="/"
-            className="flex items-center gap-2.5 group focus-visible:outline-2 focus-visible:outline-[#1D528F] rounded-lg p-1"
+            className="flex items-center gap-2.5 group focus-visible:outline-2 focus-visible:outline-[#F2B233] rounded-lg p-1"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#1D528F] flex items-center justify-center text-white shadow-[0_2px_0_rgba(35,26,21,0.12)]">
-              <MapPin className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-[#FBF7EF] flex items-center justify-center text-[#12304F] shadow-sm">
+              <MapPin className="w-4 h-4 text-[#12304F]" />
             </div>
             <div>
-              <span className="font-extrabold text-lg text-[#231A15] tracking-tight block leading-tight">
+              <span className="font-extrabold text-lg text-[#FBF7EF] tracking-tight block leading-tight">
                 SamaAdresse
               </span>
-              <span className="text-[11px] font-medium text-[#5C4D44] block">
+              <span className="text-[11px] font-medium text-[#EADFC8] block">
                 Ziguinchor & Sénégal
               </span>
             </div>
@@ -46,8 +46,8 @@ export const AppNavigation: React.FC = () => {
               aria-current={pathname === '/' ? 'page' : undefined}
               className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
                 pathname === '/'
-                  ? 'bg-[#F2ECE1] text-[#1D528F] shadow-[0_1px_0_rgba(35,26,21,0.06)]'
-                  : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#F2ECE1]/60'
+                  ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                  : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
               }`}
             >
               <Home className="w-4 h-4" />
@@ -59,8 +59,8 @@ export const AppNavigation: React.FC = () => {
               aria-current={pathname === '/annuaire' ? 'page' : undefined}
               className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
                 pathname === '/annuaire'
-                  ? 'bg-[#F2ECE1] text-[#1D528F] shadow-[0_1px_0_rgba(35,26,21,0.06)]'
-                  : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#F2ECE1]/60'
+                  ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                  : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
               }`}
             >
               <BookOpen className="w-4 h-4" />
@@ -73,8 +73,8 @@ export const AppNavigation: React.FC = () => {
                 aria-current={pathname === '/addresses/mine' ? 'page' : undefined}
                 className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
                   pathname === '/addresses/mine'
-                    ? 'bg-[#F2ECE1] text-[#1D528F] shadow-[0_1px_0_rgba(35,26,21,0.06)]'
-                    : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#F2ECE1]/60'
+                    ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                    : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
                 }`}
               >
                 <MapPin className="w-4 h-4" />
@@ -88,8 +88,8 @@ export const AppNavigation: React.FC = () => {
               aria-current={pathname === '/addresses/new' ? 'page' : undefined}
               className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
                 pathname === '/addresses/new'
-                  ? 'bg-[#F2ECE1] text-[#1D528F] shadow-[0_1px_0_rgba(35,26,21,0.06)]'
-                  : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#F2ECE1]/60'
+                  ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                  : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
               }`}
             >
               <Plus className="w-4 h-4" />
@@ -97,7 +97,7 @@ export const AppNavigation: React.FC = () => {
             </Link>
 
             {/* Authentification / Profil */}
-            <div className="h-5 w-px bg-[#E6DDD0] mx-1" aria-hidden="true" />
+            <div className="h-5 w-px bg-[#766B5B] mx-1" aria-hidden="true" />
 
             {isAuthenticated ? (
               <Link
@@ -105,20 +105,20 @@ export const AppNavigation: React.FC = () => {
                 aria-current={pathname === '/account' ? 'page' : undefined}
                 className={`text-xs font-bold px-3 py-2 rounded-lg transition flex items-center gap-1.5 touch-target ${
                   pathname === '/account'
-                    ? 'bg-[#F2ECE1] text-[#1D528F] shadow-[0_1px_0_rgba(35,26,21,0.06)]'
-                    : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#F2ECE1]/60'
+                    ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                    : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
                 }`}
                 title="Accéder à mon espace personnel"
               >
-                <User className="w-4 h-4 text-[#1D528F]" />
+                <User className="w-4 h-4" />
                 <span>Compte</span>
               </Link>
             ) : (
               <Link
                 to="/login"
-                className="px-3 py-2 rounded-lg border border-[#8C8272] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition flex items-center gap-1.5 touch-target shadow-[0_1px_0_rgba(35,26,21,0.06)]"
+                className="px-3 py-2 rounded-lg border border-[#F2B233] bg-[#F2B233] hover:bg-[#DDA025] text-[#231A15] text-xs font-bold transition flex items-center gap-1.5 touch-target shadow-sm"
               >
-                <LogIn className="w-4 h-4 text-[#1D528F]" />
+                <LogIn className="w-4 h-4 text-[#231A15]" />
                 <span>Se connecter</span>
               </Link>
             )}
@@ -129,9 +129,9 @@ export const AppNavigation: React.FC = () => {
             {!isAuthenticated && (
               <Link
                 to="/login"
-                className="px-3 py-1.5 rounded-lg border border-[#8C8272] text-[#231A15] text-xs font-bold flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg border border-[#F2B233] bg-[#F2B233] hover:bg-[#DDA025] text-[#231A15] text-xs font-bold flex items-center gap-1"
               >
-                <LogIn className="w-3.5 h-3.5 text-[#1D528F]" />
+                <LogIn className="w-3.5 h-3.5 text-[#231A15]" />
                 <span>Connexion</span>
               </Link>
             )}
@@ -143,7 +143,7 @@ export const AppNavigation: React.FC = () => {
        * 2. Navigation Mobile (< 768 px) : Barre basse fixe (App Bar)
        * ========================================================================= */}
       <nav
-        className="order-last sticky bottom-0 left-0 right-0 z-40 bg-[#FBF9F5] border-t border-[#8C8272]/30 px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-[0_-2px_6px_rgba(35,26,21,0.06)] no-print"
+        className="order-last sticky bottom-0 left-0 right-0 z-40 bg-[#FBF7EF] border-t border-[#766B5B] px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] md:hidden shadow-sm no-print"
         aria-label="Navigation mobile"
       >
         {isAuthenticated ? (

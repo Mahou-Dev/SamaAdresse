@@ -5,7 +5,7 @@ import { MapPinOff, Home } from 'lucide-react';
 export const NotFoundPage: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-6 sm:p-12 max-w-xl mx-auto my-auto">
-      <div className="w-16 h-16 rounded-2xl bg-[#F2ECE1] border border-[#D4CEBF] flex items-center justify-center text-[#B84A24] mb-6 shadow-[0_2px_0_rgba(35,26,21,0.08)]">
+      <div className="w-16 h-16 rounded-2xl bg-[#F2ECE1] border border-[#766B5B] flex items-center justify-center text-[#B84A24] mb-6 shadow-[0_2px_0_rgba(35,26,21,0.08)]">
         <MapPinOff className="w-8 h-8" />
       </div>
 

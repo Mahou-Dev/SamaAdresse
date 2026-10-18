@@ -13,7 +13,7 @@ O -> UI : Saisit le numéro du destinataire
 UI -> UI : Contrôle du format mobile\n^\+221(70|75|76|77|78)[0-9]{7}$
 UI -> API : POST /api/addresses/{id}/share/sms\n(recipientPhone)
 API -> API : Vérifie que l'adresse appartient\nà l'utilisateur (et n'est ni ARCHIVED ni SUSPENDED)
-API -> RL : Trois niveaux de limitation\n(utilisateur 5/j, destinataire haché SHA-256 3/j, global 20/j)
+API -> RL : Trois niveaux de limitation atomiques\n(utilisateur 5/h, destinataire haché SHA-256 3/24h, global 200/24h)
 alt limite atteinte
   RL --> API : refus
   API --> UI : 429

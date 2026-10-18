@@ -36,22 +36,6 @@ import java.util.UUID;
 public class AdminModerationController {
 
     private final ModerationService moderationService;
-    private final sn.samaadresse.security.RateLimiterService rateLimiterService;
-    private final sn.samaadresse.security.ReportRateLimiter reportRateLimiter;
-
-    @PostMapping("/reset-rate-limits")
-    @SecurityRequirement(name = "bearerAuth")
-    @Operation(summary = "Réinitialiser les limiteurs de débit", description = "Vide le cache des limiteurs de débit en mémoire.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Limiteurs de débit réinitialisés"),
-            @ApiResponse(responseCode = "401", description = "Non authentifié", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "403", description = "Accès réservé aux administrateurs", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    public ResponseEntity<Map<String, String>> resetRateLimits() {
-        rateLimiterService.reset();
-        reportRateLimiter.reset();
-        return ResponseEntity.ok(Map.of("message", "Limiteurs de débit réinitialisés."));
-    }
 
     @GetMapping("/reports")
     @SecurityRequirement(name = "bearerAuth")

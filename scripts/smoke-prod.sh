@@ -229,6 +229,83 @@ record(
     f"X-Content-Type-Options={xcto} ; Referrer-Policy={refp} ; Permissions-Policy={permp} ; CSP-Report-Only présent ({len(cspro)} car.)"
 )
 
+# 11. GET /sw.js (Service Worker PWA)
+st_sw, hdrs_sw, body_sw = req("GET", "/sw.js")
+ct_sw = hdrs_sw.get("content-type", "")
+record(
+    "GET /sw.js (Service Worker PWA)",
+    st_sw == 200 and ("javascript" in ct_sw or len(body_sw) > 0),
+    f"HTTP {st_sw}, Content-Type={ct_sw}, taille={len(body_sw)} octets"
+)
+
+# 12. GET /manifest.webmanifest (Manifeste PWA)
+st_mf, hdrs_mf, body_mf = req("GET", "/manifest.webmanifest")
+mf_json = json.loads(body_mf.decode("utf-8")) if st_mf == 200 else {}
+record(
+    "GET /manifest.webmanifest (Manifeste PWA)",
+    st_mf == 200 and mf_json.get("name") == "SamaAdresse",
+    f"HTTP {st_mf}, name={mf_json.get('name')}, theme_color={mf_json.get('theme_color')}"
+)
+
+# 13. GET /icons/icon-192.png et /icons/icon-512.png (Icônes PWA)
+st_i192, hdrs_i192, body_i192 = req("GET", "/icons/icon-192.png")
+st_i512, hdrs_i512, body_i512 = req("GET", "/icons/icon-512.png")
+record(
+    "GET /icons/icon-192.png et /icons/icon-512.png (Icônes PWA)",
+    st_i192 == 200 and st_i512 == 200 and body_i192[:8] == b"\x89PNG\r\n\x1a\n" and body_i512[:8] == b"\x89PNG\r\n\x1a\n",
+    f"icon-192 -> {st_i192} ({len(body_i192)} octets) ; icon-512 -> {st_i512} ({len(body_i512)} octets)"
+)
+
+# 14. GET /v3/api-docs (Spécification OpenAPI 3.0)
+st_oa, hdrs_oa, body_oa = req("GET", "/v3/api-docs")
+oa_json = json.loads(body_oa.decode("utf-8")) if st_oa == 200 else {}
+oa_version = oa_json.get("openapi", "")
+record(
+    "GET /v3/api-docs (Spécification OpenAPI 3.0)",
+    st_oa == 200 and oa_version.startswith("3.0"),
+    f"HTTP {st_oa}, version openapi={oa_version}, titre={oa_json.get('info', {}).get('title')}"
+)
+
+# 15. POST /api/auth/refresh sans cookie (Rejet 401)
+st_rf, hdrs_rf, body_rf = req("POST", "/api/auth/refresh")
+record(
+    "POST /api/auth/refresh sans cookie (Rejet 401)",
+    st_rf == 401,
+    f"HTTP {st_rf}, corps={body_rf.decode('utf-8', errors='ignore').strip()}"
+)
+
+# 16. GET /cette-page-n-existe-pas (Repli SPA vers index.html)
+st_404_spa, hdrs_404_spa, body_404_spa = req("GET", "/cette-page-n-existe-pas", {"Accept": "text/html"})
+html_404 = body_404_spa.decode("utf-8", errors="ignore")
+record(
+    "GET /cette-page-n-existe-pas (Repli SPA vers index.html)",
+    st_404_spa == 200 and "<div id=\"root\">" in html_404,
+    f"HTTP {st_404_spa}, index.html servi correctement pour routage côté client"
+)
+
+# 17. Décodage du QR Code téléchargé (test-qr-decode.mjs)
+import subprocess
+qr_proc = subprocess.run(["node", "scripts/test-qr-decode.mjs", base_url], capture_output=True, text=True)
+record(
+    "Décodage du QR Code téléchargé (test-qr-decode.mjs)",
+    qr_proc.returncode == 0,
+    f"code={qr_proc.returncode}, sortie={qr_proc.stdout.strip().splitlines()[-1] if qr_proc.stdout.strip() else qr_proc.stderr.strip()}"
+)
+
+# 18. Table flyway_schema_history dans PostgreSQL
+flyway_proc = subprocess.run(
+    ["docker", "compose", "-f", "docker-compose.prod-test.yml", "exec", "-T", "db", "psql", "-U", "samaadresse_prod_user", "-d", "samaadresse_prod", "-t", "-c", "SELECT count(*) FROM flyway_schema_history WHERE success = true;"],
+    capture_output=True,
+    text=True
+)
+flyway_out = flyway_proc.stdout.strip()
+flyway_ok = flyway_proc.returncode == 0 and flyway_out.isdigit() and int(flyway_out) >= 2
+record(
+    "Table flyway_schema_history dans PostgreSQL",
+    flyway_ok,
+    f"code={flyway_proc.returncode}, migrations appliquées={flyway_out}"
+)
+
 now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 lines = [
     "# Rapport de Vérification Smoke Production (`smoke-prod.sh`)",

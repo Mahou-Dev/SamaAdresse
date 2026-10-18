@@ -42,6 +42,7 @@ public class DatabaseUrlEnvironmentPostProcessor implements EnvironmentPostProce
             props.put("DB_URL", details.jdbcUrl());
             if (StringUtils.hasText(details.username())) {
                 props.put("spring.datasource.username", details.username());
+                props.put("DB_USERNAME", details.username());
                 props.put("DB_USER", details.username());
             }
             if (details.password() != null) {

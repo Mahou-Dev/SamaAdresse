@@ -72,7 +72,7 @@ export const AddressMap: React.FC<AddressMapProps> = ({
   return (
     <div className="space-y-3">
       {/* Cadre de carte émaillé et sobre */}
-      <div className="relative rounded-xl overflow-hidden border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.08)] h-64 sm:h-80 bg-[#F2ECE1] z-0">
+      <div className="relative rounded-xl overflow-hidden border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.08)] h-64 sm:h-80 bg-[#F2ECE1] z-0">
         {mapReady ? (
           <Suspense fallback={<MapSkeleton />}>
             <LazyLeafletMapInner
@@ -103,7 +103,7 @@ export const AddressMap: React.FC<AddressMapProps> = ({
             type="button"
             onClick={handleOpenDirections}
             disabled={loadingGps}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-semibold transition shadow-[0_1px_0_rgba(35,26,21,0.06)] cursor-pointer disabled:opacity-50 touch-target"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-semibold transition shadow-[0_1px_0_rgba(35,26,21,0.06)] cursor-pointer disabled:opacity-50 touch-target"
           >
             {loadingGps ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

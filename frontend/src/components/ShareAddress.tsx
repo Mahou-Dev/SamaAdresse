@@ -99,11 +99,11 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
 
   return (
     <div
-      className="rounded-2xl bg-[#FFFFFF] border border-[#D4CEBF] shadow-sm overflow-hidden"
+      className="rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm overflow-hidden"
       aria-label="Partager cette adresse"
     >
       {/* En-tête */}
-      <div className="px-5 py-4 border-b border-[#E6DDD0] flex items-center gap-2.5">
+      <div className="px-5 py-4 border-b border-[#766B5B] flex items-center gap-2.5">
         <div className="p-2 rounded-lg bg-[#F2ECE1]">
           <Share2 className="w-4 h-4 text-[#1D528F]" />
         </div>
@@ -120,7 +120,7 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
             id="share-copy-code-btn"
             onClick={handleCopyCode}
             className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl
-              bg-[#FBF9F5] hover:bg-[#F2ECE1] border border-[#D4CEBF] hover:border-[#1D528F]/40
+              bg-[#FBF7EF] hover:bg-[#F2ECE1] border border-[#766B5B] hover:border-[#1D528F]
               text-xs font-bold text-[#231A15] transition cursor-pointer"
           >
             {copiedCode
@@ -133,7 +133,7 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
             id="share-copy-link-btn"
             onClick={handleCopyLink}
             className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl
-              bg-[#FBF9F5] hover:bg-[#F2ECE1] border border-[#D4CEBF] hover:border-[#1D528F]/40
+              bg-[#FBF7EF] hover:bg-[#F2ECE1] border border-[#766B5B] hover:border-[#1D528F]
               text-xs font-bold text-[#231A15] transition cursor-pointer"
           >
             {copiedLink
@@ -144,7 +144,7 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
         </div>
 
         {copyFeedback && (
-          <p role="alert" className="text-xs text-[#B84A24] bg-[#F2ECE1] p-2 rounded-lg border border-[#D4CEBF]">
+          <p role="alert" className="text-xs text-[#B84A24] bg-[#F2ECE1] p-2 rounded-lg border border-[#766B5B]">
             {copyFeedback}
           </p>
         )}
@@ -168,7 +168,7 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
             id="share-native-btn"
             onClick={handleNativeShare}
             className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl
-              bg-[#F2ECE1] hover:bg-[#E6DDD0] border border-[#D4CEBF]
+              bg-[#F2ECE1] hover:bg-[#E6DDD0] border border-[#766B5B]
               text-xs font-bold text-[#231A15] transition cursor-pointer"
           >
             <Smartphone className="w-3.5 h-3.5 text-[#1D528F]" />
@@ -177,14 +177,14 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
         </div>
 
         {/* Séparateur SMS serveur */}
-        <div className="border-t border-[#E6DDD0] pt-3">
+        <div className="border-t border-[#766B5B] pt-3">
           {isAuthenticated ? (
             <div className="space-y-3">
               <button
                 id="share-sms-toggle-btn"
                 onClick={() => setShowSmsForm(v => !v)}
                 className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl
-                  bg-[#2A6B44]/8 hover:bg-[#2A6B44]/15 border border-[#2A6B44]/25
+                  bg-[#2A6B44]/10 hover:bg-[#2A6B44]/20 border border-[#2A6B44]/30
                   text-xs font-bold text-[#1C4E30] transition cursor-pointer"
                 aria-expanded={showSmsForm}
                 aria-controls="sms-share-panel"
@@ -210,7 +210,7 @@ export const ShareAddress: React.FC<ShareAddressProps> = ({ code, description })
             <a
               href={smsUrl}
               className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl
-                bg-[#F2ECE1] hover:bg-[#E6DDD0] border border-[#D4CEBF]
+                bg-[#F2ECE1] hover:bg-[#E6DDD0] border border-[#766B5B]
                 text-xs font-bold text-[#231A15] transition"
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#2A6B44]" />

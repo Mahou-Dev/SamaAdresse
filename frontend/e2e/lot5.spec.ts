@@ -205,8 +205,8 @@ test.describe('LOT 5 — PWA & Mode Hors Ligne', () => {
     expect(manifest.short_name).toBe('SamaAdresse');
     expect(manifest.start_url).toBe('/');
     expect(manifest.display).toBe('standalone');
-    expect(manifest.theme_color).toBe('#B84A24');
-    expect(manifest.background_color).toBe('#FBF9F5');
+    expect(manifest.theme_color).toBe('#12304F');
+    expect(manifest.background_color).toBe('#EADFC8');
 
     // Icônes
     const icon192 = manifest.icons.find((i: any) => i.sizes === '192x192' && !i.purpose?.includes('maskable'));

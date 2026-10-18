@@ -15,7 +15,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   if (loading) {
     return (
       <div className="flex-1 min-h-[1200px] flex items-start justify-center p-6 pt-16">
-        <div className="flex flex-col items-center gap-3 p-8 rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)]">
+        <div className="flex flex-col items-center gap-3 p-8 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)]">
           <Loader2 className="w-7 h-7 text-[#1D528F] animate-spin" />
           <p className="text-xs font-medium text-[#5C4D44]">Vérification de la session...</p>
         </div>
@@ -34,7 +34,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return (
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-md w-full p-6 sm:p-8 rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] text-center space-y-4">
+        <div className="max-w-md w-full p-6 sm:p-8 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] text-center space-y-4">
           <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] flex items-center justify-center mx-auto">
             <ShieldAlert className="w-6 h-6" />
           </div>

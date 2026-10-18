@@ -43,7 +43,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 ? 'bg-[#EAF4ED] border-[#2A6B44]/40 text-[#1C4E30]'
                 : toast.type === 'error'
                 ? 'bg-[#FEF2F2] border-[#DC2626]/40 text-[#991B1B]'
-                : 'bg-[#FFFFFF] border-[#D4CEBF] text-[#231A15]'
+                : 'bg-[#FBF7EF] border-[#766B5B] text-[#231A15]'
             }`}
           >
             <div className="flex items-center gap-3">

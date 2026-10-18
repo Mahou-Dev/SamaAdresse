@@ -33,7 +33,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { resolveQuartier } from '../utils/geoGrid';
+import { resolveQuartier, formatOutOfZoneMessage } from '../utils/geoGrid';
 import {
   getDraftsCount,
   saveDraft,
@@ -198,7 +198,7 @@ export const NewAddressPage: React.FC = () => {
     try {
       resolveQuartier(latNum, lonNum);
     } catch {
-      setSubmitError("Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées.");
+      setSubmitError(formatOutOfZoneMessage());
       window.scrollTo({ top: 0, behavior: 'instant' });
       return;
     }
@@ -239,7 +239,7 @@ export const NewAddressPage: React.FC = () => {
         try {
           quartier = resolveQuartier(latNum, lonNum);
         } catch {
-          setSubmitError("Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées.");
+          setSubmitError(formatOutOfZoneMessage());
           setStep(1);
           setSubmitting(false);
           return;
@@ -463,7 +463,7 @@ export const NewAddressPage: React.FC = () => {
       {!isOnline && step < 4 && (
         <div
           role="status"
-          className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-[#5C4D44] text-xs font-medium flex items-center gap-2.5 mb-2 shadow-[0_1px_0_rgba(35,26,21,0.04)]"
+          className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-[#5C4D44] text-xs font-medium flex items-center gap-2.5 mb-2 shadow-[0_1px_0_rgba(35,26,21,0.04)]"
         >
           <WifiOff className="w-4 h-4 text-[#8A3112] shrink-0" />
           <span>Mode hors ligne · cette adresse sera enregistrée sur votre appareil et transmise dès votre retour sur le réseau.</span>
@@ -475,7 +475,7 @@ export const NewAddressPage: React.FC = () => {
       {/* ========================================================================= */}
       {step === 1 && (
         <section aria-labelledby="step1-title" className="space-y-5 animate-fadeIn">
-          <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1]/60 border border-[#E6DDD0]">
+          <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1]/60 border border-[#766B5B]">
             <h1 id="step1-title" className="text-xl sm:text-2xl font-extrabold text-[#231A15] tracking-tight">
               Où se situe votre lieu ?
             </h1>
@@ -485,7 +485,7 @@ export const NewAddressPage: React.FC = () => {
           </div>
 
           {/* Action GPS */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-[#FFFFFF] rounded-xl border border-[#8C8272]/30 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 bg-[#FBF7EF] rounded-xl border border-[#766B5B] shadow-sm">
             <div className="flex items-center gap-2.5">
               <button
                 type="button"
@@ -525,7 +525,7 @@ export const NewAddressPage: React.FC = () => {
 
           {/* Avertissement si précision faible (> 50m) */}
           {gpsAccuracy !== null && gpsAccuracy > 50 && (
-            <div className="p-3 bg-[#F2ECE1] border border-[#8C8272]/40 rounded-xl text-xs text-[#5C4D44] flex items-start gap-2" role="status">
+            <div className="p-3 bg-[#F2ECE1] border border-[#766B5B] rounded-xl text-xs text-[#5C4D44] flex items-start gap-2" role="status">
               <AlertTriangle className="w-4 h-4 text-[#B84A24] shrink-0 mt-0.5" />
               <span>
                 Précision GPS faible (± {Math.round(gpsAccuracy)} m). Rapprochez-vous d'une zone dégagée ou déplacez le repère.
@@ -535,7 +535,7 @@ export const NewAddressPage: React.FC = () => {
 
           {/* Erreur GPS */}
           {gpsError && (
-            <div className="p-3 bg-[#F2ECE1] border border-[#8C8272]/40 rounded-xl text-xs text-[#5C4D44] flex items-start gap-2">
+            <div className="p-3 bg-[#F2ECE1] border border-[#766B5B] rounded-xl text-xs text-[#5C4D44] flex items-start gap-2">
               <AlertCircle className="w-4 h-4 text-[#B84A24] shrink-0 mt-0.5" />
               <span>{gpsError}</span>
             </div>
@@ -558,12 +558,12 @@ export const NewAddressPage: React.FC = () => {
           </div>
 
           {/* Saisie manuelle pliable */}
-          <details className="group border border-[#8C8272]/30 rounded-xl p-3 bg-[#FFFFFF] text-xs">
+          <details className="group border border-[#766B5B] rounded-xl p-3 bg-[#FBF7EF] text-xs">
             <summary className="font-semibold text-[#1D528F] cursor-pointer hover:underline list-none flex items-center justify-between">
               <span>Saisir les coordonnées manuellement</span>
-              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#8C8272]" />
+              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#5C4D44]" />
             </summary>
-            <div className="mt-3 grid grid-cols-2 gap-3 pt-2 border-t border-[#E6DDD0]">
+            <div className="mt-3 grid grid-cols-2 gap-3 pt-2 border-t border-[#766B5B]">
               <div>
                 <label htmlFor="manual-lat" className="block text-[11px] font-bold text-[#231A15] mb-1">
                   Latitude (°N)
@@ -574,7 +574,7 @@ export const NewAddressPage: React.FC = () => {
                   step="0.000001"
                   value={latitude}
                   onChange={(e) => setLatitude(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#8C8272] rounded-lg text-xs bg-[#FBF9F5] font-mono text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#B84A24]"
+                  className="w-full px-3 py-2 border border-[#766B5B] rounded-lg text-xs bg-[#FBF7EF] font-mono text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#B84A24]"
                 />
               </div>
               <div>
@@ -587,7 +587,7 @@ export const NewAddressPage: React.FC = () => {
                   step="0.000001"
                   value={longitude}
                   onChange={(e) => setLongitude(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#8C8272] rounded-lg text-xs bg-[#FBF9F5] font-mono text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#B84A24]"
+                  className="w-full px-3 py-2 border border-[#766B5B] rounded-lg text-xs bg-[#FBF7EF] font-mono text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#B84A24]"
                 />
               </div>
             </div>
@@ -641,7 +641,7 @@ export const NewAddressPage: React.FC = () => {
               </label>
               <span
                 className={`text-[11px] font-mono ${
-                  description.length > 500 ? 'text-[#B84A24] font-bold' : 'text-[#8C8272]'
+                  description.length > 500 ? 'text-[#B84A24] font-bold' : 'text-[#5C4D44]'
                 }`}
               >
                 {description.length}/500
@@ -654,7 +654,7 @@ export const NewAddressPage: React.FC = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Ex : Porte verte en face de la boutique Chez Moussa, à 50 m du grand manguier..."
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#8C8272] bg-[#FFFFFF] text-xs sm:text-sm text-[#231A15] placeholder-[#8C8272] focus:outline-none focus:ring-2 focus:ring-[#B84A24] resize-none"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#766B5B] bg-[#FBF7EF] text-xs sm:text-sm text-[#231A15] placeholder-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#B84A24] resize-none"
             />
             <p className="text-[11px] text-[#5C4D44]">
               Indiquez des détails visibles depuis la voie publique : couleur de façade, commerce voisin, croisement.
@@ -662,16 +662,16 @@ export const NewAddressPage: React.FC = () => {
           </div>
 
           {/* Section repliable Visibilité dans l'annuaire */}
-          <details className="group border border-[#8C8272]/40 rounded-xl p-3.5 bg-[#FFFFFF] text-xs">
+          <details className="group border border-[#766B5B] rounded-xl p-3.5 bg-[#FBF7EF] text-xs">
             <summary className="font-semibold text-[#1D528F] cursor-pointer hover:underline list-none flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#1D528F]" />
                 <span>Visibilité dans l'annuaire</span>
               </div>
-              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#8C8272]" />
+              <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#5C4D44]" />
             </summary>
 
-            <div className="mt-3 pt-3 border-t border-[#E6DDD0] space-y-3">
+            <div className="mt-3 pt-3 border-t border-[#766B5B] space-y-3">
               <div className="flex items-start gap-2.5">
                 <input
                   id="directory-listed"
@@ -681,7 +681,7 @@ export const NewAddressPage: React.FC = () => {
                     setListed(e.target.checked);
                     if (!e.target.checked) setShowOwnerName(false);
                   }}
-                  className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#8C8272] rounded focus:ring-[#1D528F]"
+                  className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#766B5B] rounded focus:ring-[#1D528F]"
                 />
                 <div>
                   <label htmlFor="directory-listed" className="font-bold text-[#231A15] cursor-pointer">
@@ -700,7 +700,7 @@ export const NewAddressPage: React.FC = () => {
                     type="checkbox"
                     checked={showOwnerName}
                     onChange={(e) => setShowOwnerName(e.target.checked)}
-                    className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#8C8272] rounded focus:ring-[#1D528F]"
+                    className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#766B5B] rounded focus:ring-[#1D528F]"
                   />
                   <div>
                     <label htmlFor="directory-show-owner" className="font-bold text-[#231A15] cursor-pointer">
@@ -720,7 +720,7 @@ export const NewAddressPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#8C8272]/50 text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#766B5B] text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Retour à l'emplacement</span>
@@ -754,7 +754,7 @@ export const NewAddressPage: React.FC = () => {
           </div>
 
           {/* Zone d'import / Prise de vue */}
-          <div className="p-4 sm:p-6 bg-[#FFFFFF] rounded-2xl border border-[#8C8272]/30 shadow-sm space-y-4">
+          <div className="p-4 sm:p-6 bg-[#FBF7EF] rounded-2xl border border-[#766B5B] shadow-sm space-y-4">
             <input
               ref={fileInputRef}
               type="file"
@@ -766,7 +766,7 @@ export const NewAddressPage: React.FC = () => {
             />
 
             {!photoPreview ? (
-              <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#8C8272]/40 rounded-xl bg-[#FBF9F5] text-center space-y-3">
+              <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-[#766B5B] rounded-xl bg-[#FBF7EF] text-center space-y-3">
                 <div className="w-12 h-12 rounded-full bg-[#B84A24]/10 flex items-center justify-center text-[#B84A24]">
                   <Camera className="w-6 h-6" />
                 </div>
@@ -790,7 +790,7 @@ export const NewAddressPage: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="relative rounded-xl overflow-hidden border border-[#8C8272]/40 bg-[#F2ECE1] max-h-72 flex items-center justify-center">
+                <div className="relative rounded-xl overflow-hidden border border-[#766B5B] bg-[#F2ECE1] max-h-72 flex items-center justify-center">
                   <img
                     src={photoPreview}
                     alt="Aperçu de la façade"
@@ -816,7 +816,7 @@ export const NewAddressPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#8C8272]/40 text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[36px]"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#766B5B] text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[36px]"
                   >
                     <RotateCcw className="w-3.5 h-3.5 text-[#5C4D44]" />
                     <span>Reprendre</span>
@@ -854,7 +854,7 @@ export const NewAddressPage: React.FC = () => {
               type="button"
               onClick={() => setStep(2)}
               disabled={submitting}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#8C8272]/50 text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#766B5B] text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Retour aux détails</span>
@@ -866,7 +866,7 @@ export const NewAddressPage: React.FC = () => {
                   type="button"
                   onClick={() => handleFinalSubmit(false)}
                   disabled={submitting || compressing}
-                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#5C4D44] hover:text-[#231A15] hover:bg-[#FFFFFF] transition cursor-pointer min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#5C4D44] hover:text-[#231A15] hover:bg-[#FBF7EF] transition cursor-pointer min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Passer cette étape
                 </button>
@@ -902,7 +902,7 @@ export const NewAddressPage: React.FC = () => {
         <article aria-labelledby="step4-title" className="space-y-6 animate-fadeIn">
           <div className="text-center space-y-2">
             {isOfflineCreated ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F2ECE1] border border-[#D4CEBF] text-[#8A3112] text-xs font-bold">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F2ECE1] border border-[#766B5B] text-[#8A3112] text-xs font-bold">
                 <WifiOff className="w-3.5 h-3.5" />
                 <span>Enregistrée sur cet appareil · en attente d'envoi</span>
               </div>
@@ -939,11 +939,11 @@ export const NewAddressPage: React.FC = () => {
           {!isOfflineCreated && (
             <>
               {/* Affichage sobre du QR Code */}
-              <div className="p-5 rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-sm text-center space-y-3">
+              <div className="p-5 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm text-center space-y-3">
                 <h2 className="text-sm font-bold text-[#231A15]">
                   QR code d'accès rapide
                 </h2>
-                <div className="inline-block p-2 bg-[#FFFFFF] border border-[#8C8272]/30 rounded-xl shadow-inner">
+                <div className="inline-block p-2 bg-[#FFFFFF] border border-[#766B5B] rounded-xl shadow-inner">
                   <img
                     src={`/api/addresses/${createdAddress.code}/qrcode`}
                     alt={`QR code pour l'adresse ${createdAddress.code}`}
@@ -965,7 +965,7 @@ export const NewAddressPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#8C8272]/50 text-xs font-bold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[38px]"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#766B5B] text-xs font-bold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[38px]"
                   >
                     <Printer className="w-3.5 h-3.5 text-[#5C4D44]" />
                     <span>Imprimer la plaque</span>
@@ -974,7 +974,7 @@ export const NewAddressPage: React.FC = () => {
               </div>
 
               {/* Bloc de partage */}
-              <div className="p-4 rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/30 shadow-sm space-y-3">
+              <div className="p-4 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm space-y-3">
                 <h2 className="text-sm font-bold text-[#231A15]">
                   Partager l'adresse
                 </h2>
@@ -991,7 +991,7 @@ export const NewAddressPage: React.FC = () => {
             <button
               type="button"
               onClick={handleReset}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#8C8272]/50 text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#766B5B] text-xs font-semibold text-[#231A15] hover:bg-[#F2ECE1] transition cursor-pointer min-h-[44px]"
             >
               <RotateCcw className="w-3.5 h-3.5" />
               <span>{isOfflineCreated ? 'Enregistrer une autre adresse' : 'Créer une autre adresse'}</span>

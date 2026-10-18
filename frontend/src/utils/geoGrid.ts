@@ -152,3 +152,12 @@ export function getQuartierName(
   return q ? q.name : quartierCode;
 }
 
+export function getCoveredZoneNames(gridData: GeoGridData = geoGridJson as GeoGridData): string[] {
+  return gridData.zones.map((z) => z.name);
+}
+
+export function formatOutOfZoneMessage(gridData: GeoGridData = geoGridJson as GeoGridData): string {
+  const zoneList = getCoveredZoneNames(gridData).join(', ');
+  return `Ces coordonnées sont hors des zones couvertes (${zoneList}). Déplacez le repère ou saisissez d'autres coordonnées.`;
+}
+

@@ -195,7 +195,7 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-xs font-bold text-[#1D528F] transition shadow-[0_1px_0_rgba(35,26,21,0.06)] cursor-pointer touch-target"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-xs font-bold text-[#1D528F] transition shadow-[0_1px_0_rgba(35,26,21,0.06)] cursor-pointer touch-target"
             title="Copier le code de la plaque"
           >
             {copied ? (

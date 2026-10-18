@@ -266,7 +266,7 @@ export const DirectoryPage: React.FC = () => {
             value={inputQ}
             onChange={handleInputChange}
             placeholder="Code, quartier ou description…"
-            className="w-full pl-11 pr-10 py-3 rounded-xl border border-[#8C8272] bg-[#FFFFFF] text-sm text-[#231A15] placeholder-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F] focus:border-transparent transition shadow-[0_1px_0_rgba(35,26,21,0.06)]"
+            className="w-full pl-11 pr-10 py-3 rounded-xl border border-[#766B5B] bg-[#FBF7EF] text-sm text-[#231A15] placeholder-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F] focus:border-transparent transition shadow-sm"
           />
           {inputQ && (
             <button
@@ -291,7 +291,7 @@ export const DirectoryPage: React.FC = () => {
                 id="filter-quartier"
                 value={selectedQuartier}
                 onChange={handleQuartierChange}
-                className="w-full px-3 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] text-xs font-medium text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
+                className="w-full px-3 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-xs font-medium text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
               >
                 {QUARTIERS.map((q) => (
                   <option key={q.value} value={q.value}>
@@ -311,7 +311,7 @@ export const DirectoryPage: React.FC = () => {
                 id="filter-type"
                 value={selectedType}
                 onChange={handleTypeChange}
-                className="w-full px-3 py-2 rounded-lg border border-[#8C8272] bg-[#FFFFFF] text-xs font-medium text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
+                className="w-full px-3 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-xs font-medium text-[#231A15] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
               >
                 {TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -326,7 +326,7 @@ export const DirectoryPage: React.FC = () => {
 
       {/* État Hors ligne */}
       {isOffline && (
-        <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1] border border-[#8C8272] text-[#231A15] space-y-3">
+        <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-[#231A15] space-y-3">
           <div className="flex items-start gap-3">
             <WifiOff className="w-5 h-5 text-[#8A3112] shrink-0 mt-0.5" />
             <div>
@@ -340,7 +340,7 @@ export const DirectoryPage: React.FC = () => {
           </div>
 
           {visitedCodes.length > 0 && (
-            <div className="pt-2 border-t border-[#D4CEBF] space-y-1.5">
+            <div className="pt-2 border-t border-[#766B5B] space-y-1.5">
               <span className="text-xs font-bold text-[#5C4D44] block">
                 Fiches consultables hors ligne :
               </span>
@@ -349,7 +349,7 @@ export const DirectoryPage: React.FC = () => {
                   <Link
                     key={code}
                     to={`/a/${code}`}
-                    className="px-2.5 py-1 rounded bg-[#FFFFFF] border border-[#8C8272] font-mono text-xs font-bold text-[#1D528F] hover:bg-[#FBF9F5] transition"
+                    className="px-2.5 py-1 rounded bg-[#FBF7EF] border border-[#766B5B] font-mono text-xs font-bold text-[#1D528F] hover:bg-[#F2ECE1] transition"
                   >
                     {code}
                   </Link>
@@ -395,7 +395,7 @@ export const DirectoryPage: React.FC = () => {
               {[1, 2].map((i) => (
                 <div
                   key={i}
-                  className="h-[188px] sm:h-[132px] rounded-xl bg-[#FFFFFF] border border-[#8C8272]/30 p-4 flex gap-4 animate-pulse"
+                  className="h-[188px] sm:h-[132px] rounded-xl bg-[#FBF7EF] border border-[#766B5B] p-4 flex gap-4 animate-pulse"
                 >
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] shrink-0" />
                   <div className="flex-1 space-y-2 py-1">
@@ -434,8 +434,8 @@ export const DirectoryPage: React.FC = () => {
 
             {/* État vide */}
             {hasSearched && items.length === 0 && !error && (
-              <div className="p-8 sm:p-12 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272]/40 shadow-[0_1px_0_rgba(35,26,21,0.06)] space-y-3">
-                <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] flex items-center justify-center text-[#8A3112] mx-auto">
+              <div className="p-8 sm:p-12 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm space-y-3">
+                <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#766B5B] flex items-center justify-center text-[#8A3112] mx-auto">
                   <Search className="w-6 h-6" />
                 </div>
                 <div className="space-y-1">
@@ -454,7 +454,7 @@ export const DirectoryPage: React.FC = () => {
               {items.map((item) => (
                 <article
                   key={item.code}
-                  className="p-4 rounded-xl border border-[#8C8272]/40 bg-[#FFFFFF] shadow-[0_1px_2px_rgba(35,26,21,0.05)] hover:border-[#1D528F] transition flex flex-col sm:flex-row gap-4 items-start justify-between"
+                  className="p-4 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm hover:border-[#1D528F] transition flex flex-col sm:flex-row gap-4 items-start justify-between"
                 >
                   <div className="flex gap-3 sm:gap-4 items-start w-full">
                     {item.photoUrl ? (
@@ -463,11 +463,11 @@ export const DirectoryPage: React.FC = () => {
                         alt={`Façade pour l'adresse ${item.code}`}
                         width={80}
                         height={80}
-                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-[#E6DDD0] shrink-0"
+                        className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg object-cover border border-[#766B5B] shrink-0"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] border border-[#E6DDD0] flex flex-col items-center justify-center text-[#5C4D44] shrink-0">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] border border-[#766B5B] flex flex-col items-center justify-center text-[#5C4D44] shrink-0">
                         <MapPin className="w-6 h-6 text-[#1D528F]" />
                         <span className="text-[10px] font-medium mt-1">Sans photo</span>
                       </div>
@@ -478,10 +478,10 @@ export const DirectoryPage: React.FC = () => {
                       <span className="font-mono font-bold text-base text-[#1D528F]">
                         {item.code}
                       </span>
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F2ECE1] text-[#231A15] border border-[#E6DDD0]">
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F2ECE1] text-[#231A15] border border-[#766B5B]">
                         {item.quartier}
                       </span>
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F2ECE1] text-[#5C4D44] border border-[#E6DDD0]">
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F2ECE1] text-[#5C4D44] border border-[#766B5B]">
                         {item.locationType === 'COMMERCE'
                           ? 'Commerce'
                           : item.locationType === 'INSTITUTION'
@@ -505,7 +505,7 @@ export const DirectoryPage: React.FC = () => {
 
                 <Link
                   to={`/a/${item.code}`}
-                  className="shrink-0 self-end sm:self-center px-3 py-1.5 rounded-lg border border-[#8C8272] bg-[#FBF9F5] hover:bg-[#F2ECE1] text-xs font-bold text-[#1D528F] transition flex items-center gap-1.5 touch-target shadow-[0_1px_0_rgba(35,26,21,0.06)]"
+                  className="shrink-0 self-end sm:self-center px-3 py-1.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-xs font-bold text-[#1D528F] transition flex items-center gap-1.5 touch-target shadow-sm"
                 >
                   <span>Voir la fiche</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -521,7 +521,7 @@ export const DirectoryPage: React.FC = () => {
                 type="button"
                 onClick={handleLoadMore}
                 disabled={loadingMore}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-xs font-bold text-[#231A15] transition shadow-[0_1px_0_rgba(35,26,21,0.06)] touch-target cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-xs font-bold text-[#231A15] transition shadow-sm touch-target cursor-pointer disabled:opacity-50"
               >
                 {loadingMore ? (
                   <>

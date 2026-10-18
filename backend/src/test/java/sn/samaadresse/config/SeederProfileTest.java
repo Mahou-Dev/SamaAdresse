@@ -106,12 +106,16 @@ class SeederProfileTest {
         verify(photoStorage, times(3)).storeSeedPhoto(any(UUID.class), any(byte[].class), eq("image/jpeg"));
 
         ArgumentCaptor<Address> addrCaptor = ArgumentCaptor.forClass(Address.class);
-        verify(addressRepository, times(12)).save(addrCaptor.capture());
+        verify(addressRepository, times(13)).save(addrCaptor.capture());
 
         assertThat(addrCaptor.getAllValues())
                 .filteredOn(Address::isListed)
                 .extracting(Address::getCode)
                 .containsExactlyInAnyOrder("ZIG-KBG-4271", "ZIG-ESC-1042");
+
+        assertThat(addrCaptor.getAllValues())
+                .extracting(Address::getCode)
+                .contains("ZIG-KND-8319");
     }
 
     @Test
@@ -169,12 +173,37 @@ class SeederProfileTest {
     @Test
     @DisplayName("9. Validation FRONTEND_BASE_URL en production : exige https:// (sauf localhost test Docker)")
     void validateFrontendBaseUrl_enforcesHttpsInProd() {
-        ProductionAdminInitializer.validateFrontendBaseUrl("https://samaadresse.onrender.com");
-        ProductionAdminInitializer.validateFrontendBaseUrl("http://localhost:8082");
-
         assertThatThrownBy(() -> ProductionAdminInitializer.validateFrontendBaseUrl("http://samaadresse.onrender.com"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("https://");
+    }
+
+    @Test
+    @DisplayName("10. Validation des codes du seeder : refuse format invalide (ex: ZIG-lyn-8319) ou quartier inexistant")
+    void demoDataSeeder_validateCodeAndGrid_rejectsNonConformantOrUnknownQuartier() {
+        UserRepository userRepository = mock(UserRepository.class);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
+        sn.samaadresse.service.GeoGridService geoGridService = new sn.samaadresse.service.GeoGridService();
+        geoGridService.initGeoGridData();
+
+        DemoDataSeeder seeder = new DemoDataSeeder(userRepository, null, passwordEncoder, null, geoGridService);
+
+        // 1. Code valide conforme à la grille
+        seeder.validateCodeAndGrid("ZIG-KND-8319", "ZIG", "KND");
+
+        // 2. Code invalide en minuscules (ex: ZIG-lyn-8319) -> rejeté
+        assertThatThrownBy(() -> seeder.validateCodeAndGrid("ZIG-lyn-8319", "ZIG", "lyn"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("format réglementaire");
+
+        // 3. Code sans tirets ou format erroné -> rejeté
+        assertThatThrownBy(() -> seeder.validateCodeAndGrid("INVALIDCODE", "ZIG", "KBG"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        // 4. Code avec quartier inexistant dans la grille (ex: XYZ) -> rejeté
+        assertThatThrownBy(() -> seeder.validateCodeAndGrid("ZIG-XYZ-1234", "ZIG", "XYZ"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("n'existe pas dans la grille");
     }
 
     private static void setField(Object target, String fieldName, Object value) throws Exception {

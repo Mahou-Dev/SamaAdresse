@@ -71,7 +71,7 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#D4CEBF] shadow-sm">
+        <div className="p-6 sm:p-8 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm">
           {errorMsg && (
             <div className="mb-6 p-4 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
@@ -96,7 +96,7 @@ export const LoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nom@exemple.sn"
-                  className="w-full pl-11 pr-4 py-3 bg-[#FBF9F5] border border-[#D4CEBF] focus:border-[#1D528F] focus:ring-1 focus:ring-[#1D528F] rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition"
+                  className="w-full pl-11 pr-4 py-3 bg-[#FBF7EF] border border-[#766B5B] focus:border-[#1D528F] focus:ring-1 focus:ring-[#1D528F] rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition"
                 />
               </div>
             </div>
@@ -117,7 +117,7 @@ export const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-11 py-3 bg-[#FBF9F5] border border-[#D4CEBF] focus:border-[#1D528F] focus:ring-1 focus:ring-[#1D528F] rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition"
+                  className="w-full pl-11 pr-11 py-3 bg-[#FBF7EF] border border-[#766B5B] focus:border-[#1D528F] focus:ring-1 focus:ring-[#1D528F] rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition"
                 />
                 <button
                   type="button"
@@ -135,7 +135,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-4 rounded-xl bg-[#B84A24] hover:bg-[#963919] text-white font-bold text-sm shadow-sm active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3.5 px-4 rounded-xl bg-[#B84A24] hover:bg-[#9A3816] text-white font-bold text-sm shadow-sm active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

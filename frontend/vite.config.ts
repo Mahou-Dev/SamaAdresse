@@ -20,6 +20,8 @@ export default defineConfig({
         'pwa-192x192.png',
         'pwa-512x512.png',
         'pwa-512x512-maskable.png',
+        'icons/icon-192.png',
+        'icons/icon-512.png',
         'fonts/outfit-latin.woff2',
         'fonts/jetbrains-mono-latin.woff2',
       ],
@@ -31,8 +33,8 @@ export default defineConfig({
         start_url: "/",
         scope: "/",
         display: "standalone",
-        theme_color: "#B84A24",
-        background_color: "#FBF9F5",
+        theme_color: "#12304F",
+        background_color: "#EADFC8",
         icons: [
           {
             src: "pwa-192x192.png",
