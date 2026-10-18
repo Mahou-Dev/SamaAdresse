@@ -224,7 +224,7 @@ test.describe('LOT 7 — Capture d\'adresse hors ligne & synchronisation', () =>
     await expect(page.locator('#manual-lng')).toHaveValue('-13.6700');
     await page.click('button:has-text("Continuer vers les détails")');
     await expect(page.locator('[role="alert"]')).toContainText(
-      "Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar). Déplacez le repère ou saisissez d'autres coordonnées."
+      "Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar, Saint-Louis). Déplacez le repère ou saisissez d'autres coordonnées."
     );
 
     // Captures preuve : hors_zone_hors_ligne (360x780 et 1440x900)

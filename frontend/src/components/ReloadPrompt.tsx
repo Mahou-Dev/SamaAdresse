@@ -20,7 +20,7 @@ export const ReloadPrompt: React.FC = () => {
     <div
       role="alert"
       aria-live="polite"
-      className="fixed bottom-20 right-4 z-50 p-4 rounded-xl border border-[#8C8272] bg-[#FFFFFF] shadow-[0_4px_12px_rgba(35,26,21,0.15)] max-w-sm flex flex-col gap-2.5 font-sans"
+      className="fixed bottom-20 right-4 z-50 p-4 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-md max-w-sm flex flex-col gap-2.5 font-sans"
     >
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-bold text-[#231A15]">

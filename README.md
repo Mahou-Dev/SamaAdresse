@@ -10,24 +10,29 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 
 **SamaAdresse** permet à tout habitant ou commerçant de :
 1. Capturer la position GPS de son entrée (ou placer le repère sur la carte), ajouter une description de terrain et une photo de façade facultative.
-2. Obtenir un code d'adresse court, lisible et immuable au format `ZONE-QUARTIER-XXXX` (par exemple `ZIG-KBG-4271` pour Kandé Banéto à Ziguinchor), accompagné d'une plaque numérique et d'un QR code imprimable.
+2. Obtenir un code d'adresse court, lisible et immuable au format `ZONE-QUARTIER-XXXX` (par exemple `ZIG-KBG-4271` pour Boucotte - Kangourou à Ziguinchor), accompagné d'une plaque numérique et d'un QR code imprimable.
 3. Partager cette fiche par lien, WhatsApp ou SMS pour permettre à tout visiteur de consulter le repère, la photo et l'itinéraire routier ou piéton jusqu'à l'entrée, sans créer de compte.
 
 ---
 
-## 2. Fonctionnalités principales
+## 2. État d'avancement par rapport au cahier des charges
 
-- **Création d'adresse en 4 étapes** : acquisition GPS (avec avertissement si la précision dépasse 50 m et déplacement libre du repère sur la carte), choix du type de lieu (`Maison`, `Commerce`, `Institution`) et description de terrain, ajout d'une photo de façade (compressée côté client à 1600 px JPEG avant envoi, validée par octets magiques et redimensionnée à 800 px côté serveur) et choix explicite de visibilité dans l'annuaire, puis récapitulatif et validation.
-- **Plaque d'enseigne et QR code** : génération du code `ZONE-QUARTIER-XXXX` par tirage aléatoire cryptographique (`SecureRandom`) à partir de la grille géographique (`geo-grid.json`), affichage de la plaque inspirée des plaques de rue de Ziguinchor et génération du QR code PNG via ZXing (`/api/addresses/{code}/qrcode`).
-- **Fiche publique (`/a/{code}`)** : accessible sans authentification ; affiche la plaque, le quartier, la description, la photo de façade et la carte interactive. Renvoie un statut HTTP `410 Gone` neutre si l'adresse a été archivée par son propriétaire ou suspendue par la modération.
-- **Itinéraire intégré (OpenRouteService)** : calcul d'itinéraire en voiture (`driving-car`) ou à pied (`foot-walking`) depuis la position courante du visiteur jusqu'à l'adresse via le proxy serveur `/api/public/route`, avec tracé GeoJSON sur la carte, durée, distance et étapes en français, ainsi qu'un bouton de secours vers l'application de cartes du téléphone.
-- **Partage multi-canal** : copie du lien, copie du code, partage natif Web Share API, partage WhatsApp pré-rempli et envoi par SMS (`/api/addresses/{code}/share/sms`, message GSM-7 ≤ 160 caractères, protégé par trois niveaux de limitation de débit).
-- **Annuaire public opt-in (`/annuaire`)** : recherche par code ou mots-clés (insensible à la casse, aux tirets et aux accents via `search_text`) et filtrage par quartier et par type de lieu (`Maison`, `Commerce`, `Institution`). Une adresse n'y figure que si son propriétaire a coché « Figurer dans l'annuaire public » (`listed = true`, décoché par défaut), et le nom du propriétaire n'est cherché et affiché que si `showOwnerName = true`.
-- **Mode hors ligne (PWA, Service Worker et IndexedDB)** :
-  - Consultation hors ligne des fiches publiques déjà visitées (cache Workbox `NetworkFirst` avec délai de 3 s, 50 entrées, 30 jours, et purge automatique sur réponse `410 Gone`).
-  - Pré-réservation de codes par zone (`POST /api/address-codes/reservations?zone=ZIG`, 3 codes par quartier, plafond de 40 par utilisateur, validité 30 jours) stockés dans IndexedDB.
-  - Création d'adresse hors ligne avec affichage immédiat de la plaque provisoire (< 3 s), mise en file d'attente locale (`pendingAddresses`), synchronisation automatique au retour du réseau avec idempotence (`clientRequestId`) et bannière d'information si le code provisoire a dû être remplacé après vérification serveur du quartier.
-- **Signalement public et modération (`/admin`)** : signalement anonyme d'une adresse (`POST /api/public/addresses/{code}/reports`, limité par IP hachée SHA-256) ; interface d'administration réservée au rôle `ADMIN` permettant de classer sans suite un signalement ou de suspendre/réactiver une adresse avec motif obligatoire et journalisation d'audit (`admin_actions`).
+| Exigence du cahier | Statut | Commentaire et preuve |
+|---|:---:|---|
+| **Authentification & Gestion des utilisateurs** (JWT, cookies HttpOnly SameSite=Strict, rôles PROPRIETAIRE / ADMIN) | **Fait** | Validé par tests d'intégration Spring Security (`AuthControllerTest`) et E2E Playwright. |
+| **Génération et immuabilité du code d'adresse** (format `ZONE-QUARTIER-XXXX`, SecureRandom, coordonnées figées) | **Fait** | Vérifié unitairement (`AddressCodeGeneratorTest`) ; code et coordonnées protégés contre toute modification. |
+| **Fiche publique & Plaque d'enseigne** (palette Ziguinchor, QR code PNG ZXing, réponse 410 neutre sur révocation) | **Fait** | Validé en local et conteneur (`smoke-prod.sh`, décodage QR jsQR, Playwright). |
+| **Annuaire public opt-in** (`listed` décoché par défaut, filtrage quartier/type, recherche textuelle normalisée) | **Fait** | 4 tests dédiés dans `DirectoryControllerTest`, CLS = 0,000, audits Lighthouse conformes. |
+| **Itinéraire OpenRouteService** (voiture/piéton, cache mémoire 5 min, proxy backend sans stockage de l'origine) | **Fait** | Réponses réelles consignées dans `docs/audit/ors-real-car.json` et `docs/audit/ors-real-foot.json`. |
+| **Partage multi-canal** (Web Share API, WhatsApp pré-rempli, SMS GSM-7 ≤ 160 car., triple limitation de débit) | **Fait** | Providers `MockSmsProvider`, `TwilioSmsProvider`, `SendFlashSmsProvider` testés unitairement. |
+| **Envoi et réception d'un SMS réel sur un téléphone physique** | **NON PROUVÉ** | Aucun compte Twilio/SendFlash crédité ni numéro physique de test disponible dans cet environnement. |
+| **Mode hors ligne & PWA** (Service Worker Workbox, pré-réservation IndexedDB, synchronisation idempotente) | **Fait** | Délais mesurés dans `docs/audit/offline-timing.json` (< 3 s) et tests de reprise réseau E2E. |
+| **Installation PWA via invite native sous certificat HTTPS public** | **NON PROUVÉ** | Testé localement sur `http://localhost:8082` avec Service Worker actif et mode hors ligne validé. |
+| **Modération & Signalements publics** (signalement anonyme par IP hachée SHA-256, suspension admin, journal d'audit) | **Fait** | Testé dans `PublicReportControllerTest`, `AdminModerationControllerTest` et E2E. |
+| **Sécurité IP cliente derrière Render** (`CF-Connecting-IP`, `X-Forwarded-For` sécurisé, `TRUSTED_PROXY_HOPS`) | **Fait** | Validé par `ClientIpResolverTest` (tests a, b, c, d). |
+| **Comportement réel de la résolution d'IP derrière l'infrastructure Render** | **NON PROUVÉ** | Requiert un déploiement cloud actif sur Render (procédure de contrôle documentée ci-dessous). |
+| **Déploiement effectif sur les infrastructures distantes (Render, Neon, GitHub Actions)** | **NON PROUVÉ** | Aucun compte cloud connecté ; image Docker de production validée localement via `docker-compose.prod-test.yml`. |
+| **Design System & Palette visuelle** (Sable doré #EADFC8, Crème #FBF7EF, Bleu nuit #12304F, 0 blanc pur sauf QR/boutons) | **Fait** | Ratios de contraste WCAG AA/AAA calculés dans `docs/audit/contrastes.md` ; 38 captures MD5 uniques. |
 
 ---
 
@@ -38,7 +43,7 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 │ Navigateur / PWA (React 19, TypeScript, Vite 8, Tailwind v4, Leaflet)    │
 │  ├─ Service Worker (Workbox injectManifest : précache + cache /a/{code}) │
 │  ├─ IndexedDB (codes réservés par utilisateur + file pendingAddresses)   │
-│  └─ AuthContext (JWT en mémoire + cookie HttpOnly SameSite=Strict)       │
+│  ├─ AuthContext (JWT en mémoire + cookie HttpOnly SameSite=Strict)       │
 └───────────────────────────────────┬──────────────────────────────────────┘
                                     │ HTTPS (même origine en production)
                                     ▼
@@ -46,7 +51,7 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 │ Conteneur unique Spring Boot 3.4.3 / Java 21 (Temurin JRE Alpine)        │
 │  ├─ Ressources statiques SPA (index.html no-cache, /assets/* immutable)  │
 │  ├─ Contrôleurs REST (/api/auth, /api/addresses, /api/public, /api/admin)│
-│  ├─ ClientIpResolver + Limiteurs de débit en mémoire (SHA-256)           │
+│  ├─ ClientIpResolver + Limiteurs de débit en mémoire (Bucket4j, SHA-256) │
 │  ├─ GeoGridService + AddressCodeGenerator + QrCodeService (ZXing)        │
 │  ├─ PhotoStorage : DiskPhotoStorage (dev) / DbPhotoStorage bytea (prod)  │
 │  └─ Flyway (V1__init.sql, V2__photo_blobs.sql) + HikariCP (max 5 conn.)  │
@@ -63,40 +68,87 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 └───────────────────────────────┘
 ```
 
-Les diagrammes UML détaillés (cas d'utilisation, classes du domaine, contrôleurs/services/infrastructure, et 8 diagrammes de séquence) ainsi que leur table de vérification par rapport au code sont disponibles dans :
-- [`docs/uml/README.md`](file:///home/mahou-dev/Documents/SamaAdresse/docs/uml/README.md)
-- [`docs/uml/VERIFICATION.md`](file:///home/mahou-dev/Documents/SamaAdresse/docs/uml/VERIFICATION.md)
-- Rendus PNG et SVG : [`docs/uml/rendus/`](file:///home/mahou-dev/Documents/SamaAdresse/docs/uml/rendus/)
+Les diagrammes PlantUML détaillés et leur rapport de vérification sont disponibles dans :
+- Documentation des diagrammes : [`docs/uml/README.md`](docs/uml/README.md)
+- Tableau de vérification code/diagrammes : [`docs/uml/VERIFICATION.md`](docs/uml/VERIFICATION.md)
+- Rendus PNG et SVG des diagrammes :
+  - Cas d'utilisation : [`docs/uml/rendus/01-cas-utilisation.png`](docs/uml/rendus/01-cas-utilisation.png) ([SVG](docs/uml/rendus/01-cas-utilisation.svg))
+  - Classes du domaine : [`docs/uml/rendus/02-classes-domaine.png`](docs/uml/rendus/02-classes-domaine.png) ([SVG](docs/uml/rendus/02-classes-domaine.svg))
+  - Contrôleurs & Services : [`docs/uml/rendus/03a-classes-controleurs-services.png`](docs/uml/rendus/03a-classes-controleurs-services.png) ([SVG](docs/uml/rendus/03a-classes-controleurs-services.svg))
+  - Services & Infrastructure : [`docs/uml/rendus/03b-classes-services-infrastructure.png`](docs/uml/rendus/03b-classes-services-infrastructure.png) ([SVG](docs/uml/rendus/03b-classes-services-infrastructure.svg))
+  - Séquence — Création en ligne : [`docs/uml/rendus/04-seq-creation-en-ligne.png`](docs/uml/rendus/04-seq-creation-en-ligne.png) ([SVG](docs/uml/rendus/04-seq-creation-en-ligne.svg))
+  - Séquence — Création hors ligne : [`docs/uml/rendus/05-seq-creation-hors-ligne.png`](docs/uml/rendus/05-seq-creation-hors-ligne.png) ([SVG](docs/uml/rendus/05-seq-creation-hors-ligne.svg))
+  - Séquence — QR code vers fiche publique : [`docs/uml/rendus/06-seq-qr-vers-fiche.png`](docs/uml/rendus/06-seq-qr-vers-fiche.png) ([SVG](docs/uml/rendus/06-seq-qr-vers-fiche.svg))
+  - Séquence — Itinéraire OpenRouteService (cache 5 min) : [`docs/uml/rendus/07-seq-itineraire.png`](docs/uml/rendus/07-seq-itineraire.png) ([SVG](docs/uml/rendus/07-seq-itineraire.svg))
+  - Séquence — Partage SMS (limites 5/h, 3/24h, quota global) : [`docs/uml/rendus/08-seq-partage-sms.png`](docs/uml/rendus/08-seq-partage-sms.png) ([SVG](docs/uml/rendus/08-seq-partage-sms.svg))
+  - Séquence — Signalement & Modération : [`docs/uml/rendus/09-seq-signalement-moderation.png`](docs/uml/rendus/09-seq-signalement-moderation.png) ([SVG](docs/uml/rendus/09-seq-signalement-moderation.svg))
+  - Séquence — Authentification & Rotation : [`docs/uml/rendus/10-seq-authentification.png`](docs/uml/rendus/10-seq-authentification.png) ([SVG](docs/uml/rendus/10-seq-authentification.svg))
+  - Séquence — Annuaire public opt-in : [`docs/uml/rendus/11-seq-annuaire.png`](docs/uml/rendus/11-seq-annuaire.png) ([SVG](docs/uml/rendus/11-seq-annuaire.svg))
 
 ---
 
-## 4. Modèle de données
+## 4. Documentation de l'API
 
-Le modèle du domaine comprend 7 entités JPA persistées par Flyway :
-- `User` (`users`) : compte utilisateur (`PROPRIETAIRE` ou `ADMIN`), mot de passe haché BCrypt (coût 12).
-- `RefreshToken` (`refresh_tokens`) : jeton de rafraîchissement haché en SHA-256 avec rotation à chaque utilisation.
-- `Address` (`addresses`) : adresse géolocalisée avec `code` et coordonnées (`latitude`, `longitude`) immuables, `locationType` (`MAISON`, `COMMERCE`, `INSTITUTION`), `status` (`ACTIVE`, `SIGNALED`, `ARCHIVED`, `SUSPENDED`), options d'annuaire (`listed`, `showOwnerName`), `searchText` normalisé sans accents et `clientRequestId` d'idempotence.
-- `ReservedCode` (`reserved_codes`) : code pré-réservé par zone et quartier pour la création hors ligne (`RESERVED`, `USED`, `EXPIRED`).
-- `AddressReport` (`address_reports`) : signalement public anonyme associé à l'empreinte SHA-256 de l'IP.
-- `AdminAction` (`admin_actions`) : journal d'audit des décisions de modération.
-- `PhotoBlob` (`photo_blobs`) : stockage binaire `bytea` des photos redimensionnées pour les environnements de production sans disque persistant.
+L'API REST est intégralement spécifiée au format OpenAPI 3.0 (`springdoc.api-docs.version=OPENAPI_3_0`) :
 
-Voir le diagramme de classes complet : [`docs/uml/rendus/02-classes-domaine.png`](file:///home/mahou-dev/Documents/SamaAdresse/docs/uml/rendus/02-classes-domaine.png).
-
----
-
-## 5. Choix d'architecture et compromis
-
-1. **Image Docker unique et même origine (`SameSite=Strict`)** : Sur un hébergement gratuit où frontend et backend séparés seraient servis depuis deux sous-domaines distincts d'un domaine figurant sur la Public Suffix List (`*.onrender.com`), un cookie `SameSite=Strict` ne serait pas transmis lors des appels API cross-site. En empaquetant le build Vite directement dans les ressources statiques de Spring Boot au sein d'un conteneur unique, l'application et l'API partagent exactement la même origine : le cookie `refreshToken` conserve `SameSite=Strict`, `HttpOnly` et `Secure`, et aucune configuration CORS n'est ouverte en production.
-2. **Jeton d'accès en mémoire + rafraîchissement par cookie `HttpOnly`** : Le JWT d'accès (15 min) n'est jamais écrit dans `localStorage` ni `sessionStorage`, ce qui le protège d'une exfiltration par script. Seul un indicateur booléen non sensible (`sa_session=1`) permet de savoir au chargement s'il faut appeler `/api/auth/refresh` (évitant ainsi toute requête `401` inutile en console pour les visiteurs anonymes).
-3. **Immuabilité du code et de la position** : Une fois attribué et synchronisé, un code `ZONE-QUARTIER-XXXX` et ses coordonnées GPS ne peuvent pas être déplacés vers un autre point géographique, afin qu'un QR code imprimé ou un lien déjà transmis ne dirige jamais vers un autre lieu. En cas de déménagement, l'adresse est archivée (`410 Gone`) et une nouvelle adresse est créée.
-4. **Pré-réservation de codes pour le mode hors ligne** : Afin d'afficher une plaque dès la validation hors ligne sans risquer de collision probable, le client pré-réserve un petit lot de codes par quartier lorsqu'il est connecté. Si l'utilisateur capture finalement une position dans un autre quartier que celui du code réservé ou si le stock est épuisé, le serveur attribue un code définitif à la synchronisation et l'interface affiche une bannière explicite indiquant l'ancien et le nouveau code ainsi que le nom du quartier résolu.
-5. **Proxy OpenRouteService sans journalisation de la position** : L'appel à OpenRouteService transite par `/api/public/route` pour garder la clé `ORS_API_KEY` côté serveur, appliquer une limitation de débit par IP et mettre en cache les trajets récents (TTL 10 min), sans jamais enregistrer en base ni dans les journaux la position de départ du visiteur.
-6. **Stockage des photos en base (`DbPhotoStorage`) en production** : Le plan gratuit de Render ne fournissant pas de volume disque persistant, l'interface `PhotoStorage` bascule en profil `prod` (`PHOTO_STORAGE=db`) sur la table `photo_blobs` (`bytea`). Comme chaque photo est compressée et redimensionnée à 800 px max (~80 à 150 Ko) et servie par `/uploads/{uuid}.jpg` avec `Cache-Control: public, max-age=31536000, immutable` et `ETag` (`304 Not Modified`), l'empreinte en base reste compatible avec le quota de 0,5 Go de Neon.
+- **Interface interactive Swagger UI** : [`/swagger-ui.html`](http://localhost:8080/swagger-ui.html) en développement local, ou `http://localhost:8082/swagger-ui.html` sur le conteneur de production.
+- **Spécification brute JSON** : [`/v3/api-docs`](http://localhost:8080/v3/api-docs) et fichier versionné [`docs/api/openapi.json`](docs/api/openapi.json).
+- **Spécification brute YAML** : [`/v3/api-docs.yaml`](http://localhost:8080/v3/api-docs.yaml) et fichier versionné [`docs/api/openapi.yaml`](docs/api/openapi.yaml).
+- **Complétude garantie par test automatique** : `OpenApiCompletenessTest` inspecte chaque contrôleur Spring au démarrage des tests et échoue si un endpoint, un résumé ou une réponse documentée est manquant.
+- **Collection Postman** : [`docs/api/SamaAdresse.postman_collection.json`](docs/api/SamaAdresse.postman_collection.json), générée à partir de la spécification OpenAPI avec le dossier automatisé `Parcours démo`.
+- **Exécution Newman en ligne de commande** :
+  ```bash
+  npx --yes newman run docs/api/SamaAdresse.postman_collection.json \
+    --folder "Parcours démo" \
+    --env-var "baseUrl=http://localhost:8082" \
+    --env-var "demoPassword=VotreMotDePasseDemo2026!"
+  ```
 
 ---
 
-## 6. Prérequis et lancement en développement
+## 5. Sécurité
+
+1. **Jeton d'accès JWT en mémoire** : Durée de vie courte (15 minutes), signature HMAC-SHA256, clé secrète obligatoire d'au moins 32 octets (`JWT_SECRET`). Conservé exclusivement en mémoire JavaScript (`apiClient.ts`), jamais dans `localStorage` ni `sessionStorage`.
+2. **Jeton de rafraîchissement par cookie sécurisé** : Durée de vie 7 jours, transmis dans un cookie `HttpOnly; SameSite=Strict; Path=/api/auth/refresh` (avec attribut `Secure` activé en production via `COOKIE_SECURE=true`). Seule l'empreinte SHA-256 du jeton est persistée en base, avec révocation et rotation automatique à chaque rafraîchissement.
+3. **Limitation de débit en mémoire (Bucket4j)** :
+   - `/api/auth/login` : 5 tentatives par minute par IP cliente.
+   - `/api/public/route` : 20 requêtes par minute par IP cliente.
+   - `/api/public/directory` : 30 requêtes par minute par IP cliente.
+   - `/api/public/addresses/{code}/reports` : 3 signalements par heure par IP, et 1 signalement par tranche de 24 h par couple `(adresse, SHA-256(IP))`.
+   - `/api/addresses/{id}/share/sms` : 5 SMS par heure par utilisateur connecté, 3 SMS par 24 h par numéro destinataire (clé basée sur le hash SHA-256 du numéro E.164), et plafond quotidien global (`SMS_DAILY_CAP`, défaut 200 en dev, 20 en prod).
+4. **Résolution sécurisée de l'adresse IP du client (`ClientIpResolver`)** :
+   - L'en-tête `True-Client-IP` est **strictement ignoré** car falsifiable par le client.
+   - Le premier élément de `X-Forwarded-For` n'est **jamais utilisé** (vulnérable à l'injection d'adresses factices en tête d'en-tête).
+   - En environnement de production avec proxy inverse (`TRUSTED_PROXY_HOPS >= 1`) :
+     - Si `CF-Connecting-IP` est présent (injecté par Cloudflare Edge sur Render), il est prioritaire.
+     - Sinon, l'adresse ajoutée par le dernier proxy de confiance dans `X-Forwarded-For` est extraite à l'index `(taille - TRUSTED_PROXY_HOPS)`.
+   - En développement local sans proxy (`TRUSTED_PROXY_HOPS=0`), seule la socket distante directe (`request.getRemoteAddr()`) est utilisée.
+   - *Référence consultée :* [Documentation Render sur les Load Balancers et en-têtes HTTP](https://render.com/docs/load-balancers).
+5. **Procédure de contrôle après déploiement sur Render (statut actuel : NON PROUVÉ)** :
+   - Étape 1 : Effectuer un appel depuis un premier équipement connecté en 4G/5G mobile, puis depuis un second équipement connecté en fibre/Wi-Fi domestique.
+   - Étape 2 : Déclencher un dépassement de quota sur le premier équipement (ex. 6 tentatives de connexion rapides).
+   - Étape 3 : Constater que le premier équipement reçoit un code HTTP `429 Too Many Requests`, tandis que le second équipement peut continuer d'interroger l'API sans être bloqué.
+   - Étape 4 : Vérifier dans les journaux Render que les adresses IP consignées correspondent bien aux adresses IP publiques distinctes des deux équipements et non à l'IP interne du proxy Render (`127.0.0.1` ou `10.x.x.x`).
+6. **En-têtes de sécurité HTTP** :
+   - `X-Content-Type-Options: nosniff`
+   - `Referrer-Policy: strict-origin-when-cross-origin`
+   - `Permissions-Policy: geolocation=(self), camera=(self)`
+   - `Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; ...`
+   - Cache statique long (`max-age=31536000, immutable`) sur `/assets/*` et `no-cache` sur `index.html`.
+
+---
+
+## 6. Attributions et licences
+
+- **Cartographie** : © Contributeurs [OpenStreetMap](https://www.openstreetmap.org/copyright) (données sous licence Open Database License - ODbL).
+- **Calcul d'itinéraires** : [OpenRouteService](https://openrouteservice.org/) (fourni par HeiGIT gGmbH).
+- **Typographie d'interface** : Police *Outfit* conçue par Rodrigo Fuenzalida (licence [SIL Open Font License 1.1](https://openfontlicense.org)).
+- **Typographie des codes d'adresses** : Police *JetBrains Mono* conçue par JetBrains (licence [SIL Open Font License 1.1](https://openfontlicense.org)).
+- **Icônes d'interface** : Collection *Lucide Icons* (licence ISC).
+
+---
+
+## 7. Prérequis et lancement en développement
 
 ### Prérequis
 - **Java 21** (Temurin JDK 21)
@@ -126,66 +178,90 @@ Voir le diagramme de classes complet : [`docs/uml/rendus/02-classes-domaine.png`
 
 ---
 
-## 7. Lancement avec l'image Docker de production
+## 8. Lancement avec l'image Docker de production
 
-Pour tester localement l'image Docker multi-étapes en profil `prod` (avec PostgreSQL 16, Flyway, `ddl-auto=validate`, stockage des photos en base `bytea`, en-têtes de sécurité et jeu de démonstration) :
+Pour tester localement l'image Docker multi-étapes en profil `prod` (port `8082`, avec PostgreSQL 16, Flyway, `ddl-auto=validate`, stockage des photos en base `bytea`, en-têtes de sécurité et jeu de démonstration) :
 
 ```bash
 docker compose -f docker-compose.prod-test.yml up --build -d
 ```
 
-L'application complète (interface PWA + API REST sur la même origine) est alors accessible sur `http://localhost:8082`.
-Pour exécuter le script de vérification fonctionnelle sur ce conteneur :
+L'application complète (interface PWA + API REST sur la même origine) est accessible sur `http://localhost:8082`.
 
+Pour exécuter le script de vérification fonctionnelle (`smoke-prod.sh`) sur ce conteneur :
 ```bash
 ./scripts/smoke-prod.sh http://localhost:8082
 ```
 
-Pour arrêter et nettoyer les conteneurs de test :
+Pour exécuter les tests E2E Playwright contre ce conteneur :
+```bash
+cd frontend
+PLAYWRIGHT_BASE_URL=http://localhost:8082 npx playwright test
+```
 
+Pour arrêter et nettoyer les conteneurs de test :
 ```bash
 docker compose -f docker-compose.prod-test.yml down -v
 ```
 
 ---
 
-## 8. Variables d'environnement
+## 9. Variables d'environnement
 
-Aucun secret n'est présent dans les fichiers suivis par Git. Le fichier [`.env.example`](file:///home/mahou-dev/Documents/SamaAdresse/.env.example) contient uniquement des clés vides à copier dans `.env`.
+Aucun secret n'est présent dans les fichiers suivis par Git. Le modèle [`.env.example`](.env.example) liste l'ensemble des clés utilisables sans aucune valeur pré-remplie.
 
 | Variable | Rôle | Obligatoire en `prod` | Exemple non sensible |
 |---|---|:---:|---|
 | `SPRING_PROFILES_ACTIVE` | Profil Spring Boot actif (`dev`, `e2e`, `prod`) | Oui | `prod` |
-| `PORT` | Port HTTP d'écoute du serveur Spring Boot | Non (défaut `8080`) | `8080` |
+| `PORT` | Port HTTP d'écoute du serveur Spring Boot | Non (défaut `8080` en dev, `8082` en prod) | `8082` |
 | `DATABASE_URL` | URL PostgreSQL au format Render/Neon (`postgresql://user:pass@host/db?sslmode=require`), convertie automatiquement en JDBC | Oui (ou `DB_URL`) | `postgresql://user:secret@ep-xxx.eu-central-1.aws.neon.tech/samaadresse?sslmode=require` |
 | `DB_URL` | URL JDBC PostgreSQL explicite (alternative à `DATABASE_URL`) | Non | `jdbc:postgresql://db:5432/samaadresse` |
-| `DB_USERNAME` | Utilisateur PostgreSQL (si non inclus dans `DATABASE_URL`) | Non | `samaadresse` |
-| `DB_PASSWORD` | Mot de passe PostgreSQL (si non inclus dans `DATABASE_URL`) | Non | *(mot de passe base)* |
-| `JWT_SECRET` | Clé secrète HMAC-SHA256 pour signer les JWT (**≥ 32 octets** en `prod`, sinon arrêt au démarrage) | Oui | *(chaîne aléatoire de 64 caractères)* |
-| `COOKIE_SECURE` | Ajoute l'attribut `Secure` au cookie `refreshToken` (`true` en HTTPS) | Non (défaut `true` en `prod`) | `true` |
-| `FRONTEND_BASE_URL` | URL publique de l'application utilisée dans les QR codes et les SMS (doit commencer par `https://` en `prod`) | Oui | `https://samaadresse.onrender.com` |
+| `DB_USERNAME` | Nom d'utilisateur PostgreSQL (si non inclus dans `DATABASE_URL`) | Non | `samaadresse` |
+| `DB_PASSWORD` | Mot de passe de la base PostgreSQL | Non | *(mot de passe base)* |
+| `JWT_SECRET` | Clé secrète HMAC-SHA256 pour signer les JWT (**≥ 32 octets** en `prod`, sinon arrêt immédiat au démarrage) | Oui | *(chaîne aléatoire d'au moins 32 octets)* |
+| `JWT_ACCESS_EXP` | Durée de validité du jeton d'accès JWT en millisecondes | Non (défaut `900000` = 15 min) | `900000` |
+| `JWT_REFRESH_EXP` | Durée de validité du jeton de rafraîchissement en millisecondes | Non (défaut `604800000` = 7 jours) | `604800000` |
+| `COOKIE_SECURE` | Active l'attribut `Secure` sur le cookie de rafraîchissement (`true` en HTTPS) | Non (défaut `true` en `prod`, `false` en dev) | `true` |
+| `TRUSTED_PROXY_HOPS` | Nombre de sauts de proxy inverse de confiance pour l'extraction de l'IP cliente (`1` derrière Render/Cloudflare, `0` en local) | Non (défaut `1` en `prod`, `0` en dev) | `1` |
+| `FRONTEND_BASE_URL` | URL publique de l'application (utilisée dans les QR codes et les liens partagés, doit débuter par `https://` en production) | Oui | `https://samaadresse.onrender.com` |
+| `PHOTO_STORAGE` | Mode de stockage des photos de façade : `disk` (système de fichiers local) ou `db` (table PostgreSQL `photo_blobs`) | Non (défaut `db` en `prod`, `disk` en dev) | `db` |
+| `UPLOAD_DIR` | Répertoire local de stockage des photos lorsque `PHOTO_STORAGE=disk` | Non (défaut `./uploads`) | `./uploads` |
 | `ADMIN_EMAIL` | Adresse e-mail du compte administrateur initial créé de manière idempotente au démarrage | Oui | `admin@samaadresse.sn` |
-| `ADMIN_PASSWORD` | Mot de passe initial de l'administrateur (**≥ 12 caractères** en `prod`) | Oui | *(mot de passe fort ≥ 12 car.)* |
-| `DEMO_SEED` | Active le chargement idempotent des 3 adresses et photos de démonstration en `prod` | Non (défaut `false`) | `true` |
+| `ADMIN_PASSWORD` | Mot de passe initial du compte administrateur (**≥ 12 caractères** en `prod`) | Oui | *(mot de passe fort ≥ 12 car.)* |
+| `DEMO_SEED` | Active le chargement idempotent des adresses et photos de démonstration en `prod` | Non (défaut `false`) | `true` |
 | `DEMO_PASSWORD` | Mot de passe attribué aux comptes de démonstration lorsque `DEMO_SEED=true` | Si `DEMO_SEED=true` | *(mot de passe démo)* |
-| `PHOTO_STORAGE` | Mode de stockage des photos de façade : `disk` (système de fichiers) ou `db` (table `photo_blobs`) | Non (défaut `db` en `prod`) | `db` |
-| `ORS_API_KEY` | Clé API OpenRouteService pour le calcul d'itinéraire (`/api/public/route`) | Non (503 propre si absente) | *(clé ORS)* |
-| `SMS_PROVIDER` | Fournisseur d'envoi de SMS (`mock`, `twilio`, `sendflash`) | Non (défaut `mock`) | `mock` |
-| `SMS_DAILY_CAP` | Plafond quotidien global d'envoi de SMS (protection du crédit) | Non (défaut `20`) | `20` |
+| `ORS_API_KEY` | Clé API OpenRouteService pour le calcul d'itinéraires (`/api/public/route`) | Non (503 propre si absente) | *(clé ORS)* |
+| `ORS_BASE_URL` | URL de base de l'API OpenRouteService | Non (défaut `https://api.openrouteservice.org`) | `https://api.openrouteservice.org` |
+| `SMS_PROVIDER` | Fournisseur d'envoi de SMS (`mock`, `console`, `twilio`, `sendflash`) | Non (défaut `mock`) | `mock` |
+| `SMS_TIMEOUT` | Délai d'expiration des requêtes HTTP vers le fournisseur SMS | Non (défaut `5s`) | `5s` |
+| `SMS_DAILY_CAP` | Plafond quotidien global de SMS de la plateforme (protection financière du crédit) | Non (défaut `20` en `prod`, `200` en dev) | `20` |
+| `SMS_USER_HOURLY_LIMIT` | Plafond horaire d'envoi de SMS par utilisateur connecté | Non (défaut `5`) | `5` |
+| `SMS_RECIPIENT_DAILY_LIMIT` | Plafond quotidien d'envoi de SMS par numéro destinataire (clé SHA-256) | Non (défaut `3`) | `3` |
 | `TWILIO_ACCOUNT_SID` | Identifiant de compte Twilio (`AC...`) lorsque `SMS_PROVIDER=twilio` | Si `SMS_PROVIDER=twilio` | `ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` |
 | `TWILIO_AUTH_TOKEN` | Jeton d'authentification Twilio lorsque `SMS_PROVIDER=twilio` | Si `SMS_PROVIDER=twilio` | *(jeton Twilio)* |
 | `TWILIO_FROM_NUMBER` | Numéro d'expéditeur Twilio E.164 ou `MessagingServiceSid` (`MG...`) | Si `SMS_PROVIDER=twilio` | `+15005550006` |
+| `TWILIO_API_BASE_URL` | URL de base de l'API Twilio (utile pour mocker l'API en test) | Non (défaut `https://api.twilio.com`) | `https://api.twilio.com` |
+| `SENDFLASH_API_URL` | URL d'envoi de l'API SendFlash | Non | `https://api.sendflash.com/v1/sms/send` |
+| `SENDFLASH_API_KEY` | Clé API du service d'envoi SendFlash | Si `SMS_PROVIDER=sendflash` | *(clé SendFlash)* |
+| `SENDFLASH_SENDER_ID` | Nom d'expéditeur alphanumérique agréé (ex. `SamaAdresse`) | Non (défaut `SamaAdresse`) | `SamaAdresse` |
+| `GEO_FALLBACK_MAX_DISTANCE_KM` | Rayon maximal de rattachement Haversine au quartier le plus proche | Non (défaut `3.0`) | `3.0` |
+| `VITE_TILE_URL` | Modèle d'URL des tuiles cartographiques Leaflet | Non | `https://tile.openstreetmap.org/{z}/{x}/{y}.png` |
+| `VITE_TILE_ATTRIBUTION` | Mention textuelle d'attribution des tuiles cartographiques | Non | `&copy; OpenStreetMap contributors` |
+| `VITE_API_BASE_URL` | URL de base de l'API pour le frontend Vite en mode séparé | Non (vide en conteneur unique même origine) | `http://localhost:8080` |
 
 ---
 
-## 9. Tests et vérification automatique
+## 10. Tests et vérification automatique
 
-Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et génère `VERIFY.md` ainsi que `rapport.md` :
+Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et génère `docs/audit/VERIFY.md` ainsi que `rapport.md` :
 - Scan d'absence de secrets et de clés dans les fichiers suivis par Git.
-- Tests unitaires et d'intégration Backend (`./mvnw test`, 124 tests) + vérification de la couverture JaCoCo (≥ 60 %) + test de complétude OpenAPI (`OpenApiCompletenessTest`).
+- Contrôle de stricte cohérence des variables d'environnement (`scripts/check-env-vars.py`).
+- Contrôle de validité des liens relatifs du README (`scripts/check-readme-links.py`).
+- Tests unitaires et d'intégration Backend (`./mvnw test`) + couverture JaCoCo (≥ 60 %) + test de complétude OpenAPI (`OpenApiCompletenessTest`).
 - Vérification TypeScript (`tsc --noEmit`), linter (`oxlint`), tests unitaires Vitest, build de production Vite et budget de taille gzip (`check-size.mjs`).
+- Contrôle des ratios de contraste WCAG AA/AAA sur tous les jetons de thème (`scripts/check-contrast.py` dans `docs/audit/contrastes.md`).
 - Tests E2E Playwright (parcours en ligne, hors ligne, synchronisation, annuaire, itinéraire, modération) et vérification des 38 captures d'écran (dimensions et unicité MD5).
-- Audits Lighthouse sur les 8 pages (Performance, Accessibilité, Bonnes pratiques = 100, CLS < 0,1).
+- Audits Lighthouse sur les 8 pages (accessibilité = 100, bonnes pratiques = 100, performance ≥ 90, CLS < 0,1).
 - Exécution de la collection Postman via Newman (`docs/audit/newman.json`).
 
 ```bash
@@ -198,13 +274,13 @@ Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et g�
 
 ---
 
-## 10. Déploiement sur Neon + Render
+## 11. Déploiement sur Neon + Render
 
-Le dépôt inclut le fichier Blueprint [`render.yaml`](file:///home/mahou-dev/Documents/SamaAdresse/render.yaml) prêt pour Render :
+Le dépôt inclut le fichier Blueprint [`render.yaml`](render.yaml) prêt pour Render :
 
 1. **Base de données Neon (PostgreSQL 16)** :
    - Créer un projet PostgreSQL 16 sur [Neon](https://neon.tech) dans la région `eu-central-1` (Francfort).
-   - Copier l'URL de connexion directe (non poolée, format `postgresql://user:pass@ep-...neon.tech/neondb?sslmode=require`) : Flyway nécessite une connexion directe pour ses verrous de migration, et HikariCP est déjà plafonné à 5 connexions (`max-lifetime: 540000`).
+   - Copier l'URL de connexion directe (non poolée, format `postgresql://user:pass@ep-...neon.tech/neondb?sslmode=require`) : Flyway nécessite une connexion directe pour ses verrous de migration, et HikariCP est plafonné à 5 connexions (`max-lifetime: 540000`).
 2. **Service Web Render (Docker)** :
    - Connecter votre dépôt GitHub à [Render](https://render.com) et créer un **Web Service** (ou importer le Blueprint `render.yaml`).
    - Dans l'onglet **Environment**, renseigner les variables `sync: false` :
@@ -213,14 +289,16 @@ Le dépôt inclut le fichier Blueprint [`render.yaml`](file:///home/mahou-dev/Do
      - `ADMIN_PASSWORD` : un mot de passe administrateur d'au moins 12 caractères.
      - `DEMO_PASSWORD` : un mot de passe pour les comptes de démonstration (si `DEMO_SEED=true`).
      - `ORS_API_KEY` : votre clé OpenRouteService.
+     - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` : vos identifiants Twilio (si `SMS_PROVIDER=twilio`).
    - `JWT_SECRET` est généré automatiquement par Render (`generateValue: true`).
-   - La route de santé `/api/health` répond `200 {"status":"UP"}` sans interroger PostgreSQL, ce qui permet à Render de vérifier l'état du conteneur tout en laissant Neon se mettre en veille en l'absence de trafic utilisateur.
+   - `TRUSTED_PROXY_HOPS` est initialisé à `1` pour extraire l'IP cliente derrière le proxy inverse de Render.
+   - La route de santé `/api/health` répond `200 {"status":"UP"}` en mémoire sans interroger PostgreSQL, ce qui permet à Render de vérifier l'état du conteneur tout en laissant Neon se mettre en veille en l'absence de trafic utilisateur.
 
 ---
 
-## 11. Limites connues
+## 12. Limites connues
 
-- **Grille géographique par boîtes englobantes (`geo-grid.json`)** : Les limites des quartiers de Ziguinchor, Dakar et Saint-Louis sont définies par des boîtes englobantes (`bbox`) et leurs centres (repli Haversine ≤ 3 km). Elles permettent de découper chaque zone de façon déterministe mais ne constituent pas un cadastre municipal. Voir [`docs/geo-grid-a-verifier.md`](file:///home/mahou-dev/Documents/SamaAdresse/docs/geo-grid-a-verifier.md) pour la procédure de vérification terrain à Ziguinchor.
-- **Réveil à froid sur hébergement gratuit** : Le plan gratuit de Render met le conteneur en veille après 15 minutes d'inactivité (réveil en 30 à 60 s au premier appel). Voir [`docs/DEMO.md`](file:///home/mahou-dev/Documents/SamaAdresse/docs/DEMO.md) pour la préparation avant soutenance.
+- **Grille géographique par boîtes englobantes (`geo-grid.json`)** : Les limites des 8 quartiers de Ziguinchor, Dakar et Saint-Louis sont des **boîtes rectangulaires estimées géométriquement, non confirmées par l'administration locale ni par un cadastre municipal officiel**. Voir [`docs/geo-grid-a-verifier.md`](docs/geo-grid-a-verifier.md) pour la fiche de vérification terrain.
+- **Réveil à froid sur hébergement gratuit** : Le plan gratuit de Render met le conteneur en veille après 15 minutes d'inactivité (réveil en 30 à 60 s au premier appel). Voir [`docs/DEMO.md`](docs/DEMO.md) pour la préparation avant soutenance.
 - **Envoi de SMS au Sénégal (`+221`)** : Les opérateurs sénégalais (Orange, Free, Expresso) filtrent les numéros internationaux non enregistrés et exigent l'enregistrement préalable d'un `Sender ID` alphanumérique pour une délivrabilité garantie. Le mode par défaut est `SMS_PROVIDER=mock`, et le script `./scripts/sms-live-test +221XXXXXXXXX` permet de tester l'intégration Twilio sur un numéro vérifié.
 - **Absence de notifications push** : L'application ne sollicite pas d'autorisation de notifications push ; les retours de synchronisation hors ligne et de modération sont présentés directement dans l'interface (« Mes adresses »).

@@ -102,7 +102,7 @@ export const RegisterPage: React.FC = () => {
         </div>
 
         {/* Form Card */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFFFF] border border-[#D4CEBF] shadow-sm">
+        <div className="p-6 sm:p-8 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm">
           {errorMsg && (
             <div className="mb-6 p-4 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
@@ -127,8 +127,8 @@ export const RegisterPage: React.FC = () => {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Mamadou Diallo"
-                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF9F5] border rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition ${
-                    fieldErrors.fullName ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#D4CEBF] focus:border-[#1D528F]'
+                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF7EF] border rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition ${
+                    fieldErrors.fullName ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#766B5B] focus:border-[#1D528F]'
                   }`}
                 />
               </div>
@@ -151,8 +151,8 @@ export const RegisterPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="mamadou@exemple.sn"
-                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF9F5] border rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition ${
-                    fieldErrors.email ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#D4CEBF] focus:border-[#1D528F]'
+                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF7EF] border rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition ${
+                    fieldErrors.email ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#766B5B] focus:border-[#1D528F]'
                   }`}
                 />
               </div>
@@ -178,8 +178,8 @@ export const RegisterPage: React.FC = () => {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="+221770000000"
-                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF9F5] border rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition ${
-                    fieldErrors.phoneNumber ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#D4CEBF] focus:border-[#1D528F]'
+                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF7EF] border rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition ${
+                    fieldErrors.phoneNumber ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#766B5B] focus:border-[#1D528F]'
                   }`}
                 />
               </div>
@@ -202,8 +202,8 @@ export const RegisterPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className={`w-full pl-11 pr-11 py-3 bg-[#FBF9F5] border rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition ${
-                    fieldErrors.password ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#D4CEBF] focus:border-[#1D528F]'
+                  className={`w-full pl-11 pr-11 py-3 bg-[#FBF7EF] border rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition ${
+                    fieldErrors.password ? 'border-[#DC2626] focus:border-[#DC2626]' : 'border-[#766B5B] focus:border-[#1D528F]'
                   }`}
                 />
                 <button
@@ -219,7 +219,7 @@ export const RegisterPage: React.FC = () => {
 
               {/* Password Strength Indicator */}
               {password.length > 0 && (
-                <div className="mt-2 space-y-2 p-3 rounded-xl bg-[#F2ECE1] border border-[#E6DDD0]">
+                <div className="mt-2 space-y-2 p-3 rounded-xl bg-[#F2ECE1] border border-[#766B5B]">
                   <div className="flex items-center justify-between text-xs font-medium">
                     <span className="text-[#5C4D44]">Force du mot de passe :</span>
                     <span
@@ -253,15 +253,15 @@ export const RegisterPage: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-3 gap-1 pt-1 text-[11px]">
-                    <div className={`flex items-center gap-1 ${hasMinLength ? 'text-[#2A6B44] font-bold' : 'text-[#8C7B70]'}`}>
+                    <div className={`flex items-center gap-1 ${hasMinLength ? 'text-[#2A6B44] font-bold' : 'text-[#5C4D44]'}`}>
                       {hasMinLength ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                       <span>≥ 8 car.</span>
                     </div>
-                    <div className={`flex items-center gap-1 ${hasUppercase ? 'text-[#2A6B44] font-bold' : 'text-[#8C7B70]'}`}>
+                    <div className={`flex items-center gap-1 ${hasUppercase ? 'text-[#2A6B44] font-bold' : 'text-[#5C4D44]'}`}>
                       {hasUppercase ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                       <span>1 Majuscule</span>
                     </div>
-                    <div className={`flex items-center gap-1 ${hasDigit ? 'text-[#2A6B44] font-bold' : 'text-[#8C7B70]'}`}>
+                    <div className={`flex items-center gap-1 ${hasDigit ? 'text-[#2A6B44] font-bold' : 'text-[#5C4D44]'}`}>
                       {hasDigit ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
                       <span>1 Chiffre</span>
                     </div>
@@ -286,10 +286,10 @@ export const RegisterPage: React.FC = () => {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF9F5] border rounded-xl text-[#231A15] placeholder-[#8C7B70] text-sm outline-none transition ${
+                  className={`w-full pl-11 pr-4 py-3 bg-[#FBF7EF] border rounded-xl text-[#231A15] placeholder-[#5C4D44] text-sm outline-none transition ${
                     confirmPassword.length > 0 && !passwordsMatch
                       ? 'border-[#DC2626] focus:border-[#DC2626]'
-                      : 'border-[#D4CEBF] focus:border-[#1D528F]'
+                      : 'border-[#766B5B] focus:border-[#1D528F]'
                   }`}
                 />
               </div>
@@ -302,7 +302,7 @@ export const RegisterPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading || strengthScore < 3 || !passwordsMatch}
-              className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#B84A24] hover:bg-[#963919] text-white font-bold text-sm shadow-sm active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#B84A24] hover:bg-[#9A3816] text-white font-bold text-sm shadow-sm active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>

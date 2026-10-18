@@ -139,30 +139,36 @@ class ProductionFeaturesTest {
     }
 
     @Test
-    @DisplayName("A1 : Extraction de l'IP réelle du client derrière le proxy Render (X-Forwarded-For / True-Client-IP)")
+    @DisplayName("A1 : Extraction de l'IP réelle du client derrière le proxy Render (CF-Connecting-IP / X-Forwarded-For)")
     void clientIpResolver_extractsVisitorIpBehindProxy() {
-        // 1. En-tête X-Forwarded-For multi-sauts : extrait l'IP du visiteur
-        MockHttpServletRequest reqXff = new MockHttpServletRequest();
-        reqXff.setRemoteAddr("10.0.0.1");
-        reqXff.addHeader("X-Forwarded-For", "41.82.100.12, 172.68.10.1, 10.12.0.5");
-        assertThat(ClientIpResolver.resolve(reqXff)).isEqualTo("41.82.100.12");
+        ClientIpResolver.setConfiguredHops(1);
+        try {
+            // 1. En-tête X-Forwarded-For : extrait l'IP insérée par le dernier proxy de confiance (et non la tête falsifiable)
+            MockHttpServletRequest reqXff = new MockHttpServletRequest();
+            reqXff.setRemoteAddr("10.0.0.1");
+            reqXff.addHeader("X-Forwarded-For", "fake.ip.1, fake.ip.2, 41.82.100.12");
+            assertThat(ClientIpResolver.resolve(reqXff)).isEqualTo("41.82.100.12");
 
-        // 2. En-tête True-Client-IP prioritaire (Cloudflare / Render)
-        MockHttpServletRequest reqTrueIp = new MockHttpServletRequest();
-        reqTrueIp.setRemoteAddr("10.0.0.1");
-        reqTrueIp.addHeader("True-Client-IP", "154.65.22.10");
-        reqTrueIp.addHeader("X-Forwarded-For", "1.1.1.1, 154.65.22.10");
-        assertThat(ClientIpResolver.resolve(reqTrueIp)).isEqualTo("154.65.22.10");
+            // 2. En-tête CF-Connecting-IP prioritaire (Cloudflare / Render) et True-Client-IP ignoré
+            MockHttpServletRequest reqCf = new MockHttpServletRequest();
+            reqCf.setRemoteAddr("10.0.0.1");
+            reqCf.addHeader("True-Client-IP", "1.1.1.1"); // Ignoré car falsifiable
+            reqCf.addHeader("CF-Connecting-IP", "154.65.22.10");
+            reqCf.addHeader("X-Forwarded-For", "fake.ip.3, 154.65.22.10");
+            assertThat(ClientIpResolver.resolve(reqCf)).isEqualTo("154.65.22.10");
 
-        // 3. Deux visiteurs distincts derrière le même proxy (même remoteAddr) ont des quotas indépendants
-        RateLimiterService limiter = new RateLimiterService();
-        for (int i = 0; i < 5; i++) {
-            limiter.checkRateLimit("proxy_test", ClientIpResolver.resolve(reqXff), 5);
+            // 3. Deux visiteurs distincts derrière le même proxy (même remoteAddr) ont des quotas indépendants
+            RateLimiterService limiter = new RateLimiterService();
+            for (int i = 0; i < 5; i++) {
+                limiter.checkRateLimit("proxy_test", ClientIpResolver.resolve(reqXff), 5);
+            }
+            assertThatThrownBy(() -> limiter.checkRateLimit("proxy_test", ClientIpResolver.resolve(reqXff), 5))
+                    .isInstanceOf(sn.samaadresse.exception.RateLimitExceededException.class);
+            // Le second visiteur derrière le même proxy n'est pas bloqué
+            limiter.checkRateLimit("proxy_test", ClientIpResolver.resolve(reqCf), 5);
+        } finally {
+            ClientIpResolver.setConfiguredHops(0);
         }
-        assertThatThrownBy(() -> limiter.checkRateLimit("proxy_test", ClientIpResolver.resolve(reqXff), 5))
-                .isInstanceOf(sn.samaadresse.exception.RateLimitExceededException.class);
-        // Le second visiteur derrière le même proxy n'est pas bloqué
-        limiter.checkRateLimit("proxy_test", ClientIpResolver.resolve(reqTrueIp), 5);
     }
 
     // =========================================================================

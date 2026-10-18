@@ -305,7 +305,7 @@ export const MyAddressesPage: React.FC = () => {
       />
 
       {/* En-tête : Titre h1, Ligne de compteurs sobre, et Action Principale */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 pb-4 border-b border-[#E6DDD0]">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5 pb-4 border-b border-[#766B5B]">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
             Mes adresses
@@ -321,7 +321,7 @@ export const MyAddressesPage: React.FC = () => {
 
         <Link
           to="/addresses/new"
-          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs font-bold transition shadow-sm touch-target shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Nouvelle adresse</span>
@@ -332,7 +332,7 @@ export const MyAddressesPage: React.FC = () => {
       {codeChangedNotification && (
         <div
           role="status"
-          className="mt-2 mb-6 px-4 py-3.5 rounded-xl bg-[#1D528F]/10 border border-[#1D528F]/30 text-[#1D528F] text-xs sm:text-sm font-medium flex items-center justify-between gap-4 shadow-[0_1px_0_rgba(35,26,21,0.04)]"
+          className="mt-2 mb-6 px-4 py-3.5 rounded-xl bg-[#1D528F]/10 border border-[#1D528F]/30 text-[#1D528F] text-xs sm:text-sm font-medium flex items-center justify-between gap-4 shadow-sm"
         >
           <div className="flex items-start sm:items-center gap-2.5 leading-relaxed">
             <RefreshCw className="w-4 h-4 shrink-0 mt-0.5 sm:mt-0" />
@@ -341,7 +341,7 @@ export const MyAddressesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setCodeChangedNotification(null)}
-            className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg bg-[#FFFFFF] border border-[#1D528F]/30 text-xs font-bold text-[#1D528F] hover:bg-[#1D528F]/10 transition shrink-0 inline-flex items-center justify-center touch-target cursor-pointer"
+            className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-lg bg-[#FBF7EF] border border-[#1D528F]/30 text-xs font-bold text-[#1D528F] hover:bg-[#1D528F]/10 transition shrink-0 inline-flex items-center justify-center touch-target cursor-pointer"
           >
             Fermer
           </button>
@@ -352,9 +352,9 @@ export const MyAddressesPage: React.FC = () => {
       {drafts.length > 0 && (
         <section
           aria-labelledby="drafts-heading"
-          className="mb-6 p-4 rounded-xl bg-[#FBF9F5] border border-[#D4CEBF] space-y-3"
+          className="mb-6 p-4 rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#E6DDD0] pb-2.5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#766B5B] pb-2.5">
             <div className="flex items-center gap-2">
               <WifiOff className="w-4 h-4 text-[#8A3112]" />
               <h2 id="drafts-heading" className="text-sm font-bold text-[#231A15]">
@@ -365,7 +365,7 @@ export const MyAddressesPage: React.FC = () => {
               type="button"
               onClick={handleSyncNow}
               disabled={!isOnline || isSyncing}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#231A15] hover:bg-[#3D2E24] text-white text-xs font-bold transition disabled:opacity-50 min-h-[36px] cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#231A15] hover:bg-[#3D2E24] text-[#FBF7EF] text-xs font-bold transition disabled:opacity-50 min-h-[36px] cursor-pointer"
             >
               {isSyncing ? (
                 <>
@@ -394,7 +394,7 @@ export const MyAddressesPage: React.FC = () => {
               return (
                 <div
                   key={draft.id}
-                  className="p-3 bg-[#FFFFFF] rounded-lg border border-[#E6DDD0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
+                  className="p-3 bg-[#F2ECE1] rounded-lg border border-[#766B5B] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -405,7 +405,7 @@ export const MyAddressesPage: React.FC = () => {
                         • {draft.description || 'Sans description'}
                       </span>
                     </div>
-                    <p className="text-[11px] text-[#8C8272]">
+                    <p className="text-[11px] text-[#5C4D44]">
                       Capturée le {formattedDate}
                     </p>
                     {draft.lastError && (
@@ -421,7 +421,7 @@ export const MyAddressesPage: React.FC = () => {
                       </span>
                     )}
                     {draft.status === 'PENDING' && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8A3112] bg-[#F2ECE1] px-2 py-0.5 rounded whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8A3112] bg-[#EADFC8] px-2 py-0.5 rounded whitespace-nowrap">
                         <span>En attente</span>
                       </span>
                     )}
@@ -442,7 +442,7 @@ export const MyAddressesPage: React.FC = () => {
       {recentlyArchived && (
         <div
           role="status"
-          className="mb-5 p-3.5 rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] flex items-center justify-between gap-3 text-xs sm:text-sm"
+          className="mb-5 p-3.5 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm flex items-center justify-between gap-3 text-xs sm:text-sm"
         >
           <div className="flex items-center gap-2 text-[#231A15] font-medium">
             <CheckCircle2 className="w-4 h-4 text-[#2A6B44] shrink-0" />
@@ -455,7 +455,7 @@ export const MyAddressesPage: React.FC = () => {
               type="button"
               onClick={() => handleRestore(recentlyArchived.id)}
               disabled={restoringId === recentlyArchived.id}
-              className="px-3 py-1.5 rounded-lg border border-[#1D528F] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer"
+              className="px-3 py-1.5 rounded-lg border border-[#1D528F] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer"
             >
               Annuler
             </button>
@@ -476,7 +476,7 @@ export const MyAddressesPage: React.FC = () => {
         <div
           role="tablist"
           aria-label="Filtrer par état des adresses"
-          className="flex items-center gap-2 mb-5 border-b border-[#E6DDD0]"
+          className="flex items-center gap-2 mb-5 border-b border-[#766B5B]"
         >
           <button
             type="button"
@@ -509,7 +509,7 @@ export const MyAddressesPage: React.FC = () => {
 
       {/* Bannière unique d'aide pour les photos de façade (hauteur réservée pendant le chargement pour CLS = 0) */}
       {(loading || (!errorMsg && activeTab === 'ACTIVE' && hasAddressWithoutPhoto)) && (
-        <div className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#D4CEBF] text-xs font-medium text-[#231A15] flex items-center gap-2.5 mb-6 shadow-[0_1px_0_rgba(35,26,21,0.04)] min-h-[46px]">
+        <div className="p-3.5 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-xs font-medium text-[#231A15] flex items-center gap-2.5 mb-6 shadow-sm min-h-[46px]">
           <ImageIcon className="w-4 h-4 text-[#8A3112] shrink-0" />
           <span>Une photo de la façade aide à retrouver l'adresse.</span>
         </div>
@@ -517,7 +517,7 @@ export const MyAddressesPage: React.FC = () => {
 
       {/* ÉTAT HORS LIGNE SI AUCUNE ADRESSE CHARGÉE */}
       {!isOnline && addresses.length === 0 ? (
-        <div className="p-8 text-center rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-3 max-w-md mx-auto">
+        <div className="p-8 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm space-y-3 max-w-md mx-auto">
           <AlertCircle className="w-8 h-8 text-[#8A3112] mx-auto" />
           <h2 className="text-base font-bold text-[#231A15]">Connexion requise pour afficher cette page</h2>
           <p className="text-xs text-[#5C4D44] leading-relaxed">
@@ -530,7 +530,7 @@ export const MyAddressesPage: React.FC = () => {
           {[1, 2, 3, 4, 5, 6].map((n) => (
             <div
               key={n}
-              className="rounded-xl border border-[#D4CEBF] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] p-2.5 sm:p-3 flex flex-col justify-between gap-2 min-h-[196px] animate-pulse"
+              className="rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm p-2.5 sm:p-3 flex flex-col justify-between gap-2 min-h-[196px] animate-pulse"
             >
               <div className="flex gap-2.5 items-start">
                 <div className="w-16 h-16 min-w-16 min-h-16 aspect-square rounded-lg bg-[#F2ECE1] shrink-0" />
@@ -540,7 +540,7 @@ export const MyAddressesPage: React.FC = () => {
                   <div className="h-3 bg-[#F2ECE1] rounded w-1/3" />
                 </div>
               </div>
-              <div className="pt-2 border-t border-[#E6DDD0] flex items-center justify-between min-h-[44px]">
+              <div className="pt-2 border-t border-[#766B5B] flex items-center justify-between min-h-[44px]">
                 <div className="h-4 bg-[#E6DDD0] rounded w-32" />
                 <div className="h-6 bg-[#E6DDD0] rounded w-8" />
               </div>
@@ -565,10 +565,10 @@ export const MyAddressesPage: React.FC = () => {
         </div>
       ) : addresses.length === 0 ? (
         /* ÉTAT VIDE : Illustration SVG pointillée + Conditions (pas de double bouton) */
-        <div className="p-8 sm:p-12 text-center rounded-2xl bg-[#FFFFFF] border border-[#8C8272]/40 shadow-[0_1px_0_rgba(35,26,21,0.06)] space-y-6 max-w-xl mx-auto">
+        <div className="p-8 sm:p-12 text-center rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm space-y-6 max-w-xl mx-auto">
           <div className="py-2">
             <svg
-              className="w-56 h-28 mx-auto text-[#8C8272]"
+              className="w-56 h-28 mx-auto text-[#766B5B]"
               viewBox="0 0 200 100"
               fill="none"
               aria-hidden="true"
@@ -579,19 +579,19 @@ export const MyAddressesPage: React.FC = () => {
                 width="188"
                 height="88"
                 rx="8"
-                stroke="#8C8272"
+                stroke="#766B5B"
                 strokeWidth="2"
                 strokeDasharray="6 6"
               />
-              <circle cx="16" cy="16" r="3" fill="#8C8272" />
-              <circle cx="184" cy="16" r="3" fill="#8C8272" />
-              <circle cx="16" cy="84" r="3" fill="#8C8272" />
-              <circle cx="184" cy="84" r="3" fill="#8C8272" />
+              <circle cx="16" cy="16" r="3" fill="#766B5B" />
+              <circle cx="184" cy="16" r="3" fill="#766B5B" />
+              <circle cx="16" cy="84" r="3" fill="#766B5B" />
+              <circle cx="184" cy="84" r="3" fill="#766B5B" />
               <text
                 x="100"
                 y="58"
                 textAnchor="middle"
-                fill="#8C8272"
+                fill="#766B5B"
                 fontFamily="JetBrains Mono, monospace"
                 fontSize="18"
                 fontWeight="bold"
@@ -608,7 +608,7 @@ export const MyAddressesPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-[#FBF9F5] border border-[#D4CEBF] text-left text-xs space-y-2 text-[#231A15]">
+          <div className="p-4 rounded-xl bg-[#F2ECE1] border border-[#766B5B] text-left text-xs space-y-2 text-[#231A15]">
             <div className="flex items-start gap-2">
               <span className="font-bold text-[#8A3112] shrink-0">1.</span>
               <span>Être physiquement devant l'entrée du bâtiment ou de la concession.</span>
@@ -620,7 +620,7 @@ export const MyAddressesPage: React.FC = () => {
           </div>
         </div>
       ) : displayedAddresses.length === 0 ? (
-        <div className="p-8 text-center rounded-xl bg-[#FFFFFF] border border-[#D4CEBF] text-xs sm:text-sm text-[#5C4D44]">
+        <div className="p-8 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] text-xs sm:text-sm text-[#5C4D44]">
           {activeTab === 'ACTIVE'
             ? "Aucune adresse active pour le moment."
             : "Vous n'avez aucune adresse archivée."}
@@ -639,7 +639,7 @@ export const MyAddressesPage: React.FC = () => {
             return (
               <div
                 key={address.id}
-                className="rounded-xl border border-[#8C8272] bg-[#FFFFFF] shadow-[0_2px_0_rgba(35,26,21,0.06)] p-2.5 sm:p-3 flex flex-col justify-between gap-2 relative min-h-[196px]"
+                className="rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm p-2.5 sm:p-3 flex flex-col justify-between gap-2 relative min-h-[196px]"
               >
                 {/* Mention de suspension par la modération le cas échéant */}
                 {isSuspended && (
@@ -651,7 +651,7 @@ export const MyAddressesPage: React.FC = () => {
 
                 {/* Ligne Principale : Vignette 64x64 + AddressPlate sm + Description */}
                 <div className="flex gap-2.5 items-start">
-                  <div className="w-16 h-16 min-w-16 min-h-16 rounded-lg bg-[#F2ECE1] border border-[#D4CEBF] overflow-hidden relative group shrink-0 flex items-center justify-center">
+                  <div className="w-16 h-16 min-w-16 min-h-16 rounded-lg bg-[#F2ECE1] border border-[#766B5B] overflow-hidden relative group shrink-0 flex items-center justify-center">
                     {hasPhoto ? (
                       <img
                         src={photoSrc}
@@ -663,7 +663,7 @@ export const MyAddressesPage: React.FC = () => {
                         onError={() => setFailedPhotos((prev) => ({ ...prev, [address.id]: true }))}
                       />
                     ) : (
-                      <ImageIcon className="w-6 h-6 text-[#8C8272]" />
+                      <ImageIcon className="w-6 h-6 text-[#5C4D44]" />
                     )}
 
                     {uploadingAddressId === address.id && (
@@ -707,7 +707,7 @@ export const MyAddressesPage: React.FC = () => {
                 </div>
 
                 {/* Rangée d'actions texte + icône et menu Actions accessible au clavier (flex-wrap) */}
-                <div className="pt-2 border-t border-[#E6DDD0] flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                <div className="pt-2 border-t border-[#766B5B] flex flex-wrap items-center justify-between gap-1.5 text-xs">
                   <div className="flex flex-wrap items-center gap-1 sm:gap-2">
                     {!isArchived && !isSuspended && (
                       <>
@@ -772,7 +772,7 @@ export const MyAddressesPage: React.FC = () => {
                         aria-expanded={openMenuId === address.id}
                         aria-label={`Actions pour ${address.code}`}
                         title={`Actions pour ${address.code}`}
-                        className="inline-flex items-center justify-center p-1.5 sm:p-2 rounded-lg border border-[#D4CEBF] bg-[#FBF9F5] hover:bg-[#F2ECE1] text-[#231A15] min-h-[36px] min-w-[36px] cursor-pointer"
+                        className="inline-flex items-center justify-center p-1.5 sm:p-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] min-h-[36px] min-w-[36px] cursor-pointer"
                       >
                         <span className="sr-only">Actions pour {address.code}</span>
                         <MoreVertical className="w-4 h-4 text-[#5C4D44]" />
@@ -782,7 +782,7 @@ export const MyAddressesPage: React.FC = () => {
                       <div
                         role="menu"
                         aria-label={`Options pour ${address.code}`}
-                        className="absolute right-0 bottom-full mb-1.5 w-44 rounded-xl bg-[#FFFFFF] border border-[#8C8272] shadow-lg py-1 z-30"
+                        className="absolute right-0 bottom-full mb-1.5 w-44 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-lg py-1 z-30"
                       >
                         {!isArchived ? (
                           <>
@@ -836,7 +836,7 @@ export const MyAddressesPage: React.FC = () => {
 
                 {/* Bloc de partage dépliable */}
                 {shareOpenId === address.id && !isArchived && (
-                  <div className="pt-2 border-t border-[#E6DDD0]">
+                  <div className="pt-2 border-t border-[#766B5B]">
                     <ShareAddress code={address.code} description={address.description} />
                   </div>
                 )}
@@ -859,9 +859,9 @@ export const MyAddressesPage: React.FC = () => {
         >
           <div
             ref={archiveModalRef}
-            className="w-full max-w-[calc(100vw-32px)] sm:max-w-md rounded-xl bg-[#FBF9F5] border border-[#8C8272] shadow-lg p-5 sm:p-6 space-y-4 mx-auto"
+            className="w-full max-w-[calc(100vw-32px)] sm:max-w-md rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-lg p-5 sm:p-6 space-y-4 mx-auto"
           >
-            <div className="flex items-start justify-between gap-2 border-b border-[#E6DDD0] pb-3">
+            <div className="flex items-start justify-between gap-2 border-b border-[#766B5B] pb-3">
               <h2 id="archive-modal-title" className="text-base font-bold text-[#231A15] break-words">
                 Archiver l'adresse {archiveTarget.code} ?
               </h2>
@@ -879,11 +879,11 @@ export const MyAddressesPage: React.FC = () => {
               La fiche publique et le QR code cesseront de fonctionner. Vous pourrez restaurer l'adresse.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-[#E6DDD0]">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2 border-t border-[#766B5B]">
               <button
                 type="button"
                 onClick={() => setArchiveTarget(null)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-[#8C8272] bg-[#FFFFFF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition cursor-pointer touch-target text-center"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition cursor-pointer touch-target text-center"
               >
                 Annuler
               </button>
@@ -891,7 +891,7 @@ export const MyAddressesPage: React.FC = () => {
                 type="button"
                 onClick={handleConfirmArchive}
                 disabled={archiving}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer disabled:opacity-50 touch-target text-center"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 touch-target text-center"
               >
                 {archiving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 <span>Archiver l'adresse</span>

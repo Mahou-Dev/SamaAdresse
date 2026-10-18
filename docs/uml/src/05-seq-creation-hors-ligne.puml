@@ -19,7 +19,7 @@ UI -> IDB : Stocke les codes réservés (par utilisateur)
 O -> UI : Capture GPS + description + photo
 UI -> UI : Résolution locale zone/quartier\n(geoGrid.ts — port TypeScript de la grille)
 alt position hors zone
-  UI --> O : « Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar).\nDéplacez le repère ou saisissez d'autres coordonnées. »
+  UI --> O : « Ces coordonnées sont hors des zones couvertes (Ziguinchor, Dakar, Saint-Louis).\nDéplacez le repère ou saisissez d'autres coordonnées. »
 else quartier résolu
   alt un code réservé est disponible
     UI -> IDB : Retire un code du quartier

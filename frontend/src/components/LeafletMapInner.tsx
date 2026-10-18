@@ -26,13 +26,13 @@ const createMarkerIcon = (isDraggable: boolean) =>
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 3px solid #FFFFFF;
+          border: 3px solid #FBF7EF;
           box-shadow: 0 3px 6px rgba(35,26,21,0.3);
         ">
           <div style="
             width: 10px;
             height: 10px;
-            background-color: #FFFFFF;
+            background-color: #FBF7EF;
             border-radius: 50%;
             transform: rotate(45deg);
           "></div>
@@ -60,7 +60,7 @@ const createStartMarkerIcon = () =>
           width: 24px;
           height: 24px;
           border-radius: 50%;
-          border: 3px solid #FFFFFF;
+          border: 3px solid #FBF7EF;
           box-shadow: 0 2px 5px rgba(35,26,21,0.3);
         "></div>
       </div>
@@ -171,7 +171,7 @@ const LeafletMapInner: React.FC<LeafletMapInnerProps> = ({
     [onPositionChange]
   );
 
-  const offlineTileFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" fill="%23F2ECE1"/><rect x="4" y="4" width="248" height="248" fill="none" stroke="%23D4CEBF" stroke-width="2" stroke-dasharray="6,6"/><text x="128" y="115" text-anchor="middle" font-family="Outfit, sans-serif" font-size="11" font-weight="bold" fill="%235C4D44">Carte indisponible</text><text x="128" y="135" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="%238C8272">hors ligne pour cette zone</text></svg>`;
+  const offlineTileFallback = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256"><rect width="256" height="256" fill="%23FBF7EF"/><rect x="4" y="4" width="248" height="248" fill="none" stroke="%23766B5B" stroke-width="2" stroke-dasharray="6,6"/><text x="128" y="115" text-anchor="middle" font-family="Outfit, sans-serif" font-size="11" font-weight="bold" fill="%23231A15">Carte indisponible</text><text x="128" y="135" text-anchor="middle" font-family="Outfit, sans-serif" font-size="10" fill="%235C4D44">hors ligne pour cette zone</text></svg>`;
 
   return (
     <MapContainer

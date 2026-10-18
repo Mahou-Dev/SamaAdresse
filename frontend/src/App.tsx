@@ -40,7 +40,7 @@ export function App() {
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
-            <div className="min-h-screen flex flex-col bg-[#FBF9F5] text-[#231A15]">
+            <div className="min-h-screen flex flex-col bg-[#EADFC8] text-[#231A15]">
               <AppNavigation />
               <OfflineBanner />
               <main className="flex-1 flex flex-col">

@@ -43,7 +43,7 @@ export const SegmentedPicker: React.FC<SegmentedPickerProps> = ({
     <div
       role="radiogroup"
       aria-label={label}
-      className="grid grid-cols-3 gap-2 p-1.5 bg-[#F2ECE1] rounded-xl border border-[#8C8272]/30"
+      className="grid grid-cols-3 gap-2 p-1.5 bg-[#F2ECE1] rounded-xl border border-[#766B5B]"
     >
       {LOCATION_TYPES.map((type, idx) => {
         const isSelected = value === type.id;
@@ -63,11 +63,11 @@ export const SegmentedPicker: React.FC<SegmentedPickerProps> = ({
             onKeyDown={(e) => handleKeyDown(e, idx)}
             className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition duration-150 cursor-pointer min-h-[44px] ${
               isSelected
-                ? 'bg-[#231A15] text-[#FFFFFF] shadow-sm'
-                : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#FFFFFF]/60'
+                ? 'bg-[#231A15] text-[#FBF7EF] shadow-sm'
+                : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#FBF7EF]'
             }`}
           >
-            <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#B84A24]' : 'text-[#8C8272]'}`} />
+            <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#B84A24]' : 'text-[#766B5B]'}`} />
             <span>{type.label}</span>
           </button>
         );
