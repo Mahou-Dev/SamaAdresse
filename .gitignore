@@ -42,4 +42,5 @@ uploads*/
 backend/uploads*/
 backend/src/main/resources/static/
 lot*/
+!docs/audit/lot*/
 scratch/

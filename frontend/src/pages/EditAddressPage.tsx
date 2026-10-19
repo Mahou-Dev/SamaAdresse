@@ -13,8 +13,8 @@ import { SegmentedPicker } from '../components/SegmentedPicker';
 import { useToast } from '../components/Toast';
 import { compressImage, formatFileSize } from '../utils/imageCompressor';
 import { validateStep2Details, validateStep3Photo } from '../utils/formValidation';
+import { ConnectedLayout } from '../components/ConnectedLayout';
 import {
-  ArrowLeft,
   Loader2,
   AlertCircle,
   Lock,
@@ -173,25 +173,12 @@ export const EditAddressPage: React.FC = () => {
     : null;
 
   return (
-    <div className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 font-sans space-y-6">
-      <div>
-        <Link
-          to="/addresses/mine"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5C4D44] hover:text-[#1D528F] transition py-1"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Retour à mes adresses</span>
-        </Link>
-      </div>
-
-      <div className="pb-4 border-b border-[#766B5B]">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
-          Modifier l'adresse
-        </h1>
-        <p className="text-xs sm:text-sm text-[#5C4D44] mt-1">
-          Mettez à jour le type de lieu, le repère visuel ou la photo de façade.
-        </p>
-      </div>
+    <ConnectedLayout
+      title={`Modifier l'adresse ${address?.code || ''}`}
+      subtitle="Mettez à jour le type de lieu, le repère visuel ou la photo de façade."
+      backTo="/addresses/mine"
+      backLabel="Retour à mes adresses"
+    >
 
       {loading ? (
         <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3">
@@ -440,6 +427,6 @@ export const EditAddressPage: React.FC = () => {
           </div>
         </form>
       )}
-    </div>
+    </ConnectedLayout>
   );
 };

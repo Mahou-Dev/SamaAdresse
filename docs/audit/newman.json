@@ -5,7 +5,7 @@
     },
     "item": [
       {
-        "id": "a160034c-abce-47da-88f1-9096e72bcc23",
+        "id": "8fc91a03-2c1c-418e-a65e-817ffe3631bf",
         "name": "Parcours démo",
         "description": {
           "content": "Parcours complet automatisé : connexion (sauvegarde du jeton), création d'adresse, résolution publique, recherche annuaire, signalement public et calcul d'itinéraire.",
@@ -13,7 +13,7 @@
         },
         "item": [
           {
-            "id": "696fff8c-1c35-4b45-9eba-bf7b6090358a",
+            "id": "c9d3fec8-45f7-4210-a959-f1eb53ff4c7d",
             "name": "1. Connexion (sauvegarde du jeton)",
             "request": {
               "url": {
@@ -45,7 +45,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "fac177b3-9d50-40cd-8938-80287f11a1dc",
+                  "id": "6c6e0ee6-3c3e-4215-8a01-b6465f813b58",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Connexion réussie (200)', function () {",
@@ -55,13 +55,13 @@
                     "    pm.collectionVariables.set('token', jsonData.accessToken);",
                     "});"
                   ],
-                  "_lastExecutionId": "6ff086e3-4479-4df1-b753-7e88a3508867"
+                  "_lastExecutionId": "eed5a199-cc01-4e09-abe4-7ff6ce0cab3c"
                 }
               }
             ]
           },
           {
-            "id": "1c567837-1cd2-4502-b7d8-dd3009d20a91",
+            "id": "0552b7e2-ee8e-44c5-a475-ffa61ea094c8",
             "name": "2. Création d'adresse",
             "request": {
               "url": {
@@ -102,7 +102,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "55f0fa2f-e5c8-4f2c-a943-a41ef2519d5d",
+                  "id": "ea30de1e-a89a-4327-8a8a-813276d94530",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Adresse créée (201)', function () {",
@@ -113,13 +113,13 @@
                     "    pm.collectionVariables.set('demoAddressId', jsonData.id);",
                     "});"
                   ],
-                  "_lastExecutionId": "6bd3cbc2-4e39-4406-83eb-07c5a278da50"
+                  "_lastExecutionId": "0f08dbe7-3ccf-4f68-975f-fd62fea2ba28"
                 }
               }
             ]
           },
           {
-            "id": "08201eac-750c-487a-9da6-10fe704bbd4c",
+            "id": "37fab005-9887-464c-ae48-b9ff0548b63e",
             "name": "3. Résolution publique du code",
             "request": {
               "url": {
@@ -141,7 +141,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "7195a71d-773c-48a3-bde2-24a155e6d04a",
+                  "id": "8746e431-c914-4564-8e14-5b7a009702df",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Fiche publique résolue avec latitude, longitude et photoUrl (200)', function () {",
@@ -153,13 +153,13 @@
                     "    pm.expect(jsonData.photoUrl).to.be.a('string').and.not.empty;",
                     "});"
                   ],
-                  "_lastExecutionId": "d1527ec2-dc4a-4299-b163-068a6d7c3cab"
+                  "_lastExecutionId": "20a28e30-8425-4f2e-8c87-2a173ab90ca6"
                 }
               }
             ]
           },
           {
-            "id": "1390a5a0-accf-4554-81c8-6a796dbb80bd",
+            "id": "c24a693c-7433-4051-9d1e-6d08d7f052d0",
             "name": "4. Recherche dans l'annuaire",
             "request": {
               "url": {
@@ -190,7 +190,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "38fca8ea-a278-4a5d-8195-aeac062aef12",
+                  "id": "1361a4ae-806a-4b69-8ea9-e39757f042d4",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Recherche annuaire valide (200)', function () {",
@@ -199,13 +199,13 @@
                     "    pm.expect(jsonData.content).to.be.an('array');",
                     "});"
                   ],
-                  "_lastExecutionId": "0d14df64-82ff-47f6-a9c5-c848c5028e47"
+                  "_lastExecutionId": "7adcc34d-0d6d-4ce8-9713-8f8a108c3965"
                 }
               }
             ]
           },
           {
-            "id": "cda6810f-c857-443a-8d50-7df757551d07",
+            "id": "b406902d-62af-46a1-b402-6967d4285371",
             "name": "5. Signalement public",
             "request": {
               "url": {
@@ -239,20 +239,20 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "8e691361-c2ed-4ac1-b50c-55320a6f8a2d",
+                  "id": "375052a7-6381-4e7b-920a-131fd40e2872",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Signalement enregistré (202)', function () {",
                     "    pm.response.to.have.status(202);",
                     "});"
                   ],
-                  "_lastExecutionId": "16567739-e27c-47ca-a274-908b1c1665bb"
+                  "_lastExecutionId": "bb44086d-11ac-4d2e-9d62-06c5e4fc3cd2"
                 }
               }
             ]
           },
           {
-            "id": "503f5a4a-eaee-4394-aacc-d90de3403b13",
+            "id": "c6a1180f-b123-4173-9a52-ad34df8f6595",
             "name": "6. Calcul d'itinéraire",
             "request": {
               "url": {
@@ -291,7 +291,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "596a8f1f-0402-4895-974e-d1637f984981",
+                  "id": "1c5d26b2-288c-4206-b154-8dbaa196a9e9",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)', function () {",
@@ -305,7 +305,7 @@
                     "    }",
                     "});"
                   ],
-                  "_lastExecutionId": "e9e4f909-f926-4d43-aea0-b503b0c4cf7b"
+                  "_lastExecutionId": "f3182776-e9cc-426c-9f0e-081e762f7afe"
                 }
               }
             ]
@@ -314,11 +314,11 @@
         "event": []
       },
       {
-        "id": "cc2b57ba-cd6b-43d0-8fd0-b0cc90c44dc6",
+        "id": "c40bd286-9add-4fa2-a97f-6e86d5deb174",
         "name": "Administration & Modération",
         "item": [
           {
-            "id": "660f80db-7cc8-45e5-9974-c9baf8afdd19",
+            "id": "0bd71138-0751-49bf-b125-cc0bccf2d0cf",
             "name": "POST /api/admin/addresses/{id}/reinstate — Réactiver une adresse suspendue",
             "request": {
               "description": {
@@ -369,7 +369,7 @@
             "event": []
           },
           {
-            "id": "88b81fd1-169c-4c60-b1cc-15f22f1fe4c6",
+            "id": "e6a488cf-a069-4235-9819-fef314dc6a1b",
             "name": "POST /api/admin/addresses/{id}/suspend — Suspendre une adresse (motif obligatoire)",
             "request": {
               "description": {
@@ -420,7 +420,7 @@
             "event": []
           },
           {
-            "id": "9675ede0-c26c-4eab-b663-db515c4b2da2",
+            "id": "e48bc35e-ca6c-4512-af5b-3c594bc8d35f",
             "name": "GET /api/admin/reports — Lister les signalements d'adresses (paginé)",
             "request": {
               "description": {
@@ -486,7 +486,7 @@
             "event": []
           },
           {
-            "id": "5725d33b-89e5-4515-8331-431448f12ca8",
+            "id": "eacfda31-cd48-4cce-9fd1-602b3771d264",
             "name": "PATCH /api/admin/reports/{id} — Mettre à jour le statut d'un signalement (RESOLVED ou DISMISSED)",
             "request": {
               "description": {
@@ -536,7 +536,7 @@
             "event": []
           },
           {
-            "id": "a5b3f329-40f3-4937-825b-707cf8e5778f",
+            "id": "cee45000-69e8-402a-9a9d-96ab75fb6ceb",
             "name": "POST /api/admin/reset-rate-limits — Réinitialiser les limiteurs de débit",
             "request": {
               "description": {
@@ -580,11 +580,11 @@
         "event": []
       },
       {
-        "id": "5a8a8b7a-cc96-4e13-af23-c4fccc38ebc3",
+        "id": "bd257a03-6a22-4592-a9c9-847d45ea1bd6",
         "name": "Adresses Géolocalisées",
         "item": [
           {
-            "id": "68634b46-3965-4d54-aaf1-435d4c037e1e",
+            "id": "db6f5685-0d97-443f-bf78-56feb83dea95",
             "name": "POST /api/addresses — Créer une nouvelle adresse géolocalisée (JSON)",
             "request": {
               "description": {
@@ -632,7 +632,7 @@
             "event": []
           },
           {
-            "id": "884410a1-e200-4bdb-999f-2db3b47d5530",
+            "id": "ba8358ec-8ce7-4985-9869-319dc1b33f2f",
             "name": "GET /api/addresses/mine — Lister les adresses du propriétaire connecté",
             "request": {
               "description": {
@@ -673,7 +673,7 @@
             "event": []
           },
           {
-            "id": "c9fb2df3-f258-4f68-9b91-cb44241cf884",
+            "id": "daf3f4aa-68e8-4e7a-817f-73d502a01a9d",
             "name": "GET /api/addresses/{code} — Résoudre une adresse publique par son code court",
             "request": {
               "description": {
@@ -704,7 +704,7 @@
             "event": []
           },
           {
-            "id": "7ab1cef0-9d6f-482c-8e7f-c368e76aa9ea",
+            "id": "5c2f4868-e7d7-497a-abc9-72bbff0bbf0a",
             "name": "GET /api/addresses/{code}/qrcode — Générer le QR code d'une adresse publique",
             "request": {
               "description": {
@@ -736,7 +736,7 @@
             "event": []
           },
           {
-            "id": "9de15a5b-0a2d-492e-86d1-11468c761fc0",
+            "id": "39dadd01-b358-491b-a813-e7e4850d29be",
             "name": "PATCH /api/addresses/{id} — Mettre à jour la description ou le type d'une adresse (propriétaire uniquement)",
             "request": {
               "description": {
@@ -785,7 +785,7 @@
             "event": []
           },
           {
-            "id": "a9e03dc6-cbb7-43a1-9417-059468ea4ceb",
+            "id": "1a4dd5c8-39b9-4b95-a8cb-8ec521580f8e",
             "name": "POST /api/addresses/{id}/archive — Archiver une adresse (propriétaire uniquement)",
             "request": {
               "description": {
@@ -827,7 +827,7 @@
             "event": []
           },
           {
-            "id": "89c6ce1c-14e0-4f75-be40-a1f96046351f",
+            "id": "64b8f2cb-f9bf-47fd-ae31-4200f9db6391",
             "name": "POST /api/addresses/{id}/photo — Uploader une photo de façade pour une adresse existante",
             "request": {
               "description": {
@@ -877,7 +877,7 @@
             "event": []
           },
           {
-            "id": "845f3977-8625-4b88-98e9-3b1843f073e2",
+            "id": "60f1c6ee-dc4c-4d2e-ad32-730a827d3a9b",
             "name": "DELETE /api/addresses/{id}/photo — Supprimer la photo de façade d'une adresse (propriétaire uniquement)",
             "request": {
               "description": {
@@ -919,7 +919,7 @@
             "event": []
           },
           {
-            "id": "eebb7ebf-b559-405e-bf7c-e8a554ce0420",
+            "id": "1b0b85f6-1451-45ba-882c-f64b460bbf79",
             "name": "POST /api/addresses/{id}/restore — Restaurer une adresse archivée (propriétaire uniquement)",
             "request": {
               "description": {
@@ -961,7 +961,7 @@
             "event": []
           },
           {
-            "id": "e0f1527a-ecd3-4fc2-802b-5705985eadf5",
+            "id": "94ad107a-0a19-4ded-a3a6-4c914f770eae",
             "name": "PATCH /api/addresses/{id}/visibility — Modifier la visibilité d'une adresse dans l'annuaire (propriétaire uniquement)",
             "request": {
               "description": {
@@ -1014,11 +1014,11 @@
         "event": []
       },
       {
-        "id": "308872c7-35b9-4da3-8daf-f5749c426a19",
+        "id": "0ec2eaeb-b741-4fc7-91fe-3c4619cb1eaa",
         "name": "Annuaire Public",
         "item": [
           {
-            "id": "324473e8-c271-4955-a78e-b1e87f48ae37",
+            "id": "52f5b56e-23c5-454f-8f6b-48e9fa91e9f6",
             "name": "GET /api/public/directory — Consulter et rechercher dans l'annuaire public",
             "request": {
               "description": {
@@ -1093,11 +1093,11 @@
         "event": []
       },
       {
-        "id": "67c2794e-6428-48d8-b33f-7cfb2a2e0853",
+        "id": "ecaf6c26-2934-4b02-acc3-c97f5169e1f5",
         "name": "Authentification",
         "item": [
           {
-            "id": "025b76bf-aa03-47ad-b1df-424d8e0e2e01",
+            "id": "88928433-4228-4eee-8106-c998fd850924",
             "name": "POST /api/auth/login — Connexion utilisateur",
             "request": {
               "description": {
@@ -1136,7 +1136,7 @@
             "event": []
           },
           {
-            "id": "6edc9563-d1b8-4475-90d2-67c964d5baa4",
+            "id": "32bf49df-8e2b-49b9-b0ab-9d99cf1475f7",
             "name": "POST /api/auth/logout — Déconnexion utilisateur",
             "request": {
               "description": {
@@ -1167,7 +1167,7 @@
             "event": []
           },
           {
-            "id": "176b0c60-d9a0-4c86-9143-b375182b1ee7",
+            "id": "811e3af2-4455-4418-ab3f-97715f54b98f",
             "name": "GET /api/auth/me — Profil de l'utilisateur connecté",
             "request": {
               "description": {
@@ -1208,7 +1208,7 @@
             "event": []
           },
           {
-            "id": "36b979a2-e04d-4e61-a730-bd70f2b7a7db",
+            "id": "97700095-5b70-49f6-91b7-b49a5af2a09a",
             "name": "POST /api/auth/refresh — Rafraîchissement silencieux de l'Access Token via Cookie Refresh Token",
             "request": {
               "description": {
@@ -1239,7 +1239,7 @@
             "event": []
           },
           {
-            "id": "d2fb515f-6e20-4ff4-b86f-fdedcbe0da58",
+            "id": "948ca04e-c536-47f4-ab50-87b3620da5fd",
             "name": "POST /api/auth/register — Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)",
             "request": {
               "description": {
@@ -1281,11 +1281,11 @@
         "event": []
       },
       {
-        "id": "2ea255c5-2f65-4a50-9fb9-c0a3cda6de4d",
+        "id": "0ec4ecfe-1055-4261-a256-101b5acb0b5a",
         "name": "Itinéraire Public",
         "item": [
           {
-            "id": "cbbc45c7-086d-4f9f-8116-ba6a12d052b6",
+            "id": "8eff1cb1-0bee-42b0-afbb-cf5257228440",
             "name": "GET /api/public/route — Calculer un itinéraire vers une adresse géolocalisée",
             "request": {
               "description": {
@@ -1352,11 +1352,11 @@
         "event": []
       },
       {
-        "id": "2fd96586-7115-4b91-8969-7b888153e061",
+        "id": "ceca4776-4f73-4c0d-95cd-e72a729242fe",
         "name": "Partage d'adresse",
         "item": [
           {
-            "id": "c11d45a0-da0a-43e4-b84c-f9cabd7e3cd5",
+            "id": "ce043719-3584-4917-a349-bbdf751522f0",
             "name": "POST /api/addresses/{code}/share/sms — Envoyer le lien d'une adresse par SMS",
             "request": {
               "description": {
@@ -1410,11 +1410,11 @@
         "event": []
       },
       {
-        "id": "f44d919f-f7b8-495c-a174-0b10872e46ef",
+        "id": "34d04523-ba78-4552-8897-227ae3e8c325",
         "name": "Photos",
         "item": [
           {
-            "id": "135e9435-e371-4c6a-b954-b824edbe9645",
+            "id": "31fa1e00-97e4-4916-87ea-0d8ff532b74c",
             "name": "GET /uploads/{filename} — Récupérer une photo de façade",
             "request": {
               "description": {
@@ -1447,11 +1447,11 @@
         "event": []
       },
       {
-        "id": "d38c9fd5-2785-47f0-b0f1-70d9409b371b",
+        "id": "a5c70e45-e833-442f-97ef-dd697d97410e",
         "name": "Réservations de codes d'adresse",
         "item": [
           {
-            "id": "c5f8f2ed-ded4-4711-b9a5-9baccaaa1fdf",
+            "id": "87a56f95-d916-4eae-b431-b56ad82ab0aa",
             "name": "GET /api/address-codes/reservations — Obtenir les réservations actives de l'utilisateur",
             "request": {
               "description": {
@@ -1492,7 +1492,7 @@
             "event": []
           },
           {
-            "id": "462b83d1-0a0d-4012-96fa-c499bbedad2c",
+            "id": "2644b5f4-6521-46fb-8793-39172fc499fc",
             "name": "POST /api/address-codes/reservations — Compléter le stock de codes réservés pour une zone",
             "request": {
               "description": {
@@ -1545,11 +1545,11 @@
         "event": []
       },
       {
-        "id": "a2bb9a15-b1b4-43fc-82d6-834ee6f8d8c4",
+        "id": "7fa7e201-97de-4d0a-9442-925cd132cd7d",
         "name": "Santé",
         "item": [
           {
-            "id": "62fedf8f-b6b8-4ffe-8ef1-e5d905a88f73",
+            "id": "9f2e90ae-d003-4916-9bac-4997014929b8",
             "name": "GET /api/health — Vérifier la disponibilité du service",
             "request": {
               "description": {
@@ -1582,11 +1582,11 @@
         "event": []
       },
       {
-        "id": "d4307098-91bb-4987-8ee4-dddea2ca103f",
+        "id": "7067ec57-02e0-4d8d-b6a3-0d01263a65b6",
         "name": "Signalements Publics",
         "item": [
           {
-            "id": "9891ee2b-03d3-47d5-a16c-7a3684a27972",
+            "id": "36e39160-e272-4241-b2dd-ee9f323dd9a2",
             "name": "POST /api/public/addresses/{code}/reports — Signaler un problème sur une adresse publique (anonyme)",
             "request": {
               "description": {
@@ -1674,7 +1674,7 @@
     }
   },
   "environment": {
-    "id": "3998c36c-b7c3-48b6-b6db-59b00d38c53f",
+    "id": "bac8aecd-f1e3-4ba1-9183-ae68e10c6b1f",
     "values": [
       {
         "type": "any",
@@ -1689,7 +1689,7 @@
     ]
   },
   "globals": {
-    "id": "a8f29262-0775-4887-a291-618fa6bdddeb",
+    "id": "454a7953-2514-4fea-a797-a366baf99404",
     "values": []
   },
   "run": {
@@ -1741,10 +1741,10 @@
       }
     },
     "timings": {
-      "responseAverage": 1083.8333333333333,
-      "responseMin": 31,
-      "responseMax": 5663,
-      "responseSd": 2057.6343550030674,
+      "responseAverage": 273.8333333333333,
+      "responseMin": 33,
+      "responseMax": 794,
+      "responseSd": 295.4343788766335,
       "dnsAverage": 0,
       "dnsMin": 0,
       "dnsMax": 0,
@@ -1753,8 +1753,8 @@
       "firstByteMin": 0,
       "firstByteMax": 0,
       "firstByteSd": 0,
-      "started": 1792351040540,
-      "completed": 1792351047193
+      "started": 1792411764337,
+      "completed": 1792411766113
     },
     "executions": [
       {
@@ -1767,11 +1767,11 @@
           "eof": false,
           "bof": true,
           "cr": false,
-          "ref": "b6d886ad-eb18-452f-9d64-0e5746053d2d",
-          "httpRequestId": "56e104ef-af97-49c7-93fe-b2e69af30488"
+          "ref": "d72f2665-473c-4db4-a0ca-ec57b1055938",
+          "httpRequestId": "94aa5e2d-c970-45fd-9cf2-971e734a3f95"
         },
         "item": {
-          "id": "696fff8c-1c35-4b45-9eba-bf7b6090358a",
+          "id": "c9d3fec8-45f7-4210-a959-f1eb53ff4c7d",
           "name": "1. Connexion (sauvegarde du jeton)",
           "request": {
             "url": {
@@ -1803,7 +1803,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "fac177b3-9d50-40cd-8938-80287f11a1dc",
+                "id": "6c6e0ee6-3c3e-4215-8a01-b6465f813b58",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Connexion réussie (200)', function () {",
@@ -1813,7 +1813,7 @@
                   "    pm.collectionVariables.set('token', jsonData.accessToken);",
                   "});"
                 ],
-                "_lastExecutionId": "6ff086e3-4479-4df1-b753-7e88a3508867"
+                "_lastExecutionId": "eed5a199-cc01-4e09-abe4-7ff6ce0cab3c"
               }
             }
           ]
@@ -1855,7 +1855,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "80c774ba-8b25-46eb-a05f-6f8fd2ef89fc",
+              "value": "ba9eb1e4-f40b-4cf5-9c35-4a8f501059c7",
               "system": true
             },
             {
@@ -1886,7 +1886,7 @@
           }
         },
         "response": {
-          "id": "0ccd87f8-c819-4687-a768-5ae4dd2745d2",
+          "id": "70719734-3cc2-464d-b5bd-470d1338d581",
           "status": "OK",
           "code": 200,
           "header": [
@@ -1912,7 +1912,7 @@
             },
             {
               "key": "Set-Cookie",
-              "value": "refreshToken=2d3eb1f9-26f6-46d6-8632-181042d93fd9-194d63c0-8368-468f-ae25-79476db5835c; Max-Age=604800; Path=/api/auth/refresh; HttpOnly; SameSite=Strict"
+              "value": "refreshToken=b1d3c122-188c-425a-9c0d-83a2b8ac958a-c2212fdc-5b66-48fd-942d-0c4dde3c75a4; Max-Age=604800; Path=/api/auth/refresh; HttpOnly; SameSite=Strict"
             },
             {
               "key": "X-XSS-Protection",
@@ -1952,7 +1952,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
+              "value": "Mon, 19 Oct 2026 12:09:24 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -2186,14 +2186,14 @@
               79,
               84,
               73,
-              122,
-              78,
+              48,
+              77,
               84,
               69,
-              119,
+              51,
               78,
-              68,
-              69,
+              106,
+              81,
               115,
               73,
               109,
@@ -2209,102 +2209,102 @@
               53,
               77,
               106,
+              81,
+              120,
               77,
-              49,
-              77,
-              84,
-              107,
-              48,
-              77,
-              88,
+              106,
+              89,
+              50,
+              78,
+              72,
               48,
               46,
-              75,
-              78,
-              86,
-              102,
-              107,
-              110,
-              72,
-              115,
-              55,
-              51,
-              100,
-              74,
-              78,
-              72,
-              100,
-              121,
-              103,
-              74,
-              49,
-              71,
-              56,
-              56,
-              77,
-              112,
-              79,
-              65,
-              73,
-              122,
-              83,
-              106,
-              101,
-              84,
-              101,
-              67,
-              107,
-              65,
-              83,
-              121,
-              118,
-              103,
-              90,
-              76,
-              121,
-              116,
-              107,
-              87,
-              112,
-              101,
-              83,
-              120,
-              76,
-              72,
-              79,
-              51,
-              116,
-              121,
-              116,
-              107,
-              69,
-              100,
               113,
-              111,
-              102,
-              82,
-              51,
-              101,
-              82,
-              73,
-              104,
-              48,
-              78,
-              51,
-              56,
-              98,
-              89,
-              78,
-              115,
-              77,
-              122,
-              81,
-              72,
-              53,
-              108,
-              119,
               110,
-              119,
+              51,
+              55,
+              102,
+              110,
+              105,
+              105,
+              48,
+              45,
+              66,
+              73,
+              122,
+              48,
+              115,
+              52,
+              73,
+              76,
+              90,
+              112,
+              66,
+              71,
+              68,
+              68,
+              97,
+              114,
+              56,
+              55,
+              50,
+              73,
+              55,
+              86,
+              117,
+              48,
+              86,
+              76,
+              50,
+              100,
+              65,
+              53,
+              113,
+              71,
+              51,
+              102,
+              80,
+              57,
+              82,
+              74,
+              121,
+              80,
+              53,
+              101,
+              87,
+              102,
+              121,
+              112,
+              117,
+              49,
+              110,
+              67,
+              103,
+              99,
+              115,
+              57,
+              49,
+              88,
+              88,
+              56,
+              50,
+              121,
+              67,
+              49,
+              97,
+              115,
+              76,
+              113,
+              54,
+              50,
+              52,
+              57,
+              56,
+              121,
+              71,
+              89,
+              49,
+              103,
               34,
               44,
               34,
@@ -2543,23 +2543,23 @@
               48,
               45,
               49,
-              56,
+              57,
               84,
               49,
+              50,
+              58,
+              48,
               57,
               58,
               49,
-              55,
-              58,
               48,
-              51,
               46,
-              54,
-              53,
-              54,
+              56,
+              50,
               48,
-              51,
-              57,
+              56,
+              49,
+              52,
               90,
               34,
               125,
@@ -2567,10 +2567,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 602,
+          "responseTime": 564,
           "responseSize": 598
         },
-        "id": "696fff8c-1c35-4b45-9eba-bf7b6090358a",
+        "id": "c9d3fec8-45f7-4210-a959-f1eb53ff4c7d",
         "assertions": [
           {
             "assertion": "Connexion réussie (200)",
@@ -2580,15 +2580,15 @@
       },
       {
         "cursor": {
-          "ref": "a3b620b6-c18a-4870-9773-28199e4af792",
+          "ref": "bb2e59af-8ea9-4391-9dba-81dea12c2893",
           "length": 6,
           "cycles": 1,
           "position": 1,
           "iteration": 0,
-          "httpRequestId": "fad77bf7-f460-42fa-9523-70ab52c9c588"
+          "httpRequestId": "38b308ab-56f0-4223-a97e-e3f404d524da"
         },
         "item": {
-          "id": "1c567837-1cd2-4502-b7d8-dd3009d20a91",
+          "id": "0552b7e2-ee8e-44c5-a475-ffa61ea094c8",
           "name": "2. Création d'adresse",
           "request": {
             "url": {
@@ -2629,7 +2629,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "55f0fa2f-e5c8-4f2c-a943-a41ef2519d5d",
+                "id": "ea30de1e-a89a-4327-8a8a-813276d94530",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Adresse créée (201)', function () {",
@@ -2640,7 +2640,7 @@
                   "    pm.collectionVariables.set('demoAddressId', jsonData.id);",
                   "});"
                 ],
-                "_lastExecutionId": "6bd3cbc2-4e39-4406-83eb-07c5a278da50"
+                "_lastExecutionId": "0f08dbe7-3ccf-4f68-975f-fd62fea2ba28"
               }
             }
           ]
@@ -2686,7 +2686,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "ce9223b9-d1d7-4b76-8cd7-83993bef7484",
+              "value": "11fc0d0f-4964-4d1b-9be4-1cc97b01d261",
               "system": true
             },
             {
@@ -2727,7 +2727,7 @@
           }
         },
         "response": {
-          "id": "c1b7d13c-335b-4c3b-b565-0163d16414f0",
+          "id": "d17f7bc7-b34f-4cbf-8003-9c82bdf1c320",
           "status": "Created",
           "code": 201,
           "header": [
@@ -2789,7 +2789,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
+              "value": "Mon, 19 Oct 2026 12:09:25 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -2811,41 +2811,41 @@
               58,
               34,
               100,
-              101,
-              100,
-              57,
-              98,
-              54,
+              99,
+              99,
               97,
-              57,
-              45,
+              99,
               50,
+              49,
+              98,
+              45,
+              49,
+              50,
+              100,
+              53,
+              45,
+              52,
+              52,
               53,
               56,
-              101,
               45,
-              52,
-              50,
-              102,
-              49,
-              45,
-              57,
-              49,
-              57,
-              54,
-              45,
-              102,
-              99,
-              101,
-              50,
-              99,
-              99,
-              48,
               56,
-              102,
+              50,
+              49,
               101,
+              45,
+              53,
+              99,
               52,
-              52,
+              53,
+              97,
+              53,
+              102,
+              102,
+              99,
+              99,
+              50,
+              48,
               34,
               44,
               34,
@@ -2864,10 +2864,10 @@
               78,
               68,
               45,
-              53,
-              52,
-              50,
+              56,
+              56,
               55,
+              50,
               34,
               44,
               34,
@@ -3140,26 +3140,26 @@
               48,
               45,
               49,
-              56,
+              57,
               84,
               49,
+              50,
+              58,
+              48,
               57,
               58,
-              49,
-              55,
-              58,
               50,
-              49,
+              53,
               46,
-              50,
-              57,
+              48,
+              52,
+              51,
               50,
               51,
-              53,
+              55,
               49,
-              57,
-              50,
-              50,
+              56,
+              55,
               90,
               34,
               44,
@@ -3363,23 +3363,23 @@
               48,
               45,
               49,
-              56,
+              57,
               84,
               49,
+              50,
+              58,
+              48,
               57,
               58,
               49,
-              55,
-              58,
               48,
-              51,
               46,
-              54,
-              53,
-              54,
+              56,
+              50,
               48,
-              51,
-              57,
+              56,
+              49,
+              52,
               90,
               34,
               125,
@@ -3450,10 +3450,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 121,
+          "responseTime": 126,
           "responseSize": 644
         },
-        "id": "1c567837-1cd2-4502-b7d8-dd3009d20a91",
+        "id": "0552b7e2-ee8e-44c5-a475-ffa61ea094c8",
         "assertions": [
           {
             "assertion": "Adresse créée (201)",
@@ -3463,15 +3463,15 @@
       },
       {
         "cursor": {
-          "ref": "7c4bf9c0-a0bd-4ead-a1af-cf0ca9b85403",
+          "ref": "d56060df-57b2-4a42-ac18-727638cc89ad",
           "length": 6,
           "cycles": 1,
           "position": 2,
           "iteration": 0,
-          "httpRequestId": "74fe831b-3ea6-46d2-ab34-fff079528165"
+          "httpRequestId": "264f2203-6ce5-40c6-a101-0907d5fe1386"
         },
         "item": {
-          "id": "08201eac-750c-487a-9da6-10fe704bbd4c",
+          "id": "37fab005-9887-464c-ae48-b9ff0548b63e",
           "name": "3. Résolution publique du code",
           "request": {
             "url": {
@@ -3493,7 +3493,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "7195a71d-773c-48a3-bde2-24a155e6d04a",
+                "id": "8746e431-c914-4564-8e14-5b7a009702df",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Fiche publique résolue avec latitude, longitude et photoUrl (200)', function () {",
@@ -3505,7 +3505,7 @@
                   "    pm.expect(jsonData.photoUrl).to.be.a('string').and.not.empty;",
                   "});"
                 ],
-                "_lastExecutionId": "d1527ec2-dc4a-4299-b163-068a6d7c3cab"
+                "_lastExecutionId": "20a28e30-8425-4f2e-8c87-2a173ab90ca6"
               }
             }
           ]
@@ -3543,7 +3543,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "5b83e4e7-5f5a-4772-9b53-86dc0fd01afa",
+              "value": "87e2e995-2445-4c65-b5f1-22d88d1b5e36",
               "system": true
             },
             {
@@ -3565,7 +3565,7 @@
           "method": "GET"
         },
         "response": {
-          "id": "b5c86a1a-9f12-45e5-8ee7-7dfff7315a04",
+          "id": "922c3aa9-afc4-4f25-92c4-5e5d348190aa",
           "status": "OK",
           "code": 200,
           "header": [
@@ -3627,7 +3627,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
+              "value": "Mon, 19 Oct 2026 12:09:25 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -3916,33 +3916,33 @@
               48,
               45,
               49,
-              56,
+              57,
               84,
               49,
-              57,
-              58,
-              49,
-              55,
+              50,
               58,
               48,
-              52,
-              46,
-              52,
-              54,
-              51,
-              49,
               57,
+              58,
+              49,
+              49,
+              46,
               56,
+              55,
+              49,
+              54,
+              52,
+              51,
               90,
               34,
               125
             ]
           },
           "cookie": [],
-          "responseTime": 31,
+          "responseTime": 54,
           "responseSize": 295
         },
-        "id": "08201eac-750c-487a-9da6-10fe704bbd4c",
+        "id": "37fab005-9887-464c-ae48-b9ff0548b63e",
         "assertions": [
           {
             "assertion": "Fiche publique résolue avec latitude, longitude et photoUrl (200)",
@@ -3952,15 +3952,15 @@
       },
       {
         "cursor": {
-          "ref": "894d102c-7617-4ea5-bb98-4900662ed7d5",
+          "ref": "2346b46a-12f7-490d-a093-fafe0c229dff",
           "length": 6,
           "cycles": 1,
           "position": 3,
           "iteration": 0,
-          "httpRequestId": "85cc0af1-ede7-419c-baa0-c483b33b837f"
+          "httpRequestId": "5d44c901-40a4-40c3-b412-b65e3e35e16d"
         },
         "item": {
-          "id": "1390a5a0-accf-4554-81c8-6a796dbb80bd",
+          "id": "c24a693c-7433-4051-9d1e-6d08d7f052d0",
           "name": "4. Recherche dans l'annuaire",
           "request": {
             "url": {
@@ -3991,7 +3991,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "38fca8ea-a278-4a5d-8195-aeac062aef12",
+                "id": "1361a4ae-806a-4b69-8ea9-e39757f042d4",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Recherche annuaire valide (200)', function () {",
@@ -4000,7 +4000,7 @@
                   "    pm.expect(jsonData.content).to.be.an('array');",
                   "});"
                 ],
-                "_lastExecutionId": "0d14df64-82ff-47f6-a9c5-c848c5028e47"
+                "_lastExecutionId": "7adcc34d-0d6d-4ce8-9713-8f8a108c3965"
               }
             }
           ]
@@ -4047,7 +4047,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "f21b7322-d054-4e67-9feb-b1208fdb5e00",
+              "value": "dbfefe95-c556-43ea-9ed7-45e522b1db50",
               "system": true
             },
             {
@@ -4069,7 +4069,7 @@
           "method": "GET"
         },
         "response": {
-          "id": "de82f83f-5cb8-4f56-887c-1b2aef63f9f8",
+          "id": "7db30cff-59ba-4f4b-a2f1-2805b82d74f1",
           "status": "OK",
           "code": 200,
           "header": [
@@ -4131,7 +4131,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
+              "value": "Mon, 19 Oct 2026 12:09:25 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -4463,10 +4463,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 48,
+          "responseTime": 72,
           "responseSize": 315
         },
-        "id": "1390a5a0-accf-4554-81c8-6a796dbb80bd",
+        "id": "c24a693c-7433-4051-9d1e-6d08d7f052d0",
         "assertions": [
           {
             "assertion": "Recherche annuaire valide (200)",
@@ -4476,15 +4476,15 @@
       },
       {
         "cursor": {
-          "ref": "37515bbb-52d5-4c39-849e-cc4d5b474747",
+          "ref": "6fda5a1c-4a8e-43a7-a414-59045176eb21",
           "length": 6,
           "cycles": 1,
           "position": 4,
           "iteration": 0,
-          "httpRequestId": "46e9c201-8713-4a3d-ad69-706e13c30076"
+          "httpRequestId": "7aa5db2e-d1ac-4f49-8935-89854e68ea58"
         },
         "item": {
-          "id": "cda6810f-c857-443a-8d50-7df757551d07",
+          "id": "b406902d-62af-46a1-b402-6967d4285371",
           "name": "5. Signalement public",
           "request": {
             "url": {
@@ -4518,14 +4518,14 @@
             {
               "listen": "test",
               "script": {
-                "id": "8e691361-c2ed-4ac1-b50c-55320a6f8a2d",
+                "id": "375052a7-6381-4e7b-920a-131fd40e2872",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Signalement enregistré (202)', function () {",
                   "    pm.response.to.have.status(202);",
                   "});"
                 ],
-                "_lastExecutionId": "16567739-e27c-47ca-a274-908b1c1665bb"
+                "_lastExecutionId": "bb44086d-11ac-4d2e-9d62-06c5e4fc3cd2"
               }
             }
           ]
@@ -4538,7 +4538,7 @@
               "api",
               "public",
               "addresses",
-              "ZIG-KND-5427",
+              "ZIG-KND-8872",
               "reports"
             ],
             "host": [
@@ -4569,7 +4569,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "14759cf7-be93-4e37-adf8-f323fdd0c841",
+              "value": "a4ce6851-dc2f-441e-951e-267f6d2231ba",
               "system": true
             },
             {
@@ -4600,7 +4600,7 @@
           }
         },
         "response": {
-          "id": "2b82adc2-5c25-49f2-972e-88e8726a6fbe",
+          "id": "cfd12ce1-90e2-47ef-9c7a-1ef5545ae6d9",
           "status": "Accepted",
           "code": 202,
           "header": [
@@ -4662,7 +4662,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
+              "value": "Mon, 19 Oct 2026 12:09:25 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -4755,10 +4755,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 38,
+          "responseTime": 33,
           "responseSize": 76
         },
-        "id": "cda6810f-c857-443a-8d50-7df757551d07",
+        "id": "b406902d-62af-46a1-b402-6967d4285371",
         "assertions": [
           {
             "assertion": "Signalement enregistré (202)",
@@ -4768,15 +4768,15 @@
       },
       {
         "cursor": {
-          "ref": "0dd5f640-c128-46ae-98e0-91d02275bb2b",
+          "ref": "cdb6d0d2-11ec-4e71-96ad-6fdcf89f0145",
           "length": 6,
           "cycles": 1,
           "position": 5,
           "iteration": 0,
-          "httpRequestId": "0904129a-ea81-4daf-8fa5-947fde2712c8"
+          "httpRequestId": "71154952-68c5-4c25-99ad-14858328ed4f"
         },
         "item": {
-          "id": "503f5a4a-eaee-4394-aacc-d90de3403b13",
+          "id": "c6a1180f-b123-4173-9a52-ad34df8f6595",
           "name": "6. Calcul d'itinéraire",
           "request": {
             "url": {
@@ -4815,7 +4815,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "596a8f1f-0402-4895-974e-d1637f984981",
+                "id": "1c5d26b2-288c-4206-b154-8dbaa196a9e9",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)', function () {",
@@ -4829,7 +4829,7 @@
                   "    }",
                   "});"
                 ],
-                "_lastExecutionId": "e9e4f909-f926-4d43-aea0-b503b0c4cf7b"
+                "_lastExecutionId": "f3182776-e9cc-426c-9f0e-081e762f7afe"
               }
             }
           ]
@@ -4884,7 +4884,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "a674057f-a0dd-486b-b600-07ffcfa29a2b",
+              "value": "0b89960a-84f4-4dba-bccb-9aebe7698eb5",
               "system": true
             },
             {
@@ -4906,7 +4906,7 @@
           "method": "GET"
         },
         "response": {
-          "id": "530407cf-1b34-47e2-ad76-846d883279fc",
+          "id": "4d9bdf64-a12a-4934-96ff-45f616caad9e",
           "status": "OK",
           "code": 200,
           "header": [
@@ -4968,7 +4968,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 19:17:27 GMT"
+              "value": "Mon, 19 Oct 2026 12:09:26 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -4995,11 +4995,11 @@
               34,
               58,
               49,
-              53,
+              51,
               56,
-              57,
+              50,
               46,
-              49,
+              48,
               44,
               34,
               100,
@@ -5013,10 +5013,10 @@
               34,
               58,
               49,
-              54,
-              51,
+              55,
+              56,
               46,
-              53,
+              48,
               44,
               34,
               103,
@@ -5073,7 +5073,9 @@
               50,
               55,
               49,
-              50,
+              49,
+              54,
+              53,
               44,
               49,
               50,
@@ -5081,7 +5083,9 @@
               53,
               56,
               51,
-              53,
+              52,
+              55,
+              55,
               93,
               44,
               91,
@@ -5090,21 +5094,20 @@
               54,
               46,
               50,
-              54,
-              56,
-              54,
-              53,
+              55,
+              49,
+              50,
+              48,
               52,
               44,
               49,
               50,
               46,
               53,
-              55,
-              57,
-              57,
-              57,
-              57,
+              56,
+              51,
+              52,
+              50,
               93,
               44,
               91,
@@ -5113,19 +5116,155 @@
               54,
               46,
               50,
-              54,
               55,
+              49,
+              50,
+              56,
+              55,
+              44,
+              49,
+              50,
+              46,
               53,
+              56,
+              51,
+              51,
+              54,
+              51,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              55,
+              48,
+              57,
+              57,
+              56,
+              44,
+              49,
+              50,
+              46,
+              53,
+              56,
+              51,
+              48,
+              49,
+              56,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              55,
               48,
               56,
+              48,
+              57,
               44,
               49,
               50,
               46,
               53,
-              55,
-              55,
+              56,
               50,
+              56,
+              50,
+              53,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              55,
+              48,
+              54,
+              48,
+              51,
+              44,
+              49,
+              50,
+              46,
+              53,
+              56,
+              50,
+              53,
+              55,
+              54,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              55,
+              48,
+              49,
+              52,
+              57,
+              44,
+              49,
+              50,
+              46,
+              53,
+              56,
+              50,
+              48,
+              53,
+              57,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              57,
+              54,
+              56,
+              49,
+              44,
+              49,
+              50,
+              46,
+              53,
+              56,
+              49,
+              53,
+              52,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              57,
+              49,
+              52,
+              44,
+              49,
+              50,
+              46,
+              53,
+              56,
+              48,
+              56,
               57,
               56,
               93,
@@ -5137,7 +5276,461 @@
               46,
               50,
               54,
+              56,
+              54,
+              56,
+              55,
+              44,
+              49,
+              50,
+              46,
               53,
+              56,
+              48,
+              51,
+              56,
+              50,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              56,
+              50,
+              49,
+              57,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              57,
+              56,
+              53,
+              56,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              55,
+              55,
+              56,
+              51,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              57,
+              51,
+              53,
+              56,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              55,
+              51,
+              50,
+              55,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              56,
+              56,
+              52,
+              53,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              54,
+              56,
+              54,
+              53,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              56,
+              51,
+              49,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              54,
+              55,
+              54,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              56,
+              49,
+              56,
+              56,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              54,
+              54,
+              53,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              56,
+              48,
+              53,
+              49,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              54,
+              52,
+              49,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              55,
+              55,
+              55,
+              49,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              57,
+              57,
+              50,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              55,
+              50,
+              56,
+              55,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              57,
+              54,
+              54,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              55,
+              50,
+              53,
+              56,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              53,
+              51,
+              57,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              54,
+              55,
+              55,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              50,
+              51,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              54,
+              52,
+              52,
+              49,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              48,
+              57,
+              51,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              54,
+              50,
+              57,
+              54,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              55,
+              49,
+              49,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              53,
+              57,
+              53,
+              52,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              54,
+              53,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              53,
+              57,
+              49,
+              54,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              55,
+              57,
+              55,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              53,
+              49,
+              56,
+              53,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              56,
+              57,
+              55,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              52,
+              56,
+              51,
+              52,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              48,
+              49,
+              50,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              52,
+              54,
+              56,
+              53,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              55,
+              49,
+              57,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              52,
+              52,
+              49,
+              53,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              57,
+              52,
+              53,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              52,
+              49,
+              52,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              52,
+              57,
+              54,
               44,
               49,
               50,
@@ -5145,6 +5738,31 @@
               53,
               55,
               51,
+              57,
+              53,
+              57,
+              93,
+              44,
+              91,
+              45,
+              49,
+              54,
+              46,
+              50,
+              54,
+              53,
+              48,
+              51,
+              54,
+              44,
+              49,
+              50,
+              46,
+              53,
+              55,
+              51,
+              56,
+              49,
               56,
               93,
               93,
@@ -5199,25 +5817,17 @@
               110,
               32,
               100,
-              101,
+              117,
               32,
-              118,
-              111,
-              116,
-              114,
-              101,
-              32,
+              83,
+              117,
               100,
+              45,
+              79,
+              117,
               101,
               115,
               116,
-              105,
-              110,
-              97,
-              116,
-              105,
-              111,
-              110,
               34,
               44,
               34,
@@ -5231,9 +5841,8 @@
               101,
               34,
               58,
-              54,
-              51,
-              53,
+              49,
+              56,
               46,
               54,
               44,
@@ -5249,9 +5858,8 @@
               34,
               58,
               54,
-              53,
               46,
-              52,
+              55,
               125,
               44,
               123,
@@ -5270,46 +5878,257 @@
               34,
               58,
               34,
-              67,
+              84,
               111,
-              110,
-              116,
-              105,
-              110,
               117,
+              114,
+              110,
               101,
               122,
               32,
-              116,
+              195,
+              160,
+              32,
+              103,
+              97,
+              117,
+              99,
+              104,
+              101,
+              32,
+              115,
+              117,
+              114,
+              32,
+              82,
               111,
               117,
               116,
+              101,
+              32,
+              83,
+              97,
+              110,
+              116,
+              104,
+              105,
+              97,
+              98,
+              97,
+              44,
+              32,
+              83,
+              79,
+              45,
+              49,
+              50,
+              34,
+              44,
+              34,
+              100,
+              105,
+              115,
+              116,
+              97,
+              110,
+              99,
+              101,
+              34,
+              58,
+              49,
+              48,
+              57,
+              56,
+              46,
+              52,
+              44,
+              34,
+              100,
+              117,
+              114,
+              97,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              56,
+              53,
+              46,
+              49,
+              125,
+              44,
+              123,
+              34,
+              105,
+              110,
+              115,
+              116,
+              114,
+              117,
+              99,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              84,
+              111,
+              117,
+              114,
+              110,
+              101,
+              122,
+              32,
+              195,
+              160,
               32,
               100,
               114,
               111,
               105,
               116,
-              32,
-              115,
-              117,
-              114,
-              32,
-              108,
-              39,
-              97,
-              120,
               101,
-              32,
-              112,
-              114,
+              34,
+              44,
+              34,
+              100,
               105,
+              115,
+              116,
+              97,
               110,
               99,
-              105,
-              112,
+              101,
+              34,
+              58,
+              49,
+              52,
+              52,
+              46,
+              49,
+              44,
+              34,
+              100,
+              117,
+              114,
               97,
-              108,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              53,
+              49,
+              46,
+              57,
+              125,
+              44,
+              123,
+              34,
+              105,
+              110,
+              115,
+              116,
+              114,
+              117,
+              99,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              84,
+              111,
+              117,
+              114,
+              110,
+              101,
+              122,
+              32,
+              195,
+              160,
+              32,
+              103,
+              97,
+              117,
+              99,
+              104,
+              101,
+              34,
+              44,
+              34,
+              100,
+              105,
+              115,
+              116,
+              97,
+              110,
+              99,
+              101,
+              34,
+              58,
+              52,
+              51,
+              46,
+              55,
+              44,
+              34,
+              100,
+              117,
+              114,
+              97,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              49,
+              53,
+              46,
+              55,
+              125,
+              44,
+              123,
+              34,
+              105,
+              110,
+              115,
+              116,
+              114,
+              117,
+              99,
+              116,
+              105,
+              111,
+              110,
+              34,
+              58,
+              34,
+              84,
+              111,
+              117,
+              114,
+              110,
+              101,
+              122,
+              32,
+              195,
+              160,
+              32,
+              100,
+              114,
+              111,
+              105,
+              116,
+              101,
               34,
               44,
               34,
@@ -5324,10 +6143,9 @@
               34,
               58,
               55,
-              57,
-              52,
+              55,
               46,
-              54,
+              49,
               44,
               34,
               100,
@@ -5340,10 +6158,10 @@
               110,
               34,
               58,
-              56,
               49,
-              46,
               56,
+              46,
+              53,
               125,
               44,
               123,
@@ -5373,6 +6191,12 @@
               195,
               160,
               32,
+              118,
+              111,
+              116,
+              114,
+              101,
+              32,
               100,
               101,
               115,
@@ -5384,21 +6208,21 @@
               105,
               111,
               110,
+              44,
               32,
-              58,
+              115,
+              117,
+              114,
               32,
-              90,
-              73,
-              71,
-              45,
-              75,
-              66,
-              71,
-              45,
-              52,
-              50,
-              55,
-              49,
+              108,
+              97,
+              32,
+              103,
+              97,
+              117,
+              99,
+              104,
+              101,
               34,
               44,
               34,
@@ -5412,11 +6236,9 @@
               101,
               34,
               58,
-              49,
-              53,
-              56,
+              48,
               46,
-              57,
+              48,
               44,
               34,
               100,
@@ -5429,20 +6251,19 @@
               110,
               34,
               58,
-              49,
-              54,
+              48,
               46,
-              52,
+              48,
               125,
               93,
               125
             ]
           },
           "cookie": [],
-          "responseTime": 5663,
-          "responseSize": 454
+          "responseTime": 794,
+          "responseSize": 1275
         },
-        "id": "503f5a4a-eaee-4394-aacc-d90de3403b13",
+        "id": "c6a1180f-b123-4173-9a52-ad34df8f6595",
         "assertions": [
           {
             "assertion": "Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)",
@@ -5452,7 +6273,7 @@
       }
     ],
     "transfers": {
-      "responseTotal": 2382
+      "responseTotal": 3203
     },
     "failures": [],
     "error": null

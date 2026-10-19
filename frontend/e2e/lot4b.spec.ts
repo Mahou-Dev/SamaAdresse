@@ -157,13 +157,17 @@ test.describe('Lot 4b — Contrôles géométriques et Parcours E2E', () => {
     await demoContext.close();
 
     // Nettoyage : Réactiver l'adresse pour laisser les bases de données (dev, e2e et prod-test) propres
-    try {
-      for (const db of ['samaadresse', 'samaadresse_e2e']) {
+    for (const db of ['samaadresse', 'samaadresse_e2e']) {
+      try {
         execSync(`docker exec samaadresse-postgres psql -U samaadresse -d ${db} -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
+      } catch {
+        // Ignorer si conteneur dev non actif
       }
+    }
+    try {
       execSync(`docker exec samaadresse-prod-test-db psql -U samaadresse_prod_user -d samaadresse_prod -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
     } catch {
-      // Ignorer si docker non joignable
+      // Ignorer si conteneur prod-test non joignable
     }
   });
 

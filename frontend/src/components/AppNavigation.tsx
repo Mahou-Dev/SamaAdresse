@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, MapPin, Plus, LogIn, User, Eye, BookOpen } from 'lucide-react';
+import { Home, MapPin, Plus, LogIn, User, Eye, BookOpen, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const AppNavigation: React.FC = () => {
@@ -68,18 +68,33 @@ export const AppNavigation: React.FC = () => {
             </Link>
 
             {isAuthenticated && (
-              <Link
-                to="/addresses/mine"
-                aria-current={pathname === '/addresses/mine' ? 'page' : undefined}
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
-                  pathname === '/addresses/mine'
-                    ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
-                    : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
-                }`}
-              >
-                <MapPin className="w-4 h-4" />
-                <span>Mes adresses</span>
-              </Link>
+              <>
+                <Link
+                  to="/tableau-de-bord"
+                  aria-current={pathname === '/tableau-de-bord' ? 'page' : undefined}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
+                    pathname === '/tableau-de-bord'
+                      ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                      : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
+                  }`}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Tableau de bord</span>
+                </Link>
+
+                <Link
+                  to="/addresses/mine"
+                  aria-current={pathname === '/addresses/mine' ? 'page' : undefined}
+                  className={`px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 touch-target ${
+                    pathname === '/addresses/mine'
+                      ? 'bg-[#FBF7EF] text-[#12304F] shadow-sm'
+                      : 'text-[#EADFC8] hover:text-[#FBF7EF] hover:bg-[#FBF7EF]/10'
+                  }`}
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Mes adresses</span>
+                </Link>
+              </>
             )}
 
             {/* Lien de navigation : Nouvelle adresse */}

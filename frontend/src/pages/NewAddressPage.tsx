@@ -67,8 +67,20 @@ export const NewAddressPage: React.FC = () => {
   // Étape 2 : Détails & Visibilité
   const [locationType, setLocationType] = useState<LocationType>('MAISON');
   const [description, setDescription] = useState<string>('');
-  const [listed, setListed] = useState<boolean>(false);
-  const [showOwnerName, setShowOwnerName] = useState<boolean>(false);
+  const [listed, setListed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('sa_pref_default_listed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [showOwnerName, setShowOwnerName] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('sa_pref_default_show_owner') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   // Étape 3 : Photo
   const [photoFile, setPhotoFile] = useState<File | null>(null);

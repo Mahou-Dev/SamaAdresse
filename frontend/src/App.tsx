@@ -19,7 +19,9 @@ const initialPathname = typeof window !== 'undefined' ? window.location.pathname
 const myAddressesPreload = initialPathname.startsWith('/addresses/mine') ? import('./pages/MyAddressesPage') : null;
 const newAddressPreload = initialPathname.startsWith('/addresses/new') ? import('./pages/NewAddressPage') : null;
 const directoryPreload = initialPathname.startsWith('/annuaire') ? import('./pages/DirectoryPage') : null;
+const dashboardPreload = initialPathname.startsWith('/tableau-de-bord') ? import('./pages/DashboardPage') : null;
 
+const DashboardPage = lazy(() => (dashboardPreload ?? import('./pages/DashboardPage')).then(m => ({ default: m.DashboardPage })));
 const MyAddressesPage = lazy(() => (myAddressesPreload ?? import('./pages/MyAddressesPage')).then(m => ({ default: m.MyAddressesPage })));
 const NewAddressPage = lazy(() => (newAddressPreload ?? import('./pages/NewAddressPage')).then(m => ({ default: m.NewAddressPage })));
 const EditAddressPage = lazy(() => import('./pages/EditAddressPage').then(m => ({ default: m.EditAddressPage })));
@@ -50,6 +52,14 @@ export function App() {
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
                     <Route path="/annuaire" element={<DirectoryPage />} />
+                    <Route
+                      path="/tableau-de-bord"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardPage />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="/account" element={<AccountPage />} />
                     <Route path="/a/:code" element={<PublicAddressPage />} />
                     <Route
