@@ -31,8 +31,8 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 | **Modération & Signalements publics** (signalement anonyme par IP hachée SHA-256, suspension admin, journal d'audit) | **Fait** | Testé dans `PublicReportControllerTest`, `AdminModerationControllerTest` et E2E. |
 | **Sécurité IP cliente derrière Render** (`CF-Connecting-IP`, `X-Forwarded-For` sécurisé, `TRUSTED_PROXY_HOPS`) | **Fait** | Validé par `ClientIpResolverTest` (tests a, b, c, d). |
 | **Comportement réel de la résolution d'IP derrière l'infrastructure Render** | **NON PROUVÉ** | Requiert un déploiement cloud actif sur Render (procédure de contrôle documentée ci-dessous). |
-| **Déploiement effectif sur les infrastructures distantes (Render, Neon, GitHub Actions)** | **NON PROUVÉ** | Aucun compte cloud connecté ; image Docker de production validée localement via `docker-compose.prod-test.yml`. |
-| **Design System & Palette visuelle** (Sable doré #EADFC8, Crème #FBF7EF, Bleu nuit #12304F, 0 blanc pur sauf QR/boutons) | **Fait** | Ratios de contraste WCAG AA/AAA calculés dans `docs/audit/contrastes.md` ; 38 captures MD5 uniques. |
+| **Déploiement effectif sur les infrastructures distantes (Render, Neon, GitHub Actions)** | **Fait** | Déployé et validé sur [https://samaadresse.onrender.com](https://samaadresse.onrender.com) (19/19 vérifications réussies le 2026-10-18 dans [`docs/audit/smoke-prod-render.md`](docs/audit/smoke-prod-render.md)). |
+| **Design System & Palette visuelle** (Sable doré #EADFC8, Crème #FBF7EF, Bleu nuit #12304F, 0 blanc pur sauf QR/boutons) | **Fait** | Ratios de contraste WCAG AA/AAA calculés dans [`docs/audit/contrastes.md`](docs/audit/contrastes.md) ; 59 captures validées (189 au total dans `docs/audit`, 183 empreintes MD5 uniques). |
 
 ---
 
@@ -120,7 +120,7 @@ L'API REST est intégralement spécifiée au format OpenAPI 3.0 (`springdoc.api-
    - L'en-tête `True-Client-IP` est **strictement ignoré** car falsifiable par le client.
    - Le premier élément de `X-Forwarded-For` n'est **jamais utilisé** (vulnérable à l'injection d'adresses factices en tête d'en-tête).
    - En environnement de production avec proxy inverse (`TRUSTED_PROXY_HOPS >= 1`) :
-     - Si `CF-Connecting-IP` est présent (injecté par Cloudflare Edge sur Render), il est prioritaire.
+     - Si `CF-Connecting-IP` est présent (présent d'après la documentation Render, comportement à confirmer par la procédure de contrôle), il est prioritaire.
      - Sinon, l'adresse ajoutée par le dernier proxy de confiance dans `X-Forwarded-For` est extraite à l'index `(taille - TRUSTED_PROXY_HOPS)`.
    - En développement local sans proxy (`TRUSTED_PROXY_HOPS=0`), seule la socket distante directe (`request.getRemoteAddr()`) est utilisée.
    - *Référence consultée :* [Documentation Render sur les Load Balancers et en-têtes HTTP](https://render.com/docs/load-balancers).
@@ -260,7 +260,7 @@ Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et g�
 - Tests unitaires et d'intégration Backend (`./mvnw test`) + couverture JaCoCo (≥ 60 %) + test de complétude OpenAPI (`OpenApiCompletenessTest`).
 - Vérification TypeScript (`tsc --noEmit`), linter (`oxlint`), tests unitaires Vitest, build de production Vite et budget de taille gzip (`check-size.mjs`).
 - Contrôle des ratios de contraste WCAG AA/AAA sur tous les jetons de thème (`scripts/check-contrast.py` dans `docs/audit/contrastes.md`).
-- Tests E2E Playwright (parcours en ligne, hors ligne, synchronisation, annuaire, itinéraire, modération) et vérification des 38 captures d'écran (dimensions et unicité MD5).
+- Tests E2E Playwright (parcours en ligne, hors ligne, synchronisation, annuaire, itinéraire, modération) et vérification des 59 captures d'écran des lots 6, 7, 9 et 10 (dimensions 360×780 et 1440×900, empreintes MD5 uniques, 189 fichiers au total dans `docs/audit`).
 - Audits Lighthouse sur les 8 pages (accessibilité = 100, bonnes pratiques = 100, performance ≥ 90, CLS < 0,1).
 - Exécution de la collection Postman via Newman (`docs/audit/newman.json`).
 

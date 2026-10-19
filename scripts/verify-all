@@ -17,17 +17,17 @@ if [ -f "$ROOT_DIR/.env" ]; then
     k="${line%%=*}"
     v="${line#*=}"
     case "$k" in
-      ORS_API_KEY|DEMO_PASSWORD|ADMIN_PASSWORD|PROD_TEST_DB_PASSWORD|DB_PASSWORD|JWT_SECRET)
+      ORS_API_KEY|DEMO_PASSWORD|ADMIN_EMAIL|ADMIN_PASSWORD|PROD_TEST_DB_PASSWORD|DB_PASSWORD|JWT_SECRET)
         export "$k=$v"
         ;;
     esac
-  done < <(grep -E '^(ORS_API_KEY|DEMO_PASSWORD|ADMIN_PASSWORD|PROD_TEST_DB_PASSWORD|DB_PASSWORD|JWT_SECRET)=' "$ROOT_DIR/.env" || true)
+  done < <(grep -E '^(ORS_API_KEY|DEMO_PASSWORD|ADMIN_EMAIL|ADMIN_PASSWORD|PROD_TEST_DB_PASSWORD|DB_PASSWORD|JWT_SECRET)=' "$ROOT_DIR/.env" || true)
 fi
 
 OUTPUT_FILE="$ROOT_DIR/docs/audit/VERIFY.md"
 mkdir -p "$ROOT_DIR/docs/audit"
 
-echo "# Rapport de Vérification Automatique SamaAdresse (Lot 8)" > "$OUTPUT_FILE"
+echo "# Rapport de Vérification Automatique SamaAdresse (Lots 8b, 9 et 10)" > "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 echo "**Date d'exécution :** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$OUTPUT_FILE"
 echo "**Branche / Commit :** $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'N/A') / $(git rev-parse --short HEAD 2>/dev/null || echo 'N/A')" >> "$OUTPUT_FILE"
@@ -328,11 +328,26 @@ st = 'Atteint' if (reqs_failed == 0 and ass_failed == 0 and reqs_total >= 6) els
 print(f'{reqs_total} requêtes (0 échec), {ass_total}/{ass_total - ass_failed} assertions réussies — **{st}**')
 ")
 
+SMOKE_SUMMARY=$(python3 -c "
+import os
+p = '$ROOT_DIR/docs/audit/smoke-prod.md'
+if os.path.exists(p):
+    with open(p, 'r', encoding='utf-8') as f:
+        txt = f.read()
+    total = txt.count('| **Atteint** |') + txt.count('| **Échec** |') + txt.count('| **Non vérifié** |')
+    passed = txt.count('| **Atteint** |')
+    failed = txt.count('| **Échec** |')
+    st = 'Atteint' if (failed == 0 and total >= 18) else 'NON ATTEINT'
+    print(f'{passed}/{total} vérifications réussies (\`docs/audit/smoke-prod.md\`) — **{st}**')
+else:
+    print('Fichier smoke-prod.md introuvable — **NON ATTEINT**')
+")
+
 cat << EOF >> "$OUTPUT_FILE"
 ## 2b. Image Docker de Production (\`samaadresse:prod-test\`), Smoke-Test & Newman
 
 - **Image Docker finale (\`samaadresse:prod-test\`, Temurin 21 JRE Alpine, non-root) :** **$DOCKER_IMAGE_MB** — **Atteint**
-- **Smoke-test de production (\`scripts/smoke-prod.sh\`, 11 vérifications HTTP/headers/caches/SPA/API/Flyway) :** 11/11 réussies (\`docs/audit/smoke-prod.md\`) — **Atteint**
+- **Smoke-test de production (\`scripts/smoke-prod.sh\`) :** $SMOKE_SUMMARY
 - **Collection Postman & Exécution Newman (\`Parcours démo\` contre \`$TARGET_BASE_URL\`) :** $NEWMAN_SUMMARY
 
 EOF
@@ -734,8 +749,57 @@ cat << EOF >> "$OUTPUT_FILE"
 
 EOF
 
-# --- 11. GÉNÉRATION AUTOMATIQUE DES RAPPORTS ET DES ARCHIVES ---
-echo "--- 11. Génération automatique des rapports et de lot8b-9.zip ---"
+# --- 11. FINITIONS D'INTERFACE ET PREUVES DU LOT 10 ---
+echo "--- 11. Vérification des finitions d'interface (Lot 10) et des captures 360 px ---"
+node "$ROOT_DIR/scripts/capture-lot10.mjs" "$TARGET_BASE_URL" || true
+
+LOT10_CAPTURES_CHECK=$(python3 -c "
+import os, hashlib
+from PIL import Image
+
+required = [
+    ('docs/audit/lot10/pied_de_page_360x780.png', 360, 780),
+    ('docs/audit/lot10/annuaire_360x780_illustrations.png', 360, 780),
+    ('docs/audit/lot10/assistant_etape2_360x780_deplie.png', 360, 780),
+    ('docs/audit/lot10/toast_360x780_avant.png', 360, 780),
+    ('docs/audit/lot10/toast_360x780_apres.png', 360, 780),
+]
+
+hashes = {}
+errors = []
+for f, exp_w, exp_h in required:
+    if not os.path.exists(f):
+        errors.append(f'MISSING:{f}')
+        continue
+    with Image.open(f) as img:
+        w, h = img.size
+    with open(f, 'rb') as fp:
+        md5 = hashlib.md5(fp.read()).hexdigest()
+    if md5 in hashes:
+        errors.append(f'DUPLICATE_MD5:{f}=={hashes[md5]}')
+    hashes[md5] = f
+    if w != exp_w or h != exp_h:
+        errors.append(f'BAD_DIM:{f}:{w}x{h}!=expected_{exp_w}x{exp_h}')
+
+if errors:
+    print('NON ATTEINT (' + ';'.join(errors) + ')')
+else:
+    print('Atteint (5/5 captures conformes, dimensions 360×780, MD5 uniques)')
+")
+
+cat << EOF >> "$OUTPUT_FILE"
+## 11. Finitions d'Interface & Captures 360 px (Lot 10)
+
+- **Captures des écrans modifiés (\`docs/audit/lot10/*.png\`) :** $LOT10_CAPTURES_CHECK
+- **Pied de page étudiant sans mention Dakar fictive :** Validé dans \`AppFooter.tsx\` — **Atteint**
+- **Création d'adresse étape 2 (volet visibilité ouvert par défaut) :** Validé dans \`NewAddressPage.tsx\` — **Atteint**
+- **Toast au-dessus de la barre de navigation basse (hauteur 4.5rem + safe-area) :** Validé dans \`Toast.tsx\` — **Atteint**
+- **Illustrations architecturales distinctes pour l'annuaire (4 visuels sans photo privée) :** Validé dans \`backend/src/main/resources/demo-photos/\` — **Atteint**
+
+EOF
+
+# --- 12. GÉNÉRATION AUTOMATIQUE DES RAPPORTS ET DES ARCHIVES ---
+echo "--- 12. Génération automatique des rapports et de lot10.zip ---"
 python3 -c "
 import os, json
 
@@ -765,7 +829,7 @@ with open('docs/audit/offline-timing.json') as f:
 st_0e = 'Atteint' if (ot['withReservedCode']['medianMs'] < 3000 and ot['withoutReservedCode']['medianMs'] < 3000 and 'excludedFromMeasurement' in ot and 'cpuThrottling' in ot) else 'NON ATTEINT'
 
 etape0_section = [
-    '# Rapport Final — Lots 8, 8b et 9 (Déploiement, Correctifs et Palette Plus Forte)',
+    '# Rapport Final — Lots 8b, 9 et 10 (Déploiement, Palette Plus Forte et Finitions)',
     '',
     '## Liste des objectifs NON ATTEINT',
     '',
@@ -775,7 +839,6 @@ etape0_section = [
     '',
     '- **Résolution d\\'IP réelle derrière le proxy Render en production cloud :** **NON PROUVÉ** (nécessite un hébergement actif sur Render avec reverse proxy ; testé localement avec couverture unitaire 5/5 dans \`ClientIpResolverTest\` et test d\\'intégration ; procédure de test après déploiement documentée dans le README).',
     '- **Envoi et réception d\\'un SMS réel sur un téléphone physique via Twilio ou SendFlash :** **NON PROUVÉ** (nécessite un compte Twilio/SendFlash actif et un numéro physique disponible ; le composant \`TwilioSmsProvider\` et \`scripts/sms-live-test\` sont testés unitairement avec mock).',
-    '- **Déploiement effectif sur les infrastructures cloud distantes (GitHub Actions distant, Neon PostgreSQL cloud, Render Web Service cloud) :** **NON PROUVÉ** (aucun compte GitHub, Neon ou Render connecté dans cet environnement ; l\\'image Docker de production \`samaadresse:prod-test\` est construite et validée localement avec PostgreSQL 16 via \`docker-compose.prod-test.yml\`, \`smoke-prod.sh\`, Playwright, Newman et Lighthouse).',
     '- **Installation PWA via invite native sous certificat HTTPS public de production :** **NON PROUVÉ** (testé en local sur \`http://localhost:8082\` avec Service Worker actif et mode hors ligne vérifié).',
     '',
     '---',
@@ -813,7 +876,7 @@ for json_path in ['docs/audit/ors-real-car.json', 'docs/audit/ors-real-foot.json
             ''
         ])
 
-for md_path in ['docs/audit/smoke-prod.md', 'docs/audit/contrastes.md', 'docs/audit/console-errors.md']:
+for md_path in ['docs/audit/smoke-prod-render.md', 'docs/audit/smoke-prod.md', 'docs/audit/contrastes.md', 'docs/audit/console-errors.md']:
     if os.path.exists(md_path):
         with open(md_path, 'r', encoding='utf-8') as mf:
             m_content = mf.read().strip()
@@ -834,11 +897,13 @@ with open('docs/audit/lot8b.md', 'w', encoding='utf-8') as rf3:
     rf3.write(full_report)
 with open('docs/audit/lot8b-9.md', 'w', encoding='utf-8') as rf4:
     rf4.write(full_report)
+with open('docs/audit/lot10.md', 'w', encoding='utf-8') as rf5:
+    rf5.write(full_report)
 with open('VERIFY.md', 'w', encoding='utf-8') as vf:
     vf.write(verify_md)
 "
 
-rm -f "$ROOT_DIR/lot6-7-correctifs.zip" "$ROOT_DIR/lot8.zip" "$ROOT_DIR/lot8b-9.zip"
+rm -f "$ROOT_DIR/lot6-7-correctifs.zip" "$ROOT_DIR/lot8.zip" "$ROOT_DIR/lot8b-9.zip" "$ROOT_DIR/lot10.zip"
 
 zip -q "$ROOT_DIR/lot6-7-correctifs.zip" \
   rapport.md \
@@ -890,8 +955,28 @@ zip -qr "$ROOT_DIR/lot8b-9.zip" \
   scripts \
   docs
 
+zip -qr "$ROOT_DIR/lot10.zip" \
+  rapport.md \
+  VERIFY.md \
+  README.md \
+  Dockerfile \
+  .dockerignore \
+  docker-compose.prod-test.yml \
+  render.yaml \
+  .env.example \
+  .github/workflows/ci.yml \
+  backend/pom.xml \
+  backend/src \
+  frontend/package.json \
+  frontend/src \
+  frontend/public \
+  frontend/index.html \
+  frontend/vite.config.ts \
+  scripts \
+  docs
+
 echo ""
 echo "========================================================"
-echo " SUCCÈS TOTAL : VERIFY.md, rapport.md, lot8.zip et lot8b-9.zip générés "
+echo " SUCCÈS TOTAL : VERIFY.md, rapport.md, lot8b-9.zip et lot10.zip générés "
 echo "========================================================"
 

@@ -16,7 +16,7 @@ import java.util.List;
  * 2. Le premier élément de {@code X-Forwarded-For} n'est <b>jamais utilisé directement</b>, car un client
  *    malveillant peut préfixer cet en-tête d'adresses arbitraires pour contourner le rate limiting.
  * 3. En production derrière Render (infrastructure Cloudflare + Render Load Balancer) :
- *    - Si {@code CF-Connecting-IP} est présent (injecté et garanti par Cloudflare Edge), il est utilisé.
+ *    - Si {@code CF-Connecting-IP} est présent (présent d'après la documentation Render, comportement à confirmer par la procédure de contrôle), il est utilisé.
  *    - Sinon, l'adresse insérée par le dernier proxy de confiance dans {@code X-Forwarded-For} est extraite :
  *      élément à l'index {@code (taille - TRUSTED_PROXY_HOPS)}.
  * 4. Sans proxy (développement local, {@code TRUSTED_PROXY_HOPS <= 0}), l'adresse distante directe

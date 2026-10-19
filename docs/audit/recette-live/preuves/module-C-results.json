@@ -1,0 +1,67 @@
+{
+  "C1": {
+    "invalidEmailStatus": 400,
+    "shortPassStatus": 400,
+    "validRegistrationStatus": 201,
+    "duplicateEmail": {
+      "status": 409,
+      "message": "L'adresse email 'test+1792364874293@example.com' est déjà utilisée"
+    },
+    "status": "PASS"
+  },
+  "C2": {
+    "nominalLoginStatus": 200,
+    "badPassStatus": 401,
+    "badPassMsg": "Adresse email ou mot de passe incorrect",
+    "unknownEmailMsg": "Adresse email ou mot de passe incorrect",
+    "isSameErrorMessage": true,
+    "upperCaseEmailStatus": 200,
+    "loginRateLimit": {
+      "login429Hit": false,
+      "login429Index": -1
+    },
+    "status": "FAIL"
+  },
+  "C3_C4": {
+    "storageCheck": {
+      "localStorageKeys": [
+        "sa_session",
+        "sa_offline_user"
+      ],
+      "hasSessionIndicator": true,
+      "tokenInLocalStorage": false,
+      "tokenInSessionStorage": false,
+      "tokenInDocumentCookie": false
+    },
+    "stillLoggedInAfterReload": true,
+    "refreshCookie": {
+      "name": "refreshToken",
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Strict",
+      "path": "/api/auth/refresh",
+      "expiresDurationDays": 7
+    },
+    "status": "PASS"
+  },
+  "C3_Logout": {
+    "hasRefreshAfterLogout": false,
+    "saSessionAfterLogout": null,
+    "showsPrivateDataOnBack": false,
+    "status": "PASS"
+  },
+  "C5": {
+    "oldTokenReplayStatus": 401,
+    "status": "PASS"
+  },
+  "C6": {
+    "unauthenticatedStatus": 401,
+    "proprietaireToAdminStatus": 403,
+    "forgedTokenStatus": 401,
+    "status": "PASS"
+  },
+  "C7": {
+    "assignedRoleOnLogin": "PROPRIETAIRE",
+    "status": "PASS"
+  }
+}

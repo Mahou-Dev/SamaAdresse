@@ -55,7 +55,8 @@ TRUNCATE TABLE reserved_codes, address_reports, admin_actions, refresh_tokens, a
 DELETE FROM photo_blobs WHERE id NOT IN (
   '00000000-0000-4000-8000-000000000001',
   '00000000-0000-4000-8000-000000000002',
-  '00000000-0000-4000-8000-000000000003'
+  '00000000-0000-4000-8000-000000000003',
+  '00000000-0000-4000-8000-000000000004'
 );
 
 INSERT INTO users (id, email, full_name, phone_number, password_hash, role, enabled, created_at, updated_at)
@@ -71,9 +72,9 @@ VALUES
   (gen_random_uuid(), 'ZIG-TIL-3015', 12.5654, -16.2948, 'ZIG', 'TIL', 'Boutique d''alimentation generale et depot de gaz', '/uploads/00000000-0000-4000-8000-000000000003.jpg', 'COMMERCE', 'ACTIVE', false, false, 'boutique d''alimentation generale et depot de gaz til', 'b0000000-0000-0000-0000-000000000002', NOW(), NOW()),
   (gen_random_uuid(), 'ZIG-KND-5012', 12.5542, -16.2731, 'ZIG', 'KND', 'Grande concession familiale avec manguier dans la cour', null, 'MAISON', 'ACTIVE', false, false, 'grande concession familiale avec manguier dans la cour knd', 'c0000000-0000-0000-0000-000000000003', NOW(), NOW()),
   (gen_random_uuid(), 'ZIG-NEM-6021', 12.5583, -16.2455, 'ZIG', 'NEM', 'Poste de sante communautaire de Nema Kadialang', null, 'INSTITUTION', 'ACTIVE', false, false, 'poste de sante communautaire de nema kadialang nem', 'b0000000-0000-0000-0000-000000000002', NOW(), NOW()),
-  (gen_random_uuid(), 'ZIG-KBG-4272', 12.5715, -16.2680, 'ZIG', 'KBG', 'Atelier de menuiserie metallique et ferronnerie', null, 'COMMERCE', 'ACTIVE', false, false, 'atelier de menuiserie metallique et ferronnerie kbg', 'c0000000-0000-0000-0000-000000000003', NOW(), NOW()),
+  (gen_random_uuid(), 'ZIG-KBG-4272', 12.5715, -16.2680, 'ZIG', 'KBG', 'Atelier de menuiserie metallique et ferronnerie', '/uploads/00000000-0000-4000-8000-000000000004.jpg', 'COMMERCE', 'ACTIVE', true, false, 'atelier de menuiserie metallique et ferronnerie kbg', 'c0000000-0000-0000-0000-000000000003', NOW(), NOW()),
   (gen_random_uuid(), 'ZIG-ESC-1088', 12.5880, -16.2645, 'ZIG', 'ESC', 'Residence fleurie pres du debarcadere', null, 'MAISON', 'ACTIVE', false, false, 'residence fleurie pres du debarcadere esc', 'b0000000-0000-0000-0000-000000000002', NOW(), NOW()),
-  (gen_random_uuid(), 'ZIG-TIL-3040', 12.5620, -16.2980, 'ZIG', 'TIL', 'Maison familiale avec veranda bleue', null, 'MAISON', 'ACTIVE', false, false, 'maison familiale avec veranda bleue til', 'c0000000-0000-0000-0000-000000000003', NOW(), NOW()),
+  (gen_random_uuid(), 'ZIG-TIL-3040', 12.5620, -16.2980, 'ZIG', 'TIL', 'Maison familiale avec veranda bleue', '/uploads/00000000-0000-4000-8000-000000000003.jpg', 'MAISON', 'ACTIVE', true, false, 'maison familiale avec veranda bleue til', 'c0000000-0000-0000-0000-000000000003', NOW(), NOW()),
   (gen_random_uuid(), 'ZIG-KND-5080', 12.5480, -16.2800, 'ZIG', 'KND', 'Quincaillerie generale et materiaux de construction', null, 'COMMERCE', 'ACTIVE', false, false, 'quincaillerie generale et materiaux de construction knd', 'b0000000-0000-0000-0000-000000000002', NOW(), NOW()),
   (gen_random_uuid(), 'ZIG-NEM-6055', 12.5510, -16.2520, 'ZIG', 'NEM', 'Concession avec puits et portail en fer forge', null, 'MAISON', 'ACTIVE', false, false, 'concession avec puits et portail en fer forge nem', 'c0000000-0000-0000-0000-000000000003', NOW(), NOW()),
   (gen_random_uuid(), 'ZIG-KBG-4300', 12.5780, -16.2620, 'ZIG', 'KBG', 'Ecole elementaire publique de Boucotte', null, 'INSTITUTION', 'ACTIVE', false, false, 'ecole elementaire publique de boucotte kbg', 'b0000000-0000-0000-0000-000000000002', NOW(), NOW()),
@@ -86,7 +87,7 @@ reset_database "samaadresse-postgres" "samaadresse" "samaadresse_e2e"
 reset_database "samaadresse-prod-test-db" "samaadresse_prod_user" "samaadresse_prod"
 
 # Réinitialisation des limiteurs de débit mémoire dans le backend si actif
-for PORT_CHECK in 8080 8082; do
+for PORT_CHECK in 8080; do
   ADMIN_TOKEN=$(curl -s -X POST "http://127.0.0.1:${PORT_CHECK}/api/auth/login" \
     -H "Content-Type: application/json" \
     -d "{\"email\":\"admin@samaadresse.sn\",\"password\":\"$DEMO_PASS\"}" 2>/dev/null | grep -o '"accessToken":"[^"]*' | cut -d'"' -f4 || true)
@@ -97,6 +98,17 @@ for PORT_CHECK in 8080 8082; do
     echo "Limiteurs de débit du backend réinitialisés sur le port ${PORT_CHECK}."
   fi
 done
+
+if docker ps --format '{{.Names}}' | grep -qx "samaadresse-prod-test-app"; then
+  docker restart samaadresse-prod-test-app >/dev/null 2>&1 || true
+  for _ in $(seq 1 40); do
+    if curl -sf "http://127.0.0.1:8082/api/health" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 0.5
+  done
+  echo "Conteneur de production samaadresse-prod-test-app redémarré (limiteurs en mémoire réinitialisés)."
+fi
 
 for dir in "$ROOT_DIR/uploads" "$ROOT_DIR/uploads-e2e" "$ROOT_DIR/backend/uploads" "$ROOT_DIR/backend/uploads-e2e"; do
   mkdir -p "$dir"

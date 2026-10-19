@@ -47,13 +47,11 @@ export const clearSessionIndicator = (): void => {
 
 let inMemoryAccessToken: string | null = null;
 let lastRefreshData: AuthResponseData | null = null;
-let lastRefreshTime = 0;
 
 export const setMemoryAccessToken = (token: string | null) => {
   inMemoryAccessToken = token;
   if (!token) {
     lastRefreshData = null;
-    lastRefreshTime = 0;
   }
 };
 
@@ -71,9 +69,16 @@ export class ApiError extends Error {
 }
 
 let activeRefreshPromise: Promise<AuthResponseData | null> | null = null;
+let lastRefreshTime = 0;
 
 export async function refreshAuth(): Promise<AuthResponseData | null> {
-  if (inMemoryAccessToken && lastRefreshData && Date.now() - lastRefreshTime < 3000) {
+  if (inMemoryAccessToken && lastRefreshData) {
+    return lastRefreshData;
+  }
+  if (lastRefreshData && Date.now() - lastRefreshTime < 5000) {
+    if (!inMemoryAccessToken) {
+      setMemoryAccessToken(lastRefreshData.accessToken);
+    }
     return lastRefreshData;
   }
   if (activeRefreshPromise) {
@@ -107,7 +112,9 @@ export async function refreshAuth(): Promise<AuthResponseData | null> {
       setMemoryAccessToken(null);
       return null;
     } finally {
-      activeRefreshPromise = null;
+      setTimeout(() => {
+        activeRefreshPromise = null;
+      }, 500);
     }
   })();
 

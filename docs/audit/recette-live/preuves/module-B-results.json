@@ -1,0 +1,248 @@
+{
+  "B1": {
+    "status": "PASS",
+    "uiChecks": {
+      "hasMap": true,
+      "hasPhoto": true,
+      "hasCode": true,
+      "hasQuartier": true,
+      "hasRouteBtn": true,
+      "hasShareBtn": true,
+      "hasReportBtn": true,
+      "leaksEmail": false,
+      "leaksPhone": false
+    },
+    "jsonInspection": {
+      "hasOwnerEmail": false,
+      "hasOwnerPhone": false,
+      "hasOwnerNameWhenHidden": false,
+      "keys": [
+        "code",
+        "latitude",
+        "longitude",
+        "zone",
+        "quartier",
+        "description",
+        "locationType",
+        "photoUrl",
+        "createdAt"
+      ]
+    },
+    "screenshot": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/B1-fiche-ZIG-KBG-4271-360x800.png"
+  },
+  "B2": {
+    "status": "PASS",
+    "cases": [
+      {
+        "case": "minuscules",
+        "input": "zig-kbg-4271",
+        "status": 200,
+        "is500": false,
+        "body": {}
+      },
+      {
+        "case": "espaces_autour",
+        "input": "  ZIG-KBG-4271  ",
+        "status": 404,
+        "is500": false,
+        "body": {
+          "error": "Not Found",
+          "message": "Adresse non trouvée ou inactive :   ZIG-KBG-4271  ",
+          "status": 404
+        }
+      },
+      {
+        "case": "tirets_manquants",
+        "input": "ZIGKBG4271",
+        "status": 404,
+        "is500": false,
+        "body": {
+          "error": "Not Found",
+          "message": "Adresse non trouvée ou inactive : ZIGKBG4271",
+          "status": 404
+        }
+      },
+      {
+        "case": "format_invalide",
+        "input": "INVALID-CODE-999",
+        "status": 404,
+        "is500": false,
+        "body": {
+          "error": "Not Found",
+          "message": "Adresse non trouvée ou inactive : INVALID-CODE-999",
+          "status": 404
+        }
+      },
+      {
+        "case": "code_inexistant",
+        "input": "ZIG-KBG-9999",
+        "status": 404,
+        "is500": false,
+        "body": {
+          "error": "Not Found",
+          "message": "Adresse non trouvée ou inactive : ZIG-KBG-9999",
+          "status": 404
+        }
+      },
+      {
+        "case": "caracteres_speciaux",
+        "input": "ZIG<script>alert(1)</script>",
+        "status": 400,
+        "is500": false,
+        "body": "<!doctype html><html lang=\"en\"><head><title>HTTP Status 400 – Bad Request</title"
+      },
+      {
+        "case": "longueur_200",
+        "input": "ZIG-AAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "status": 404,
+        "is500": false,
+        "body": {
+          "error": "Not Found",
+          "message": "Adresse non trouvée ou inactive : ZIG-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+          "status": 404
+        }
+      }
+    ]
+  },
+  "B3": {
+    "status": "FAIL",
+    "httpStatus": 200,
+    "contentType": "image/png",
+    "qrSize": 578,
+    "qrDecodedText": "Erreur décodage: Cannot find module '/home/mahou-dev/Documents/SamaAdresse/frontend/node_modules/pngjs/lib/png.js' imported from /home/mahou-dev/.gemini/antigravity/brain/0bd7be16-c69c-4785-8879-c6dd38a2c30e/scratch/test_module_b.mjs",
+    "targetFile": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/B3-qrcode-ZIG-KBG-4271.png"
+  },
+  "B4": {
+    "carRoute": {
+      "status": 200,
+      "distance": 3543,
+      "duration": 425.1
+    },
+    "footRoute": {
+      "status": 200,
+      "distance": 2397.1,
+      "duration": 1725.9
+    },
+    "outsideSenegal": {
+      "status": 400,
+      "body": {
+        "timestamp": "2026-10-18T22:51:43.333284592Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Les coordonnées de départ doivent être situées au Sénégal (latitude entre 12.0 et 17.0, longitude entre -17.6 et -11.3).",
+        "path": "/api/public/route"
+      }
+    },
+    "invalidCoords": {
+      "status": 400
+    },
+    "rateLimit": {
+      "hit429": true,
+      "first429Index": 17,
+      "resp429Body": {
+        "timestamp": "2026-10-18T22:51:48.641483889Z",
+        "status": 429,
+        "error": "Too Many Requests",
+        "message": "Trop de requêtes. Veuillez patienter avant de réessayer.",
+        "path": "/api/public/route"
+      }
+    },
+    "status": "FAIL"
+  },
+  "B5": {
+    "status": "PASS",
+    "shareLinks": {
+      "waHref": null,
+      "buttons": [
+        "Copier le code",
+        "Partager"
+      ]
+    },
+    "screenshot": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/B5-partage-modal-360x800.png"
+  },
+  "B6": {
+    "firstReport": {
+      "status": 400,
+      "body": {
+        "timestamp": "2026-10-18T22:51:50.930149440Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Corps de requête absent ou JSON invalide",
+        "path": "/api/public/addresses/ZIG-KBG-4271/reports"
+      }
+    },
+    "secondReportSameAddress24h": {
+      "status": 400,
+      "body": {
+        "timestamp": "2026-10-18T22:51:51.130603374Z",
+        "status": 400,
+        "error": "Bad Request",
+        "message": "Corps de requête absent ou JSON invalide",
+        "path": "/api/public/addresses/ZIG-KBG-4271/reports"
+      }
+    },
+    "status": "FAIL"
+  },
+  "B7": {
+    "status": "PASS",
+    "cases": [
+      {
+        "case": "code_exact",
+        "query": "q=ZIG-KBG-4271",
+        "status": 200,
+        "is500": false,
+        "totalElements": 1
+      },
+      {
+        "case": "quartier_filtre",
+        "query": "quartier=KBG",
+        "status": 200,
+        "is500": false,
+        "totalElements": 1
+      },
+      {
+        "case": "type_filtre",
+        "query": "type=COMMERCE",
+        "status": 200,
+        "is500": false,
+        "totalElements": 1
+      },
+      {
+        "case": "accents",
+        "query": "q=Kandé",
+        "status": 200,
+        "is500": false,
+        "totalElements": 0
+      },
+      {
+        "case": "special_chars_injection",
+        "query": "q=%27%20OR%201=1--%22<script>",
+        "status": 403,
+        "is500": false,
+        "totalElements": null
+      },
+      {
+        "case": "chaine_500_car",
+        "query": "q=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "status": 200,
+        "is500": false,
+        "totalElements": 0
+      },
+      {
+        "case": "pagination_normale",
+        "query": "page=0&size=5",
+        "status": 200,
+        "is500": false,
+        "totalElements": 4
+      },
+      {
+        "case": "page_negative",
+        "query": "page=-1&size=5",
+        "status": 200,
+        "is500": false,
+        "totalElements": 4
+      }
+    ],
+    "screenshot": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/B7-annuaire-360x800.png"
+  }
+}

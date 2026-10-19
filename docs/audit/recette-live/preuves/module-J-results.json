@@ -1,0 +1,77 @@
+{
+  "J1": {
+    "pass": true,
+    "status": "PASS",
+    "directorySearchStatus": 200,
+    "searchNeutralized": true,
+    "reportStatus": 202,
+    "observation": "Les charges utiles XSS (<script>alert(1)</script>, <img onerror=...>) injectées dans la recherche publique, les descriptions ou les signalements sont traitées comme de simples chaînes de caractères littérales sans interprétation ni exécution JavaScript côté React. Aucun dialogue XSS ne se déclenche."
+  },
+  "J2": {
+    "pass": true,
+    "status": "PASS",
+    "cfConnectingIpSpoofStatus": 403,
+    "xForwardedForSpoofFirst429Index": 22,
+    "total429s": 4,
+    "observation": "Double rempart contre l'usurpation d'IP : 1) L'injection directe de l'en-tête CF-Connecting-IP par un client externe est immédiatement bloquée par l'Edge Cloudflare / Render avec HTTP 403 Forbidden. 2) La falsification d'adresses arbitraires dans X-Forwarded-For, True-Client-IP ou X-Real-IP est ignorée par ClientIpResolver (qui utilise l'index sécurisé de confiance) : le quota anti-abus (20 req/min) s'est déclenché exactement à la 22e requête avec HTTP 429."
+  },
+  "J3": {
+    "pass": true,
+    "status": "PASS",
+    "badPassExistingStatus": 401,
+    "badPassNonexistentStatus": 401,
+    "messagesIdentical": true,
+    "commonMessage": "Adresse email ou mot de passe incorrect",
+    "observation": "Absence totale de fuite permettant l'énumération de comptes : qu'une adresse email existe ou non dans la base de données, la réponse d'erreur de connexion est strictement identique (HTTP 401 avec le message 'Adresse email ou mot de passe incorrect')."
+  },
+  "J4": {
+    "pass": true,
+    "status": "PASS",
+    "directoryListingStatus": 500,
+    "traversalResponseStatus": 200,
+    "traversalIsSpaHtml": true,
+    "observation": "Listing de répertoire sur /uploads/ interdit (renvoie une erreur et non la liste des fichiers). Les tentatives de Path Traversal (/uploads/../../etc/passwd) ne traversent pas le système de fichiers hôte mais retombent sur le routeur SPA (index.html), sans aucune fuite de fichiers système."
+  },
+  "J5": {
+    "pass": true,
+    "status": "PASS",
+    "details": [
+      { "method": "POST", "path": "/api/addresses", "status": 401, "pass": true },
+      { "method": "GET", "path": "/api/addresses/mine", "status": 401, "pass": true },
+      { "method": "PATCH", "path": "/api/addresses/00000000-0000-0000-0000-000000000000", "status": 401, "pass": true },
+      { "method": "POST", "path": "/api/addresses/00000000-0000-0000-0000-000000000000/archive", "status": 401, "pass": true },
+      { "method": "POST", "path": "/api/addresses/00000000-0000-0000-0000-000000000000/restore", "status": 401, "pass": true },
+      { "method": "DELETE", "path": "/api/addresses/00000000-0000-0000-0000-000000000000/photo", "status": 401, "pass": true },
+      { "method": "GET", "path": "/api/admin/reports", "status": 401, "pass": true }
+    ],
+    "observation": "Toutes les routes privées de l'OpenAPI sont strictement protégées : sans jeton JWT valide, elles renvoient systématiquement HTTP 401 Unauthorized. Les modifications inter-utilisateurs (IDOR) sont bloquées en HTTP 403 (prouvé en E6 et H4)."
+  },
+  "J6": {
+    "pass": true,
+    "status": "PASS",
+    "sensitiveApiEndpoints": [
+      { "path": "/api/actuator", "status": 401 },
+      { "path": "/api/env", "status": 401 },
+      { "path": "/api/h2-console", "status": 401 },
+      { "path": "/api/swagger-config", "status": 401 }
+    ],
+    "nonApiPathsFallBackToSpa": [
+      { "path": "/actuator", "status": 200, "contentType": "text/html (SPA)" },
+      { "path": "/actuator/env", "status": 200, "contentType": "text/html (SPA)" },
+      { "path": "/h2-console", "status": 200, "contentType": "text/html (SPA)" }
+    ],
+    "hasTwilioSecret": false,
+    "hasOrsSecret": false,
+    "hasJwt": false,
+    "robotsStatus": 200,
+    "observation": "Aucun secret n'est exposé. Les endpoints sensibles /api/actuator, /api/env, /api/h2-console sont verrouillés (HTTP 401). Le bundle JS frontend index-DH93glLd.js ne contient aucune clé API privée ni token JWT durci."
+  },
+  "J7": {
+    "pass": true,
+    "status": "PASS",
+    "httpRedirectStatus": 301,
+    "httpRedirectLocation": "https://samaadresse.onrender.com/",
+    "hstsHeader": "max-age=31536000; includeSubDomains",
+    "observation": "Le transport non chiffré HTTP est immédiatement redirigé vers HTTPS (HTTP/2 301 Moved Permanently vers https://samaadresse.onrender.com/). L'en-tête Strict-Transport-Security est configuré avec max-age=31536000 et includeSubDomains."
+  }
+}

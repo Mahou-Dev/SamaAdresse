@@ -5,7 +5,7 @@
     },
     "item": [
       {
-        "id": "0913f290-c2c4-45a6-a687-70c7454bab5a",
+        "id": "a160034c-abce-47da-88f1-9096e72bcc23",
         "name": "Parcours démo",
         "description": {
           "content": "Parcours complet automatisé : connexion (sauvegarde du jeton), création d'adresse, résolution publique, recherche annuaire, signalement public et calcul d'itinéraire.",
@@ -13,7 +13,7 @@
         },
         "item": [
           {
-            "id": "b9700579-e4ae-4aed-b47d-ef21a9703639",
+            "id": "696fff8c-1c35-4b45-9eba-bf7b6090358a",
             "name": "1. Connexion (sauvegarde du jeton)",
             "request": {
               "url": {
@@ -45,7 +45,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "f565f274-6af0-48a9-ad8e-6a31078a69c3",
+                  "id": "fac177b3-9d50-40cd-8938-80287f11a1dc",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Connexion réussie (200)', function () {",
@@ -55,13 +55,13 @@
                     "    pm.collectionVariables.set('token', jsonData.accessToken);",
                     "});"
                   ],
-                  "_lastExecutionId": "3da128f1-b9f2-472f-8c22-24536716db6e"
+                  "_lastExecutionId": "6ff086e3-4479-4df1-b753-7e88a3508867"
                 }
               }
             ]
           },
           {
-            "id": "abb697bd-a9f5-498f-9c69-5544d517aae1",
+            "id": "1c567837-1cd2-4502-b7d8-dd3009d20a91",
             "name": "2. Création d'adresse",
             "request": {
               "url": {
@@ -102,7 +102,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "3c0be567-6f15-4da6-8432-cfb49bd5d45f",
+                  "id": "55f0fa2f-e5c8-4f2c-a943-a41ef2519d5d",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Adresse créée (201)', function () {",
@@ -113,13 +113,13 @@
                     "    pm.collectionVariables.set('demoAddressId', jsonData.id);",
                     "});"
                   ],
-                  "_lastExecutionId": "7eee368d-80d9-4d95-b4b1-b28f7cec0c87"
+                  "_lastExecutionId": "6bd3cbc2-4e39-4406-83eb-07c5a278da50"
                 }
               }
             ]
           },
           {
-            "id": "477ff8a6-44c0-44fd-835a-eaa268b095d6",
+            "id": "08201eac-750c-487a-9da6-10fe704bbd4c",
             "name": "3. Résolution publique du code",
             "request": {
               "url": {
@@ -141,7 +141,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "56da7f2d-fefa-47ae-bc3f-45f013f73ef9",
+                  "id": "7195a71d-773c-48a3-bde2-24a155e6d04a",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Fiche publique résolue avec latitude, longitude et photoUrl (200)', function () {",
@@ -153,13 +153,13 @@
                     "    pm.expect(jsonData.photoUrl).to.be.a('string').and.not.empty;",
                     "});"
                   ],
-                  "_lastExecutionId": "1ea091ae-56e5-47eb-8a8f-5ff870c286c3"
+                  "_lastExecutionId": "d1527ec2-dc4a-4299-b163-068a6d7c3cab"
                 }
               }
             ]
           },
           {
-            "id": "ee6340d8-4ea9-4345-8c11-ca962a153fc7",
+            "id": "1390a5a0-accf-4554-81c8-6a796dbb80bd",
             "name": "4. Recherche dans l'annuaire",
             "request": {
               "url": {
@@ -190,7 +190,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "7a365851-b95b-4f19-a0c9-ecb2d4ddb9d8",
+                  "id": "38fca8ea-a278-4a5d-8195-aeac062aef12",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Recherche annuaire valide (200)', function () {",
@@ -199,13 +199,13 @@
                     "    pm.expect(jsonData.content).to.be.an('array');",
                     "});"
                   ],
-                  "_lastExecutionId": "6c827fc9-a424-4076-ad50-9f29c969af55"
+                  "_lastExecutionId": "0d14df64-82ff-47f6-a9c5-c848c5028e47"
                 }
               }
             ]
           },
           {
-            "id": "a9537728-3717-4e0d-ba09-e2aa732a8592",
+            "id": "cda6810f-c857-443a-8d50-7df757551d07",
             "name": "5. Signalement public",
             "request": {
               "url": {
@@ -239,20 +239,20 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "1bbcb835-b10f-41ed-a712-dbbbd19f0571",
+                  "id": "8e691361-c2ed-4ac1-b50c-55320a6f8a2d",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Signalement enregistré (202)', function () {",
                     "    pm.response.to.have.status(202);",
                     "});"
                   ],
-                  "_lastExecutionId": "c95a0e4d-e1c9-4a3c-91df-0ea17ee486ea"
+                  "_lastExecutionId": "16567739-e27c-47ca-a274-908b1c1665bb"
                 }
               }
             ]
           },
           {
-            "id": "b754a125-57c8-42bb-a2a4-0130eddeff9d",
+            "id": "503f5a4a-eaee-4394-aacc-d90de3403b13",
             "name": "6. Calcul d'itinéraire",
             "request": {
               "url": {
@@ -291,7 +291,7 @@
               {
                 "listen": "test",
                 "script": {
-                  "id": "57985d22-6296-41b8-a573-a22abe547a40",
+                  "id": "596a8f1f-0402-4895-974e-d1637f984981",
                   "type": "text/javascript",
                   "exec": [
                     "pm.test('Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)', function () {",
@@ -305,7 +305,7 @@
                     "    }",
                     "});"
                   ],
-                  "_lastExecutionId": "e72b7846-f2bf-40a2-8363-4a46bddd9d22"
+                  "_lastExecutionId": "e9e4f909-f926-4d43-aea0-b503b0c4cf7b"
                 }
               }
             ]
@@ -314,11 +314,11 @@
         "event": []
       },
       {
-        "id": "3f8e7ced-e97e-4579-9076-15966faecb81",
+        "id": "cc2b57ba-cd6b-43d0-8fd0-b0cc90c44dc6",
         "name": "Administration & Modération",
         "item": [
           {
-            "id": "b6f94895-2bc1-465f-a590-87e8dd8b1287",
+            "id": "660f80db-7cc8-45e5-9974-c9baf8afdd19",
             "name": "POST /api/admin/addresses/{id}/reinstate — Réactiver une adresse suspendue",
             "request": {
               "description": {
@@ -369,7 +369,7 @@
             "event": []
           },
           {
-            "id": "06eeb04c-db3d-487a-a453-69910aa52641",
+            "id": "88b81fd1-169c-4c60-b1cc-15f22f1fe4c6",
             "name": "POST /api/admin/addresses/{id}/suspend — Suspendre une adresse (motif obligatoire)",
             "request": {
               "description": {
@@ -420,7 +420,7 @@
             "event": []
           },
           {
-            "id": "cf2b1f32-1df2-4c3a-9f9c-aa622b0627ce",
+            "id": "9675ede0-c26c-4eab-b663-db515c4b2da2",
             "name": "GET /api/admin/reports — Lister les signalements d'adresses (paginé)",
             "request": {
               "description": {
@@ -486,7 +486,7 @@
             "event": []
           },
           {
-            "id": "920c80ba-cb77-4d55-99ce-13c72b1a7d0d",
+            "id": "5725d33b-89e5-4515-8331-431448f12ca8",
             "name": "PATCH /api/admin/reports/{id} — Mettre à jour le statut d'un signalement (RESOLVED ou DISMISSED)",
             "request": {
               "description": {
@@ -536,7 +536,7 @@
             "event": []
           },
           {
-            "id": "5b17e935-381a-4c8d-b170-4f77f43f7b9c",
+            "id": "a5b3f329-40f3-4937-825b-707cf8e5778f",
             "name": "POST /api/admin/reset-rate-limits — Réinitialiser les limiteurs de débit",
             "request": {
               "description": {
@@ -580,11 +580,11 @@
         "event": []
       },
       {
-        "id": "628c3938-cede-4d1a-818f-0a5b11896efb",
+        "id": "5a8a8b7a-cc96-4e13-af23-c4fccc38ebc3",
         "name": "Adresses Géolocalisées",
         "item": [
           {
-            "id": "0a1083cb-6104-4583-9a3d-e070f10f8afd",
+            "id": "68634b46-3965-4d54-aaf1-435d4c037e1e",
             "name": "POST /api/addresses — Créer une nouvelle adresse géolocalisée (JSON)",
             "request": {
               "description": {
@@ -632,7 +632,7 @@
             "event": []
           },
           {
-            "id": "4f99ee75-0201-4688-83e5-36a1d8fb2633",
+            "id": "884410a1-e200-4bdb-999f-2db3b47d5530",
             "name": "GET /api/addresses/mine — Lister les adresses du propriétaire connecté",
             "request": {
               "description": {
@@ -673,7 +673,7 @@
             "event": []
           },
           {
-            "id": "a22c7613-2514-4fde-be2c-c50cbe4fd1aa",
+            "id": "c9fb2df3-f258-4f68-9b91-cb44241cf884",
             "name": "GET /api/addresses/{code} — Résoudre une adresse publique par son code court",
             "request": {
               "description": {
@@ -704,7 +704,7 @@
             "event": []
           },
           {
-            "id": "2cb1786f-28ed-49e4-aaf9-be6f842b7b57",
+            "id": "7ab1cef0-9d6f-482c-8e7f-c368e76aa9ea",
             "name": "GET /api/addresses/{code}/qrcode — Générer le QR code d'une adresse publique",
             "request": {
               "description": {
@@ -736,7 +736,7 @@
             "event": []
           },
           {
-            "id": "eceb44da-4533-4ed2-95ff-1f4a78119bf5",
+            "id": "9de15a5b-0a2d-492e-86d1-11468c761fc0",
             "name": "PATCH /api/addresses/{id} — Mettre à jour la description ou le type d'une adresse (propriétaire uniquement)",
             "request": {
               "description": {
@@ -785,7 +785,7 @@
             "event": []
           },
           {
-            "id": "53b7332f-c977-4dd4-b437-d3ac27f8167b",
+            "id": "a9e03dc6-cbb7-43a1-9417-059468ea4ceb",
             "name": "POST /api/addresses/{id}/archive — Archiver une adresse (propriétaire uniquement)",
             "request": {
               "description": {
@@ -827,7 +827,7 @@
             "event": []
           },
           {
-            "id": "a4a5c600-5beb-4f16-bd45-176817d6e253",
+            "id": "89c6ce1c-14e0-4f75-be40-a1f96046351f",
             "name": "POST /api/addresses/{id}/photo — Uploader une photo de façade pour une adresse existante",
             "request": {
               "description": {
@@ -877,7 +877,7 @@
             "event": []
           },
           {
-            "id": "016c84c2-171a-422e-be77-7676b7b29de4",
+            "id": "845f3977-8625-4b88-98e9-3b1843f073e2",
             "name": "DELETE /api/addresses/{id}/photo — Supprimer la photo de façade d'une adresse (propriétaire uniquement)",
             "request": {
               "description": {
@@ -919,7 +919,7 @@
             "event": []
           },
           {
-            "id": "47028b4d-c49e-46f7-b3a5-076dd0a5534b",
+            "id": "eebb7ebf-b559-405e-bf7c-e8a554ce0420",
             "name": "POST /api/addresses/{id}/restore — Restaurer une adresse archivée (propriétaire uniquement)",
             "request": {
               "description": {
@@ -961,7 +961,7 @@
             "event": []
           },
           {
-            "id": "ac39f441-9b96-4973-bfc7-d0cd762e2925",
+            "id": "e0f1527a-ecd3-4fc2-802b-5705985eadf5",
             "name": "PATCH /api/addresses/{id}/visibility — Modifier la visibilité d'une adresse dans l'annuaire (propriétaire uniquement)",
             "request": {
               "description": {
@@ -1014,11 +1014,11 @@
         "event": []
       },
       {
-        "id": "47d4cd77-86d0-4b43-9257-9417a1d06cc4",
+        "id": "308872c7-35b9-4da3-8daf-f5749c426a19",
         "name": "Annuaire Public",
         "item": [
           {
-            "id": "a4f98ad6-c7e8-43ae-b1a2-944857b24d69",
+            "id": "324473e8-c271-4955-a78e-b1e87f48ae37",
             "name": "GET /api/public/directory — Consulter et rechercher dans l'annuaire public",
             "request": {
               "description": {
@@ -1093,11 +1093,11 @@
         "event": []
       },
       {
-        "id": "acb28bbb-a056-480d-b778-7cc44ab0ec09",
+        "id": "67c2794e-6428-48d8-b33f-7cfb2a2e0853",
         "name": "Authentification",
         "item": [
           {
-            "id": "ba027656-f185-41a4-bbf6-fbcf567dcc0b",
+            "id": "025b76bf-aa03-47ad-b1df-424d8e0e2e01",
             "name": "POST /api/auth/login — Connexion utilisateur",
             "request": {
               "description": {
@@ -1136,7 +1136,7 @@
             "event": []
           },
           {
-            "id": "25a7469e-eebc-496b-b050-4b8d2f523941",
+            "id": "6edc9563-d1b8-4475-90d2-67c964d5baa4",
             "name": "POST /api/auth/logout — Déconnexion utilisateur",
             "request": {
               "description": {
@@ -1167,7 +1167,7 @@
             "event": []
           },
           {
-            "id": "98350c1f-9ba1-4474-a51e-cecb1d503407",
+            "id": "176b0c60-d9a0-4c86-9143-b375182b1ee7",
             "name": "GET /api/auth/me — Profil de l'utilisateur connecté",
             "request": {
               "description": {
@@ -1208,7 +1208,7 @@
             "event": []
           },
           {
-            "id": "5a47e364-f19f-46e0-9a41-cbc5cbb437a1",
+            "id": "36b979a2-e04d-4e61-a730-bd70f2b7a7db",
             "name": "POST /api/auth/refresh — Rafraîchissement silencieux de l'Access Token via Cookie Refresh Token",
             "request": {
               "description": {
@@ -1239,7 +1239,7 @@
             "event": []
           },
           {
-            "id": "dea17a3c-3b27-4496-ad42-54f31be4593e",
+            "id": "d2fb515f-6e20-4ff4-b86f-fdedcbe0da58",
             "name": "POST /api/auth/register — Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)",
             "request": {
               "description": {
@@ -1281,11 +1281,11 @@
         "event": []
       },
       {
-        "id": "8d0b7ae4-9579-45f6-8340-aa4a3f07c340",
+        "id": "2ea255c5-2f65-4a50-9fb9-c0a3cda6de4d",
         "name": "Itinéraire Public",
         "item": [
           {
-            "id": "b154488c-e6dd-42d3-9b82-029ed81dc64b",
+            "id": "cbbc45c7-086d-4f9f-8116-ba6a12d052b6",
             "name": "GET /api/public/route — Calculer un itinéraire vers une adresse géolocalisée",
             "request": {
               "description": {
@@ -1352,11 +1352,11 @@
         "event": []
       },
       {
-        "id": "c2bf2f1f-70d1-4b47-a458-a19ac43bbc9a",
+        "id": "2fd96586-7115-4b91-8969-7b888153e061",
         "name": "Partage d'adresse",
         "item": [
           {
-            "id": "f5279473-0ca3-403b-a229-0ac792043b28",
+            "id": "c11d45a0-da0a-43e4-b84c-f9cabd7e3cd5",
             "name": "POST /api/addresses/{code}/share/sms — Envoyer le lien d'une adresse par SMS",
             "request": {
               "description": {
@@ -1410,11 +1410,11 @@
         "event": []
       },
       {
-        "id": "5a6fc5f8-d404-4445-aad4-9d51fea3c4d1",
+        "id": "f44d919f-f7b8-495c-a174-0b10872e46ef",
         "name": "Photos",
         "item": [
           {
-            "id": "33fb4980-db62-4621-9c3b-9604cc34f036",
+            "id": "135e9435-e371-4c6a-b954-b824edbe9645",
             "name": "GET /uploads/{filename} — Récupérer une photo de façade",
             "request": {
               "description": {
@@ -1447,11 +1447,11 @@
         "event": []
       },
       {
-        "id": "8ef1d09a-e6ad-40e0-83b6-0d4e32d60997",
+        "id": "d38c9fd5-2785-47f0-b0f1-70d9409b371b",
         "name": "Réservations de codes d'adresse",
         "item": [
           {
-            "id": "ea680cff-73a0-48b3-944a-f42857b03229",
+            "id": "c5f8f2ed-ded4-4711-b9a5-9baccaaa1fdf",
             "name": "GET /api/address-codes/reservations — Obtenir les réservations actives de l'utilisateur",
             "request": {
               "description": {
@@ -1492,7 +1492,7 @@
             "event": []
           },
           {
-            "id": "42621815-fb3e-4d38-85ec-ad62f791b188",
+            "id": "462b83d1-0a0d-4012-96fa-c499bbedad2c",
             "name": "POST /api/address-codes/reservations — Compléter le stock de codes réservés pour une zone",
             "request": {
               "description": {
@@ -1545,11 +1545,11 @@
         "event": []
       },
       {
-        "id": "d3beb831-be60-4efc-86a3-4cecb2e8177d",
+        "id": "a2bb9a15-b1b4-43fc-82d6-834ee6f8d8c4",
         "name": "Santé",
         "item": [
           {
-            "id": "4cd95f94-0803-4ec2-97ce-b46c116a573f",
+            "id": "62fedf8f-b6b8-4ffe-8ef1-e5d905a88f73",
             "name": "GET /api/health — Vérifier la disponibilité du service",
             "request": {
               "description": {
@@ -1582,11 +1582,11 @@
         "event": []
       },
       {
-        "id": "9c4fedfe-ea54-4b1f-b4b9-947deca16011",
+        "id": "d4307098-91bb-4987-8ee4-dddea2ca103f",
         "name": "Signalements Publics",
         "item": [
           {
-            "id": "1609cbc5-928e-4b7a-86a0-862f37f0cf76",
+            "id": "9891ee2b-03d3-47d5-a16c-7a3684a27972",
             "name": "POST /api/public/addresses/{code}/reports — Signaler un problème sur une adresse publique (anonyme)",
             "request": {
               "description": {
@@ -1674,7 +1674,7 @@
     }
   },
   "environment": {
-    "id": "5dae13ed-e3a5-4093-9995-ec853ce171a9",
+    "id": "3998c36c-b7c3-48b6-b6db-59b00d38c53f",
     "values": [
       {
         "type": "any",
@@ -1689,7 +1689,7 @@
     ]
   },
   "globals": {
-    "id": "71a41f5c-867b-4af9-b6cf-2af44c7b23c0",
+    "id": "a8f29262-0775-4887-a291-618fa6bdddeb",
     "values": []
   },
   "run": {
@@ -1741,10 +1741,10 @@
       }
     },
     "timings": {
-      "responseAverage": 967.3333333333334,
-      "responseMin": 6,
-      "responseMax": 5401,
-      "responseSd": 1986.727096396371,
+      "responseAverage": 1083.8333333333333,
+      "responseMin": 31,
+      "responseMax": 5663,
+      "responseSd": 2057.6343550030674,
       "dnsAverage": 0,
       "dnsMin": 0,
       "dnsMax": 0,
@@ -1753,8 +1753,8 @@
       "firstByteMin": 0,
       "firstByteMax": 0,
       "firstByteSd": 0,
-      "started": 1792305574635,
-      "completed": 1792305580579
+      "started": 1792351040540,
+      "completed": 1792351047193
     },
     "executions": [
       {
@@ -1767,11 +1767,11 @@
           "eof": false,
           "bof": true,
           "cr": false,
-          "ref": "cb544972-1331-4598-9ea4-38584f8bb6c8",
-          "httpRequestId": "6e386836-f1a5-4781-9f4b-6b4902acd780"
+          "ref": "b6d886ad-eb18-452f-9d64-0e5746053d2d",
+          "httpRequestId": "56e104ef-af97-49c7-93fe-b2e69af30488"
         },
         "item": {
-          "id": "b9700579-e4ae-4aed-b47d-ef21a9703639",
+          "id": "696fff8c-1c35-4b45-9eba-bf7b6090358a",
           "name": "1. Connexion (sauvegarde du jeton)",
           "request": {
             "url": {
@@ -1803,7 +1803,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "f565f274-6af0-48a9-ad8e-6a31078a69c3",
+                "id": "fac177b3-9d50-40cd-8938-80287f11a1dc",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Connexion réussie (200)', function () {",
@@ -1813,7 +1813,7 @@
                   "    pm.collectionVariables.set('token', jsonData.accessToken);",
                   "});"
                 ],
-                "_lastExecutionId": "3da128f1-b9f2-472f-8c22-24536716db6e"
+                "_lastExecutionId": "6ff086e3-4479-4df1-b753-7e88a3508867"
               }
             }
           ]
@@ -1855,7 +1855,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "b730415e-3a25-4f0c-9db1-1ed6037acb86",
+              "value": "80c774ba-8b25-46eb-a05f-6f8fd2ef89fc",
               "system": true
             },
             {
@@ -1886,14 +1886,10 @@
           }
         },
         "response": {
-          "id": "5afbe500-06c2-4147-ba16-39d532203fb5",
+          "id": "0ccd87f8-c819-4687-a768-5ae4dd2745d2",
           "status": "OK",
           "code": 200,
           "header": [
-            {
-              "key": "Vary",
-              "value": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
-            },
             {
               "key": "X-Content-Type-Options",
               "value": "nosniff"
@@ -1916,7 +1912,7 @@
             },
             {
               "key": "Set-Cookie",
-              "value": "refreshToken=f24fd144-850e-493f-9ef6-76afc59bce06-25b4e2d9-f7b7-46af-a3df-918180e19a50; Max-Age=604800; Path=/api/auth/refresh; HttpOnly; SameSite=Strict"
+              "value": "refreshToken=2d3eb1f9-26f6-46d6-8632-181042d93fd9-194d63c0-8368-468f-ae25-79476db5835c; Max-Age=604800; Path=/api/auth/refresh; HttpOnly; SameSite=Strict"
             },
             {
               "key": "X-XSS-Protection",
@@ -1939,6 +1935,10 @@
               "value": "DENY"
             },
             {
+              "key": "vary",
+              "value": "accept-encoding"
+            },
+            {
               "key": "Content-Encoding",
               "value": "gzip"
             },
@@ -1952,7 +1952,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 06:39:34 GMT"
+              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -2187,13 +2187,13 @@
               84,
               73,
               122,
-              77,
-              68,
-              85,
-              49,
               78,
-              122,
-              81,
+              84,
+              69,
+              119,
+              78,
+              68,
+              69,
               115,
               73,
               109,
@@ -2210,101 +2210,101 @@
               77,
               106,
               77,
-              119,
-              78,
-              106,
-              81,
-              51,
-              78,
-              72,
+              49,
+              77,
+              84,
+              107,
+              48,
+              77,
+              88,
               48,
               46,
-              103,
-              71,
-              76,
-              73,
-              72,
-              118,
               75,
-              69,
-              114,
-              74,
-              88,
-              67,
-              85,
-              81,
-              54,
-              54,
-              89,
-              102,
-              76,
-              100,
-              111,
-              106,
-              72,
-              83,
-              83,
-              56,
               78,
-              106,
-              112,
-              67,
-              116,
-              87,
-              67,
-              45,
-              54,
-              73,
-              73,
-              105,
-              65,
-              99,
+              86,
               102,
-              117,
-              79,
-              57,
-              119,
-              117,
-              90,
-              65,
-              66,
+              107,
+              110,
+              72,
+              115,
               55,
-              97,
-              106,
-              118,
+              51,
+              100,
+              74,
+              78,
+              72,
+              100,
               121,
-              97,
+              103,
+              74,
+              49,
+              71,
+              56,
+              56,
+              77,
+              112,
+              79,
+              65,
+              73,
+              122,
+              83,
+              106,
+              101,
+              84,
+              101,
+              67,
+              107,
+              65,
+              83,
+              121,
+              118,
+              103,
+              90,
+              76,
+              121,
+              116,
+              107,
+              87,
+              112,
+              101,
+              83,
+              120,
+              76,
+              72,
               79,
               51,
-              88,
-              71,
-              67,
-              70,
-              99,
+              116,
+              121,
+              116,
+              107,
               69,
-              114,
-              90,
-              77,
-              119,
-              117,
-              110,
-              97,
               100,
-              90,
-              88,
-              54,
-              98,
-              114,
-              120,
-              117,
-              109,
+              113,
+              111,
+              102,
+              82,
+              51,
+              101,
+              82,
+              73,
               104,
-              55,
-              67,
-              85,
-              49,
-              66,
-              103,
+              48,
+              78,
+              51,
+              56,
+              98,
+              89,
+              78,
+              115,
+              77,
+              122,
+              81,
+              72,
+              53,
+              108,
+              119,
+              110,
+              119,
               34,
               44,
               34,
@@ -2545,21 +2545,21 @@
               49,
               56,
               84,
+              49,
+              57,
+              58,
+              49,
+              55,
+              58,
               48,
-              54,
-              58,
               51,
-              57,
-              58,
-              51,
-              49,
               46,
-              57,
-              49,
               54,
+              53,
+              54,
+              48,
               51,
               57,
-              53,
               90,
               34,
               125,
@@ -2567,10 +2567,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 354,
+          "responseTime": 602,
           "responseSize": 598
         },
-        "id": "b9700579-e4ae-4aed-b47d-ef21a9703639",
+        "id": "696fff8c-1c35-4b45-9eba-bf7b6090358a",
         "assertions": [
           {
             "assertion": "Connexion réussie (200)",
@@ -2580,15 +2580,15 @@
       },
       {
         "cursor": {
-          "ref": "fe777060-9165-42f9-b11a-99a94be92920",
+          "ref": "a3b620b6-c18a-4870-9773-28199e4af792",
           "length": 6,
           "cycles": 1,
           "position": 1,
           "iteration": 0,
-          "httpRequestId": "d49f1e05-9077-480d-8e5f-eb950784baf3"
+          "httpRequestId": "fad77bf7-f460-42fa-9523-70ab52c9c588"
         },
         "item": {
-          "id": "abb697bd-a9f5-498f-9c69-5544d517aae1",
+          "id": "1c567837-1cd2-4502-b7d8-dd3009d20a91",
           "name": "2. Création d'adresse",
           "request": {
             "url": {
@@ -2629,7 +2629,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "3c0be567-6f15-4da6-8432-cfb49bd5d45f",
+                "id": "55f0fa2f-e5c8-4f2c-a943-a41ef2519d5d",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Adresse créée (201)', function () {",
@@ -2640,7 +2640,7 @@
                   "    pm.collectionVariables.set('demoAddressId', jsonData.id);",
                   "});"
                 ],
-                "_lastExecutionId": "7eee368d-80d9-4d95-b4b1-b28f7cec0c87"
+                "_lastExecutionId": "6bd3cbc2-4e39-4406-83eb-07c5a278da50"
               }
             }
           ]
@@ -2686,7 +2686,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "6dbcb769-cd6c-45f6-9b5b-854e7f358ba9",
+              "value": "ce9223b9-d1d7-4b76-8cd7-83993bef7484",
               "system": true
             },
             {
@@ -2727,14 +2727,10 @@
           }
         },
         "response": {
-          "id": "ea248a34-b37b-4dc3-b615-c14a2f244240",
+          "id": "c1b7d13c-335b-4c3b-b565-0163d16414f0",
           "status": "Created",
           "code": 201,
           "header": [
-            {
-              "key": "Vary",
-              "value": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
-            },
             {
               "key": "X-Content-Type-Options",
               "value": "nosniff"
@@ -2776,6 +2772,10 @@
               "value": "DENY"
             },
             {
+              "key": "vary",
+              "value": "accept-encoding"
+            },
+            {
               "key": "Content-Encoding",
               "value": "gzip"
             },
@@ -2789,7 +2789,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 06:39:35 GMT"
+              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -2810,42 +2810,42 @@
               34,
               58,
               34,
-              102,
-              101,
-              49,
-              54,
-              98,
-              55,
-              51,
-              97,
-              45,
-              57,
-              57,
               100,
+              101,
+              100,
+              57,
+              98,
+              54,
+              97,
+              57,
+              45,
+              50,
+              53,
+              56,
               101,
               45,
               52,
-              53,
-              98,
+              50,
+              102,
+              49,
+              45,
               57,
-              45,
-              56,
-              98,
-              55,
-              55,
-              45,
               49,
               57,
-              101,
-              56,
-              56,
-              99,
-              49,
+              54,
+              45,
+              102,
               99,
               101,
-              56,
-              101,
+              50,
+              99,
+              99,
               48,
+              56,
+              102,
+              101,
+              52,
+              52,
               34,
               44,
               34,
@@ -2864,10 +2864,10 @@
               78,
               68,
               45,
-              49,
-              49,
-              57,
-              51,
+              53,
+              52,
+              50,
+              55,
               34,
               44,
               34,
@@ -3142,24 +3142,24 @@
               49,
               56,
               84,
-              48,
-              54,
-              58,
-              51,
+              49,
               57,
               58,
-              51,
-              53,
-              46,
-              48,
-              53,
-              57,
-              53,
+              49,
+              55,
+              58,
               50,
-              55,
+              49,
+              46,
+              50,
+              57,
+              50,
               51,
-              55,
-              51,
+              53,
+              49,
+              57,
+              50,
+              50,
               90,
               34,
               44,
@@ -3365,21 +3365,21 @@
               49,
               56,
               84,
+              49,
+              57,
+              58,
+              49,
+              55,
+              58,
               48,
-              54,
-              58,
               51,
-              57,
-              58,
-              51,
-              49,
               46,
-              57,
-              49,
               54,
+              53,
+              54,
+              48,
               51,
               57,
-              53,
               90,
               34,
               125,
@@ -3450,10 +3450,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 24,
+          "responseTime": 121,
           "responseSize": 644
         },
-        "id": "abb697bd-a9f5-498f-9c69-5544d517aae1",
+        "id": "1c567837-1cd2-4502-b7d8-dd3009d20a91",
         "assertions": [
           {
             "assertion": "Adresse créée (201)",
@@ -3463,15 +3463,15 @@
       },
       {
         "cursor": {
-          "ref": "f05aa39a-7069-4fef-a8a7-5827d5e9e7bc",
+          "ref": "7c4bf9c0-a0bd-4ead-a1af-cf0ca9b85403",
           "length": 6,
           "cycles": 1,
           "position": 2,
           "iteration": 0,
-          "httpRequestId": "17cac52d-3458-4154-9b40-4acbce72fb90"
+          "httpRequestId": "74fe831b-3ea6-46d2-ab34-fff079528165"
         },
         "item": {
-          "id": "477ff8a6-44c0-44fd-835a-eaa268b095d6",
+          "id": "08201eac-750c-487a-9da6-10fe704bbd4c",
           "name": "3. Résolution publique du code",
           "request": {
             "url": {
@@ -3493,7 +3493,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "56da7f2d-fefa-47ae-bc3f-45f013f73ef9",
+                "id": "7195a71d-773c-48a3-bde2-24a155e6d04a",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Fiche publique résolue avec latitude, longitude et photoUrl (200)', function () {",
@@ -3505,7 +3505,7 @@
                   "    pm.expect(jsonData.photoUrl).to.be.a('string').and.not.empty;",
                   "});"
                 ],
-                "_lastExecutionId": "1ea091ae-56e5-47eb-8a8f-5ff870c286c3"
+                "_lastExecutionId": "d1527ec2-dc4a-4299-b163-068a6d7c3cab"
               }
             }
           ]
@@ -3543,7 +3543,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "d411fd50-aff9-40c3-a1f9-7ce7906e99ae",
+              "value": "5b83e4e7-5f5a-4772-9b53-86dc0fd01afa",
               "system": true
             },
             {
@@ -3565,14 +3565,10 @@
           "method": "GET"
         },
         "response": {
-          "id": "54175d3d-9a36-40e7-b03d-0eb7ebeaae08",
+          "id": "b5c86a1a-9f12-45e5-8ee7-7dfff7315a04",
           "status": "OK",
           "code": 200,
           "header": [
-            {
-              "key": "Vary",
-              "value": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
-            },
             {
               "key": "X-Content-Type-Options",
               "value": "nosniff"
@@ -3614,6 +3610,10 @@
               "value": "DENY"
             },
             {
+              "key": "vary",
+              "value": "accept-encoding"
+            },
+            {
               "key": "Content-Encoding",
               "value": "gzip"
             },
@@ -3627,7 +3627,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 06:39:35 GMT"
+              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -3918,31 +3918,31 @@
               49,
               56,
               84,
+              49,
+              57,
+              58,
+              49,
+              55,
+              58,
               48,
-              54,
-              58,
-              51,
-              57,
-              58,
-              51,
-              50,
+              52,
               46,
-              53,
-              50,
-              57,
-              57,
-              50,
+              52,
+              54,
               51,
+              49,
+              57,
+              56,
               90,
               34,
               125
             ]
           },
           "cookie": [],
-          "responseTime": 9,
+          "responseTime": 31,
           "responseSize": 295
         },
-        "id": "477ff8a6-44c0-44fd-835a-eaa268b095d6",
+        "id": "08201eac-750c-487a-9da6-10fe704bbd4c",
         "assertions": [
           {
             "assertion": "Fiche publique résolue avec latitude, longitude et photoUrl (200)",
@@ -3952,15 +3952,15 @@
       },
       {
         "cursor": {
-          "ref": "48735a00-7264-410d-b9ed-61c5d277589f",
+          "ref": "894d102c-7617-4ea5-bb98-4900662ed7d5",
           "length": 6,
           "cycles": 1,
           "position": 3,
           "iteration": 0,
-          "httpRequestId": "ff0cba5d-e7bb-402f-80fb-7c6e2af0a83e"
+          "httpRequestId": "85cc0af1-ede7-419c-baa0-c483b33b837f"
         },
         "item": {
-          "id": "ee6340d8-4ea9-4345-8c11-ca962a153fc7",
+          "id": "1390a5a0-accf-4554-81c8-6a796dbb80bd",
           "name": "4. Recherche dans l'annuaire",
           "request": {
             "url": {
@@ -3991,7 +3991,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "7a365851-b95b-4f19-a0c9-ecb2d4ddb9d8",
+                "id": "38fca8ea-a278-4a5d-8195-aeac062aef12",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Recherche annuaire valide (200)', function () {",
@@ -4000,7 +4000,7 @@
                   "    pm.expect(jsonData.content).to.be.an('array');",
                   "});"
                 ],
-                "_lastExecutionId": "6c827fc9-a424-4076-ad50-9f29c969af55"
+                "_lastExecutionId": "0d14df64-82ff-47f6-a9c5-c848c5028e47"
               }
             }
           ]
@@ -4047,7 +4047,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "00429fc8-a714-488c-9f53-e93977dc1688",
+              "value": "f21b7322-d054-4e67-9feb-b1208fdb5e00",
               "system": true
             },
             {
@@ -4069,14 +4069,10 @@
           "method": "GET"
         },
         "response": {
-          "id": "b0a6c191-9066-4d90-ba48-7efd3ac8ea4c",
+          "id": "de82f83f-5cb8-4f56-887c-1b2aef63f9f8",
           "status": "OK",
           "code": 200,
           "header": [
-            {
-              "key": "Vary",
-              "value": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
-            },
             {
               "key": "X-Content-Type-Options",
               "value": "nosniff"
@@ -4118,6 +4114,10 @@
               "value": "DENY"
             },
             {
+              "key": "vary",
+              "value": "accept-encoding"
+            },
+            {
               "key": "Content-Encoding",
               "value": "gzip"
             },
@@ -4131,7 +4131,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 06:39:35 GMT"
+              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -4463,10 +4463,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 6,
+          "responseTime": 48,
           "responseSize": 315
         },
-        "id": "ee6340d8-4ea9-4345-8c11-ca962a153fc7",
+        "id": "1390a5a0-accf-4554-81c8-6a796dbb80bd",
         "assertions": [
           {
             "assertion": "Recherche annuaire valide (200)",
@@ -4476,15 +4476,15 @@
       },
       {
         "cursor": {
-          "ref": "8f291f78-b833-41e5-a95b-ec92a9d3e1bb",
+          "ref": "37515bbb-52d5-4c39-849e-cc4d5b474747",
           "length": 6,
           "cycles": 1,
           "position": 4,
           "iteration": 0,
-          "httpRequestId": "acc69c87-4fad-4010-8c4b-cba0d906f496"
+          "httpRequestId": "46e9c201-8713-4a3d-ad69-706e13c30076"
         },
         "item": {
-          "id": "a9537728-3717-4e0d-ba09-e2aa732a8592",
+          "id": "cda6810f-c857-443a-8d50-7df757551d07",
           "name": "5. Signalement public",
           "request": {
             "url": {
@@ -4518,14 +4518,14 @@
             {
               "listen": "test",
               "script": {
-                "id": "1bbcb835-b10f-41ed-a712-dbbbd19f0571",
+                "id": "8e691361-c2ed-4ac1-b50c-55320a6f8a2d",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Signalement enregistré (202)', function () {",
                   "    pm.response.to.have.status(202);",
                   "});"
                 ],
-                "_lastExecutionId": "c95a0e4d-e1c9-4a3c-91df-0ea17ee486ea"
+                "_lastExecutionId": "16567739-e27c-47ca-a274-908b1c1665bb"
               }
             }
           ]
@@ -4538,7 +4538,7 @@
               "api",
               "public",
               "addresses",
-              "ZIG-KND-1193",
+              "ZIG-KND-5427",
               "reports"
             ],
             "host": [
@@ -4569,7 +4569,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "df1fc921-2a58-4ea7-9d88-8163da151ec3",
+              "value": "14759cf7-be93-4e37-adf8-f323fdd0c841",
               "system": true
             },
             {
@@ -4600,14 +4600,10 @@
           }
         },
         "response": {
-          "id": "93be8cd4-4da1-47ef-93ef-48dd1b45b056",
+          "id": "2b82adc2-5c25-49f2-972e-88e8726a6fbe",
           "status": "Accepted",
           "code": 202,
           "header": [
-            {
-              "key": "Vary",
-              "value": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
-            },
             {
               "key": "X-Content-Type-Options",
               "value": "nosniff"
@@ -4649,6 +4645,10 @@
               "value": "DENY"
             },
             {
+              "key": "vary",
+              "value": "accept-encoding"
+            },
+            {
               "key": "Content-Encoding",
               "value": "gzip"
             },
@@ -4662,7 +4662,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 06:39:35 GMT"
+              "value": "Sun, 18 Oct 2026 19:17:21 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -4755,10 +4755,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 10,
+          "responseTime": 38,
           "responseSize": 76
         },
-        "id": "a9537728-3717-4e0d-ba09-e2aa732a8592",
+        "id": "cda6810f-c857-443a-8d50-7df757551d07",
         "assertions": [
           {
             "assertion": "Signalement enregistré (202)",
@@ -4768,15 +4768,15 @@
       },
       {
         "cursor": {
-          "ref": "9f15e687-17a3-4adc-bccd-40743c4b8581",
+          "ref": "0dd5f640-c128-46ae-98e0-91d02275bb2b",
           "length": 6,
           "cycles": 1,
           "position": 5,
           "iteration": 0,
-          "httpRequestId": "f6bc3333-2b70-48aa-a191-6beff4c71913"
+          "httpRequestId": "0904129a-ea81-4daf-8fa5-947fde2712c8"
         },
         "item": {
-          "id": "b754a125-57c8-42bb-a2a4-0130eddeff9d",
+          "id": "503f5a4a-eaee-4394-aacc-d90de3403b13",
           "name": "6. Calcul d'itinéraire",
           "request": {
             "url": {
@@ -4815,7 +4815,7 @@
             {
               "listen": "test",
               "script": {
-                "id": "57985d22-6296-41b8-a573-a22abe547a40",
+                "id": "596a8f1f-0402-4895-974e-d1637f984981",
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)', function () {",
@@ -4829,7 +4829,7 @@
                   "    }",
                   "});"
                 ],
-                "_lastExecutionId": "e72b7846-f2bf-40a2-8363-4a46bddd9d22"
+                "_lastExecutionId": "e9e4f909-f926-4d43-aea0-b503b0c4cf7b"
               }
             }
           ]
@@ -4884,7 +4884,7 @@
             },
             {
               "key": "Postman-Token",
-              "value": "628cc878-278f-4cc9-8d54-41a50b38739a",
+              "value": "a674057f-a0dd-486b-b600-07ffcfa29a2b",
               "system": true
             },
             {
@@ -4906,14 +4906,10 @@
           "method": "GET"
         },
         "response": {
-          "id": "80f04241-3edd-4026-8855-555b22c1777d",
+          "id": "530407cf-1b34-47e2-ad76-846d883279fc",
           "status": "OK",
           "code": 200,
           "header": [
-            {
-              "key": "Vary",
-              "value": "origin,access-control-request-method,access-control-request-headers,accept-encoding"
-            },
             {
               "key": "X-Content-Type-Options",
               "value": "nosniff"
@@ -4955,6 +4951,10 @@
               "value": "DENY"
             },
             {
+              "key": "vary",
+              "value": "accept-encoding"
+            },
+            {
               "key": "Content-Encoding",
               "value": "gzip"
             },
@@ -4968,7 +4968,7 @@
             },
             {
               "key": "Date",
-              "value": "Sun, 18 Oct 2026 06:39:40 GMT"
+              "value": "Sun, 18 Oct 2026 19:17:27 GMT"
             },
             {
               "key": "Keep-Alive",
@@ -5439,10 +5439,10 @@
             ]
           },
           "cookie": [],
-          "responseTime": 5401,
+          "responseTime": 5663,
           "responseSize": 454
         },
-        "id": "b754a125-57c8-42bb-a2a4-0130eddeff9d",
+        "id": "503f5a4a-eaee-4394-aacc-d90de3403b13",
         "assertions": [
           {
             "assertion": "Itinéraire calculé avec distance > 0, durée > 0 et géométrie présente (200 ou 503)",

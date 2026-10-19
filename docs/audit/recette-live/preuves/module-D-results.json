@@ -1,0 +1,161 @@
+{
+  "D5": {
+    "warningVisible": true,
+    "screenshot": "preuves/D5-gps-accuracy-warning-360x800.png",
+    "status": "PASS"
+  },
+  "D1": {
+    "detailsOpenByDefault": false,
+    "screenshot": "preuves/D1-wizard-etape2-visibilite-360x800.png",
+    "status": "FAIL"
+  },
+  "D4": {
+    "errorOrFallbackShown": true,
+    "canInputManuallyAndProceed": true,
+    "status": "PASS"
+  },
+  "D2": {
+    "points": [
+      {
+        "name": "Boucotte",
+        "status": 201,
+        "code": "ZIG-KBG-7334",
+        "zone": "ZIG",
+        "quartier": "KBG",
+        "pass": true
+      },
+      {
+        "name": "Escale",
+        "status": 201,
+        "code": "ZIG-ESC-1390",
+        "zone": "ZIG",
+        "quartier": "ESC",
+        "pass": true
+      },
+      {
+        "name": "Kandé",
+        "status": 201,
+        "code": "ZIG-KND-3100",
+        "zone": "ZIG",
+        "quartier": "KND",
+        "pass": true
+      },
+      {
+        "name": "Néma",
+        "status": 201,
+        "code": "ZIG-NEM-4495",
+        "zone": "ZIG",
+        "quartier": "NEM",
+        "pass": true
+      },
+      {
+        "name": "Limite commune Ziguinchor (< 3km ESC)",
+        "status": 201,
+        "code": "ZIG-ESC-6548",
+        "zone": "ZIG",
+        "quartier": "ESC",
+        "pass": true
+      },
+      {
+        "name": "Zone non couverte mais proche (< 3km KND)",
+        "status": 201,
+        "code": "ZIG-KND-5750",
+        "zone": "ZIG",
+        "quartier": "KND",
+        "pass": true
+      },
+      {
+        "name": "Dakar Médina",
+        "status": 201,
+        "code": "DKR-MED-9551",
+        "zone": "DKR",
+        "quartier": "MED",
+        "pass": true
+      },
+      {
+        "name": "Saint-Louis Ndar",
+        "status": 201,
+        "code": "SL-NDR-4605",
+        "zone": "SL",
+        "quartier": "NDR",
+        "pass": true
+      }
+    ],
+    "status": "PASS"
+  },
+  "D3": {
+    "cases": [
+      {
+        "name": "Paris",
+        "status": 400,
+        "isRejected": true,
+        "message": "Coordonnées géographiques hors de la plage plausible du Sénégal (12-17°N, -17/-11°O)"
+      },
+      {
+        "name": "Nul (0,0)",
+        "status": 400,
+        "isRejected": true,
+        "message": "Coordonnées géographiques hors de la plage plausible du Sénégal (12-17°N, -17/-11°O)"
+      },
+      {
+        "name": "Lat > 90",
+        "status": 400,
+        "isRejected": true,
+        "message": "Erreur de validation des champs"
+      },
+      {
+        "name": "Lng > 180",
+        "status": 400,
+        "isRejected": true,
+        "message": "Erreur de validation des champs"
+      }
+    ],
+    "status": "PASS"
+  },
+  "D6": {
+    "validJpgStatus": 200,
+    "exifStripped": true,
+    "emptyFileStatus": 400,
+    "fakePdfStatus": 400,
+    "hugeFileStatus": 400,
+    "status": "PASS"
+  },
+  "D7": {
+    "valid50Status": 201,
+    "emptyDescStatus": 400,
+    "limit500Status": 201,
+    "excess5000Status": 400,
+    "xssSafe": true,
+    "sqliSafe": true,
+    "status": "PASS"
+  },
+  "D8": {
+    "typesAccepted": true,
+    "status": "PASS"
+  },
+  "D9": {
+    "privExcludedFromDirectory": true,
+    "status": "PASS"
+  },
+  "D10": {
+    "alterCodeStatus": 400,
+    "alterCoordStatus": 400,
+    "status": "PASS"
+  },
+  "D11": {
+    "firstStatus": 201,
+    "secondStatus": 200,
+    "sameAddressId": true,
+    "isIdempotentReplay": false,
+    "status": "PASS"
+  },
+  "D12": {
+    "codesGenerated": [
+      "ZIG-KBG-9870",
+      "ZIG-KBG-6880",
+      "ZIG-KBG-8333"
+    ],
+    "allUnique": true,
+    "status": "PASS"
+  }
+}

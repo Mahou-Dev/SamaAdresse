@@ -55,7 +55,7 @@ export const LoginPage: React.FC = () => {
               SamaAdresse
             </span>
             <span className="text-[11px] font-medium text-[#5C4D44] block">
-              Ziguinchor et Dakar, Sénégal
+              Projet étudiant — Ziguinchor, Sénégal
             </span>
           </div>
         </Link>

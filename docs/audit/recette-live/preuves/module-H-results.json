@@ -1,0 +1,71 @@
+{
+  "H1": {
+    "pass": true,
+    "status": "PASS",
+    "totalReports": 1,
+    "sampleReport": {
+      "id": "7b4d625a-50f8-4c13-88df-e08921d9444f",
+      "reason": "POSITION_INCORRECTE",
+      "comment": "TEST-QA: Signalement automatique de vérification",
+      "status": "OPEN",
+      "createdAt": "2026-10-18T23:05:56.533135Z",
+      "resolvedAt": null,
+      "addressId": "d6a2455e-b2cd-4b7e-aea6-2e198854d2e7",
+      "addressCode": "ZIG-KBG-4271",
+      "addressZone": "ZIG",
+      "addressQuartier": "KBG",
+      "addressLocationType": "MAISON",
+      "addressDescription": "Maison familiale au portail vert face à la grande mosquée",
+      "addressPhotoUrl": "/uploads/00000000-0000-4000-8000-000000000001.jpg",
+      "addressStatus": "ACTIVE"
+    }
+  },
+  "H2": {
+    "pass": true,
+    "status": "PASS",
+    "testAddrCode": "ZIG-KBG-9309",
+    "testAddrId": "ffad5fe7-e633-4e87-8cf9-16dac67730a0",
+    "suspendStatus": 200,
+    "pubAfterSuspendStatus": 410,
+    "dirContains": false,
+    "reinstateStatus": 200,
+    "pubAfterReinstateStatus": 200
+  },
+  "H3": {
+    "pass": true,
+    "status": "PASS",
+    "auditEntries": [
+      {
+        "id": "85cfd28e-2dfb-4648-8074-95d1ab20cce6",
+        "admin_email": "admin@samaadresse.sn",
+        "action": "REINSTATE_ADDRESS",
+        "address_code": "ZIG-KBG-9309",
+        "reason": "TEST- Réactivation après levée de doute",
+        "created_at": "2026-10-19T01:40:45.572Z"
+      },
+      {
+        "id": "16a7b0b7-2321-4c96-ab49-a55795e77e15",
+        "admin_email": "admin@samaadresse.sn",
+        "action": "SUSPEND_ADDRESS",
+        "address_code": "ZIG-KBG-9309",
+        "reason": "TEST- Modération conformité emplacement et description",
+        "created_at": "2026-10-19T01:40:44.010Z"
+      }
+    ],
+    "observation": "Vérification directe dans la table PostgreSQL admin_actions hébergée sur Neon. Chaque action consigne l'administrateur, le type d'action, le code adresse, le motif et le timestamp UTC, sans mot de passe ni jeton."
+  },
+  "H4": {
+    "pass": true,
+    "status": "PASS",
+    "unauthStatus": 401,
+    "userReportsStatus": 403,
+    "userSuspendStatus": 403
+  },
+  "H5": {
+    "pass": true,
+    "status": "PASS (Inaccessible mais D-01 500)",
+    "httpStatus": 500,
+    "body": "{\"timestamp\":\"2026-10-19T01:40:46.956107136Z\",\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"Une erreur interne s'est produite. Veuillez réessayer ultérieurement.\",\"path\":\"/api/admin/reset-rate-limits\"}",
+    "observation": "L'endpoint est strictement inaccessible en production (@Profile dev, e2e non chargé). Il retourne HTTP 500 au lieu de HTTP 404 en raison de l'absence de handler NoResourceFoundException (Défaut D-01), mais n'est en aucun cas fonctionnel (aucun reset possible, code 200 absent)."
+  }
+}

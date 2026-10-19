@@ -153,6 +153,11 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
   test('1.3 Annuaire public : État hors ligne', async ({ context, page }) => {
     await page.goto('/annuaire');
     await page.waitForSelector('text=Annuaire public');
+    await page.evaluate(async () => {
+      if ('serviceWorker' in navigator) {
+        await navigator.serviceWorker.ready;
+      }
+    });
 
     await context.setOffline(true);
     await page.reload();
@@ -180,8 +185,12 @@ test.describe('LOT 6 — Annuaire & Itinéraire & Correctifs Lot 5', () => {
     // Étape 2 : Vérifier la section repliable Visibilité
     await expect(page.locator('text=Visibilité dans l\'annuaire')).toBeVisible();
 
-    // Ouvrir le details
-    await page.locator('summary:has-text("Visibilité dans l\'annuaire")').click();
+    // Vérifier que le volet est déplié par défaut (ou l'ouvrir s'il était fermé)
+    const details = page.locator('details:has(summary:has-text("Visibilité dans l\'annuaire"))');
+    const isOpen = await details.evaluate((el: HTMLDetailsElement) => el.open);
+    if (!isOpen) {
+      await page.locator('summary:has-text("Visibilité dans l\'annuaire")').click();
+    }
 
     // Case 1 présente et décochée par défaut
     const listedCheckbox = page.locator('#directory-listed');

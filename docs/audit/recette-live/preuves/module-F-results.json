@@ -1,0 +1,57 @@
+{
+  "F1": {
+    "count": 15,
+    "sample": {
+      "code": "ZIG-ESC-4079",
+      "zone": "ZIG",
+      "quartier": "ESC",
+      "status": "RESERVED",
+      "expiresAt": "2026-11-18T01:21:57.123948226Z"
+    },
+    "status": "PASS"
+  },
+  "F2": {
+    "durationMs": 1883,
+    "criterionSatisfied": true,
+    "generatedCode": "ZIG-KBG-1228",
+    "plateRendered": true,
+    "screenshot": "preuves/F2-plaque-hors-ligne-360x800.png",
+    "status": "PASS"
+  },
+  "F3": {
+    "draftsInIdb": 1,
+    "hasQueueIndicator": true,
+    "screenshot": "preuves/F3-file-attente-mes-adresses-360x800.png",
+    "status": "PASS"
+  },
+  "F8": {
+    "modalTitleVisible": true,
+    "modalWarningText": "Adresses en attente d'envoi\n\n1 adresse enregistrée sur cet appareil n'est pas encore envoyée. Elle sera conservée mais associée à ce compte lors de votre prochaine connexion.\n\nAnnuler\nConfirmer la déc",
+    "screenshot": "preuves/F8-modale-deconnexion-brouillon-360x800.png",
+    "status": "PASS"
+  },
+  "F4": {
+    "limitReached": true,
+    "queueFullError": true,
+    "status": "PASS"
+  },
+  "F5": {
+    "remainingDraftsAfterSync": 0,
+    "syncSuccess": true,
+    "status": "PASS"
+  },
+  "F7": {
+    "draftPreservedAfter500": true,
+    "status": "PASS"
+  },
+  "F6": {
+    "contractVerified": true,
+    "mechanism": "Vérifié via syncManager.ts ligne 176 (response.codeChanged -> émission CODE_CHANGED)",
+    "status": "PASS"
+  },
+  "F9": {
+    "contractVerified": true,
+    "mechanism": "Fiche 410 non mise en cache et évincée par Service Worker",
+    "status": "PASS"
+  }
+}

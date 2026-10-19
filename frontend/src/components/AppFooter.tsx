@@ -13,7 +13,7 @@ export const AppFooter: React.FC = () => {
             SamaAdresse · Adressage numérique
           </p>
           <p className="text-[11px] text-[#EADFC8] mt-0.5">
-            Déploiement en cours à Ziguinchor et Dakar, Sénégal
+            Projet étudiant — Ziguinchor, Sénégal
           </p>
         </div>
 

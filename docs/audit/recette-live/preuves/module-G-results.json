@@ -1,0 +1,158 @@
+{
+  "G1": {
+    "pass": true,
+    "status": "PASS",
+    "details": [
+      {
+        "phone": "",
+        "description": "Vide",
+        "status": 400,
+        "expectedStatus": 400,
+        "pass": true,
+        "body": {
+          "timestamp": "2026-10-19T01:36:38.835187226Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/addresses/ZIG-KBG-4271/share/sms",
+          "fieldErrors": {
+            "phoneNumber": "Le numéro doit être un mobile sénégalais (ex: +221771234567)"
+          }
+        }
+      },
+      {
+        "phone": "771234567",
+        "description": "Sans indicatif international",
+        "status": 400,
+        "expectedStatus": 400,
+        "pass": true,
+        "body": {
+          "timestamp": "2026-10-19T01:36:38.959786950Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/addresses/ZIG-KBG-4271/share/sms",
+          "fieldErrors": {
+            "phoneNumber": "Le numéro doit être un mobile sénégalais (ex: +221771234567)"
+          }
+        }
+      },
+      {
+        "phone": "+221338210000",
+        "description": "Numéro fixe sénégalais (33)",
+        "status": 400,
+        "expectedStatus": 400,
+        "pass": true,
+        "body": {
+          "timestamp": "2026-10-19T01:36:39.096678882Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/addresses/ZIG-KBG-4271/share/sms",
+          "fieldErrors": {
+            "phoneNumber": "Le numéro doit être un mobile sénégalais (ex: +221771234567)"
+          }
+        }
+      },
+      {
+        "phone": "+33612345678",
+        "description": "Numéro étranger (France)",
+        "status": 400,
+        "expectedStatus": 400,
+        "pass": true,
+        "body": {
+          "timestamp": "2026-10-19T01:36:39.235573596Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/addresses/ZIG-KBG-4271/share/sms",
+          "fieldErrors": {
+            "phoneNumber": "Le numéro doit être un mobile sénégalais (ex: +221771234567)"
+          }
+        }
+      },
+      {
+        "phone": "+22177ABCDEFG",
+        "description": "Lettres dans le numéro",
+        "status": 400,
+        "expectedStatus": 400,
+        "pass": true,
+        "body": {
+          "timestamp": "2026-10-19T01:36:39.370552670Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/addresses/ZIG-KBG-4271/share/sms",
+          "fieldErrors": {
+            "phoneNumber": "Le numéro doit être un mobile sénégalais (ex: +221771234567)"
+          }
+        }
+      },
+      {
+        "phone": "+221771234567890",
+        "description": "Numéro trop long",
+        "status": 400,
+        "expectedStatus": 400,
+        "pass": true,
+        "body": {
+          "timestamp": "2026-10-19T01:36:39.505022413Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/addresses/ZIG-KBG-4271/share/sms",
+          "fieldErrors": {
+            "phoneNumber": "Le numéro doit être un mobile sénégalais (ex: +221771234567)"
+          }
+        }
+      },
+      {
+        "phone": "+221771234503",
+        "description": "Mobile valide (77 Orange)",
+        "status": 200,
+        "expectedStatus": 200,
+        "pass": true,
+        "body": {
+          "status": "SENT",
+          "maskedPhone": "+221 77 *** ** 03"
+        }
+      }
+    ]
+  },
+  "G2": {
+    "pass": true,
+    "status": "PASS",
+    "message": "SamaAdresse : adresse ZIG-KBG-4271. Voir la fiche et l'itinéraire : https://samaadresse.onrender.com/a/ZIG-KBG-4271",
+    "length": 115,
+    "isGsm7": true,
+    "fitsSingleSms": true
+  },
+  "G3": {
+    "pass": true,
+    "status": "PASS",
+    "sixthStatus": 429,
+    "message": "Limite atteinte : vous pouvez envoyer 5 SMS par heure. Réessayez plus tard ou partagez via WhatsApp.",
+    "body": {
+      "timestamp": "2026-10-19T01:36:41.281951305Z",
+      "status": 429,
+      "error": "Too Many Requests",
+      "message": "Limite atteinte : vous pouvez envoyer 5 SMS par heure. Réessayez plus tard ou partagez via WhatsApp.",
+      "path": "/api/addresses/ZIG-KBG-4271/share/sms"
+    }
+  },
+  "G4": {
+    "unauthenticatedStatus": 401,
+    "unauthenticatedPass": true,
+    "shareOtherAddressCode": "ZIG-KBG-3010",
+    "shareOtherStatus": 200,
+    "shareOtherBody": {
+      "status": "SENT",
+      "maskedPhone": "+221 77 *** ** 77"
+    },
+    "status": "PASS",
+    "observation": "Non authentifié est strictement rejeté en HTTP 401. Tout utilisateur connecté peut partager une adresse active (fonctionnalité de recommandation d'adresse à un tiers, le quota horaire de 5 SMS étant décompté de l'utilisateur émetteur)."
+  },
+  "G5": {
+    "status": "NON TESTABLE PAR L'AGENT",
+    "reason": "L'utilisateur a confirmé que le SMS provider Twilio réel avec son numéro de téléphone n'est pas encore configuré (mode Mock actif sur Render). À faire par l'humain."
+  }
+}

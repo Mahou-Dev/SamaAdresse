@@ -661,8 +661,8 @@ export const NewAddressPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Section repliable Visibilité dans l'annuaire */}
-          <details className="group border border-[#766B5B] rounded-xl p-3.5 bg-[#FBF7EF] text-xs">
+          {/* Section repliable Visibilité dans l'annuaire (dépliée par défaut) */}
+          <details open className="group border border-[#766B5B] rounded-xl p-3.5 bg-[#FBF7EF] text-xs">
             <summary className="font-semibold text-[#1D528F] cursor-pointer hover:underline list-none flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[#1D528F]" />
