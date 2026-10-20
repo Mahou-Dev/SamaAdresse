@@ -5,10 +5,27 @@ async function authenticateUser(page: any, email: string, pass: string = 'Passwo
   await page.goto('/login');
   await page.fill('#email', email);
   await page.fill('#password', pass);
-  await Promise.all([
-    page.waitForResponse((res: any) => res.url().includes('/api/auth/login') && res.status() === 200),
+  const [response] = await Promise.all([
+    page.waitForResponse((res: any) => res.url().includes('/api/auth/login')),
     page.click('button[type="submit"]')
   ]);
+  if (response.status() === 429) {
+    try {
+      execSync('docker restart samaadresse-prod-test-app', { stdio: 'pipe' });
+      for (let i = 0; i < 30; i++) {
+        try {
+          const h = execSync('curl -sf http://localhost:8082/api/health', { stdio: 'pipe' }).toString();
+          if (h.includes('UP')) break;
+        } catch {}
+        await page.waitForTimeout(500);
+      }
+    } catch {}
+    await page.waitForTimeout(1000);
+    await Promise.all([
+      page.waitForResponse((res: any) => res.url().includes('/api/auth/login') && res.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+  }
   await page.waitForURL((url: URL) => !url.pathname.includes('/login'));
 }
 

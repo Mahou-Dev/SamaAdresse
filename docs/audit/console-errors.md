@@ -51,7 +51,7 @@
 | `http://127.0.0.1:4173/api/address-codes/reservations?zone=ZIG` | `Failed to load resource: the server responded with a status of 401 (Unauthorized)` |
 | `http://127.0.0.1:4173/api/address-codes/reservations` | `Failed to load resource: the server responded with a status of 401 (Unauthorized)` |
 
-## Après correctifs (extraction depuis les 8 rapports JSON Lighthouse)
+## Après correctifs (extraction depuis les 11 rapports JSON Lighthouse)
 
 ### landing (`http://localhost:8082/`) — score : 1
 

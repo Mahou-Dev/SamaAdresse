@@ -6,8 +6,56 @@ Génère docs/audit/contrastes.md et échoue si un ratio est non atteint.
 """
 
 import sys
+import re
 from pathlib import Path
 from datetime import datetime
+
+# Palette officielle exhaustive autorisée dans SamaAdresse (Lot 9 & Lot 12)
+ALLOWED_PALETTE_HEX = {
+    # Couleurs primaires & fonds
+    "#231A15",  # Encre principale
+    "#EADFC8",  # Sable doré (fond)
+    "#FBF7EF",  # Carte crème (surfaces)
+    "#F2ECE1",  # Sienne (bandeaux secondaires)
+    "#5C4D44",  # Texte secondaire
+    "#766B5B",  # Bordures émaillées
+    "#E6DDD0",  # Squelettes chargement
+    "#8C8272",  # Nuance bordure plaque
+    "#D4CEBF",  # Nuance bordure claire
+    "#3D2E24",  # Texte sombre
+
+    # Actions & accents
+    "#8A3112",  # Ocre accent
+    "#B84A24",  # Bouton ocre
+    "#9A3816",  # Bouton ocre hover
+    "#963B1C",  # Bouton ocre active
+    "#F2B233",  # Jaune soleil
+    "#DDA025",  # Jaune soleil hover
+
+    # Thème sombre & navigation
+    "#12304F",  # Bleu nuit
+    "#0C233B",  # Bleu nuit sombre
+    "#153C6B",  # Bleu nuit intermédiaire
+    "#153E6D",  # Bleu nuit hover
+    "#1D528F",  # Bleu action secondaire
+
+    # Statuts & alertes
+    "#2A6B44",  # Vert succès
+    "#215435",  # Vert succès hover
+    "#1E5234",  # Vert succès badge
+    "#1C4E30",  # Vert succès foncé
+    "#EAF4ED",  # Vert fond léger
+    "#FFF7ED",  # Orange avertissement fond
+    "#DC2626",  # Rouge erreur
+    "#991B1B",  # Rouge erreur texte
+    "#FEF2F2",  # Rouge erreur fond
+
+    # Partage externe (WhatsApp) & rendu neutre
+    "#128C2F",  # WhatsApp officiel
+    "#25D366",  # WhatsApp clair
+    "#000000",  # Noir pur (QR, canvas, print)
+    "#FFFFFF",  # Blanc pur (QR code scan background, print)
+}
 
 def srgb_to_lin(c):
     c = c / 255.0
@@ -108,8 +156,8 @@ DECLARED_PAIRS = [
     },
     {
         "role": "Bouton principal sur fond clair",
-        "fg_name": "Blanc pur",
-        "fg_hex": "#FFFFFF",
+        "fg_name": "Crème",
+        "fg_hex": "#FBF7EF",
         "bg_name": "Bouton ocre",
         "bg_hex": "#B84A24",
         "type": "Texte normal",
@@ -171,8 +219,8 @@ DECLARED_PAIRS = [
     },
     {
         "role": "Bouton secondaire d'action",
-        "fg_name": "Blanc pur",
-        "fg_hex": "#FFFFFF",
+        "fg_name": "Crème",
+        "fg_hex": "#FBF7EF",
         "bg_name": "Bleu",
         "bg_hex": "#1D528F",
         "type": "Texte normal",
@@ -198,8 +246,8 @@ DECLARED_PAIRS = [
     },
     {
         "role": "Bouton d'envoi SMS / messagerie",
-        "fg_name": "Blanc pur",
-        "fg_hex": "#FFFFFF",
+        "fg_name": "Crème",
+        "fg_hex": "#FBF7EF",
         "bg_name": "Vert",
         "bg_hex": "#2A6B44",
         "type": "Texte normal",
@@ -270,8 +318,8 @@ DECLARED_PAIRS = [
     },
     {
         "role": "Bouton d'action destructive / confirmation d'alerte (Composant ConfirmDialog)",
-        "fg_name": "Blanc pur",
-        "fg_hex": "#FFFFFF",
+        "fg_name": "Crème",
+        "fg_hex": "#FBF7EF",
         "bg_name": "Ocre accent",
         "bg_hex": "#8A3112",
         "type": "Texte normal",
@@ -315,6 +363,37 @@ DECLARED_PAIRS = [
     },
 ]
 
+def scan_frontend_colors(src_dir: Path):
+    """
+    Balayage de toutes les couleurs hexadécimales utilisées dans frontend/src.
+    Toute couleur absente de la palette officielle = échec.
+    """
+    hex_pattern = re.compile(r'#[0-9a-fA-F]{3,8}\b')
+    off_palette = []
+    total_found = 0
+    unique_colors = set()
+
+    for file_path in src_dir.rglob('*'):
+        if file_path.suffix in ('.ts', '.tsx', '.css', '.html'):
+            try:
+                content = file_path.read_text(encoding='utf-8')
+                for line_no, line in enumerate(content.splitlines(), start=1):
+                    for match in hex_pattern.finditer(line):
+                        raw_hex = match.group().upper()
+                        # Normalisation #RGB -> #RRGGBB
+                        if len(raw_hex) == 4:
+                            norm_hex = '#' + ''.join(c * 2 for c in raw_hex[1:])
+                        else:
+                            norm_hex = raw_hex[:7]
+                        total_found += 1
+                        unique_colors.add(norm_hex)
+                        if norm_hex not in ALLOWED_PALETTE_HEX:
+                            off_palette.append((str(file_path.relative_to(src_dir.parent.parent)), line_no, raw_hex))
+            except Exception:
+                pass
+
+    return off_palette, total_found, unique_colors
+
 def main():
     root = Path(__file__).resolve().parent.parent
     output_path = root / "docs" / "audit" / "contrastes.md"
@@ -346,6 +425,15 @@ def main():
             "status": status,
         })
 
+    # 2. Balayage exhaustif des couleurs utilisées dans frontend/src
+    src_dir = root / "frontend" / "src"
+    off_palette, total_found, unique_colors = scan_frontend_colors(src_dir)
+    if off_palette:
+        has_failure = True
+        print(f"ERREUR : {len(off_palette)} couleur(s) hors palette détectée(s) dans frontend/src :", file=sys.stderr)
+        for rel_file, line_no, color in off_palette[:10]:
+            print(f"  - {rel_file}:{line_no} -> {color}", file=sys.stderr)
+
     # Génération du fichier Markdown
     md_lines = [
         "# Audit des Contrastes WCAG 2.1 — Lot 9 (Palette Plus Forte)",
@@ -370,11 +458,17 @@ def main():
 
     md_lines.extend([
         "",
-        "## Synthèse",
+        "## Synthèse des Contrastes",
         f"- **Nombre de paires testées** : {len(rows)}",
         f"- **Paires conformes (Atteint)** : {sum(1 for r in rows if r['status'] == 'Atteint')}",
         f"- **Paires non conformes (NON ATTEINT)** : {sum(1 for r in rows if r['status'] == 'NON ATTEINT')}",
-        f"- **Résultat global** : {'CONFORME' if not has_failure else 'NON ATTEINT'}",
+        f"- **Résultat global des contrastes** : {'CONFORME' if not has_failure else 'NON ATTEINT'}",
+        "",
+        "## Contrôle d'Intégrité de la Palette (frontend/src)",
+        f"- **Occurrences hexadécimales analysées** : {total_found}",
+        f"- **Couleurs distinctes utilisées** : {len(unique_colors)}",
+        f"- **Couleurs hors palette détectées** : {len(off_palette)}",
+        f"- **Statut d'adhérence à la palette** : {'CONFORME' if not off_palette else 'NON ATTEINT'}",
         "",
         f"_Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M:%S')}_",
     ])
@@ -383,10 +477,10 @@ def main():
     print(f"Rapport de contrastes écrit dans {output_path}")
 
     if has_failure:
-        print("ERREUR : Certaines paires n'atteignent pas le seuil requis de contraste !", file=sys.stderr)
+        print("ERREUR : Non-conformité détectée (contrastes insuffisants ou couleurs hors palette) !", file=sys.stderr)
         sys.exit(1)
     else:
-        print(f"SUCCÈS : Les {len(rows)} paires respectent strictement les seuils WCAG (Atteint).")
+        print(f"SUCCÈS : Les {len(rows)} paires respectent strictement les seuils WCAG (Atteint) et les {total_found} couleurs sont toutes conformes à la palette.")
         sys.exit(0)
 
 if __name__ == "__main__":

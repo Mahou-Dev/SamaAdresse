@@ -106,7 +106,7 @@ export const DashboardPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#766B5B]">
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
-            Bonjour, {firstName} !
+            Tableau de bord — Bonjour, {firstName} !
           </h1>
           <p className="text-xs sm:text-sm text-[#5C4D44] leading-relaxed">
             Vue d'ensemble de vos adresses géolocalisées et de vos actions en cours.
@@ -116,7 +116,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <Link
             to="/addresses/new"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm touch-target"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
             <span>Nouvelle adresse</span>
@@ -133,12 +133,12 @@ export const DashboardPage: React.FC = () => {
 
       {/* État de chargement avec hauteur réservée pour CLS */}
       {loading ? (
-        <div className="space-y-6 min-h-[640px]" aria-label="Chargement du tableau de bord">
+        <div className="space-y-6 min-h-[850px]" aria-label="Chargement du tableau de bord">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Skeleton className="h-28" count={4} />
           </div>
           <Skeleton className="h-44" />
-          <Skeleton className="h-64" />
+          <Skeleton className="h-96" />
         </div>
       ) : errorMsg ? (
         <div className="p-6 rounded-xl bg-[#FBF7EF] border border-[#8A3112]/40 text-[#8A3112] text-xs sm:text-sm flex items-center justify-between gap-4">
@@ -149,7 +149,7 @@ export const DashboardPage: React.FC = () => {
           <button
             type="button"
             onClick={() => loadData(false)}
-            className="px-3 py-1.5 rounded-lg bg-[#8A3112] text-white text-xs font-bold shrink-0 hover:bg-[#9A3816] transition"
+            className="px-3 py-1.5 rounded-lg bg-[#8A3112] text-[#FBF7EF] text-xs font-bold shrink-0 hover:bg-[#9A3816] transition"
           >
             Réessayer
           </button>
@@ -332,7 +332,7 @@ export const DashboardPage: React.FC = () => {
                           type="button"
                           disabled={isSyncing}
                           onClick={handleSyncNow}
-                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white font-bold shrink-0 touch-target disabled:opacity-50 cursor-pointer shadow-sm"
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] font-bold shrink-0 touch-target disabled:opacity-50 cursor-pointer shadow-sm"
                         >
                           <RefreshCw
                             className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`}
@@ -383,7 +383,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="pt-2">
                     <Link
                       to="/addresses/new"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm touch-target"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target"
                     >
                       <Plus className="w-4 h-4 stroke-[2.5]" />
                       <span>Créer ma première adresse</span>

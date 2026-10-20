@@ -405,7 +405,7 @@ export const AdminPage: React.FC = () => {
                     }`}
                   >
                     <span>{tab.label}</span>
-                    <span className="text-[10px] opacity-80">({tab.count})</span>
+                    <span className={`text-xs font-semibold ${statusFilter === tab.id ? 'text-[#FBF7EF]' : 'text-[#5C4D44]'}`}>({tab.count})</span>
                   </button>
                 ))}
               </div>
@@ -724,7 +724,7 @@ export const AdminPage: React.FC = () => {
                     type="button"
                     disabled={processing}
                     onClick={() => handleResolveReport(selectedReport)}
-                    className="px-3.5 py-2 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-white text-xs font-bold transition shadow-sm cursor-pointer touch-target"
+                    className="px-3.5 py-2 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
                   >
                     Marquer traité
                   </button>
@@ -745,7 +745,7 @@ export const AdminPage: React.FC = () => {
                   type="button"
                   disabled={processing}
                   onClick={() => setShowReinstateModal(true)}
-                  className="px-3.5 py-2 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-white text-xs font-bold transition shadow-sm cursor-pointer touch-target"
+                  className="px-3.5 py-2 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
                 >
                   Rétablir l'adresse
                 </button>
@@ -911,7 +911,7 @@ export const AdminPage: React.FC = () => {
                   type="button"
                   disabled={processing}
                   onClick={handleConfirmReinstate}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 touch-target"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 touch-target"
                 >
                   {processing ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -984,7 +984,7 @@ export const AdminPage: React.FC = () => {
                 type="button"
                 disabled={processing}
                 onClick={handleConfirmSuspend}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-white text-xs font-bold transition min-h-[44px] cursor-pointer touch-target shadow-sm disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-[#FBF7EF] text-xs font-bold transition min-h-[44px] cursor-pointer touch-target shadow-sm disabled:opacity-50"
               >
                 {processing && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Confirmer la suspension</span>
@@ -1046,7 +1046,7 @@ export const AdminPage: React.FC = () => {
                 type="button"
                 disabled={processing}
                 onClick={handleConfirmReinstate}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-white text-xs font-bold transition min-h-[44px] cursor-pointer touch-target shadow-sm disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#2A6B44] hover:bg-[#1E5234] text-[#FBF7EF] text-xs font-bold transition min-h-[44px] cursor-pointer touch-target shadow-sm disabled:opacity-50"
               >
                 {processing && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Confirmer le rétablissement</span>

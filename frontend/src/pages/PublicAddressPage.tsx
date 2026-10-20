@@ -329,7 +329,7 @@ export const PublicAddressPage: React.FC = () => {
           <div className="pt-2">
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white font-bold text-xs sm:text-sm transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-[#FBF7EF] font-bold text-xs sm:text-sm transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target"
             >
               Retour à l'accueil
             </Link>
@@ -381,7 +381,7 @@ export const PublicAddressPage: React.FC = () => {
           <div className="pt-2">
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white font-bold text-xs sm:text-sm transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-[#FBF7EF] font-bold text-xs sm:text-sm transition shadow-[0_2px_0_rgba(35,26,21,0.12)] touch-target"
             >
               <span>Retour à l'accueil</span>
             </Link>

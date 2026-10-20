@@ -214,7 +214,7 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /api/admin/reset-rate-limits:
+  /api/admin/system/reset-rate-limits:
     post:
       tags:
       - Administration & Modération
@@ -222,6 +222,37 @@ paths:
       description: Vide le cache des limiteurs de débit en mémoire (profils dev et
         e2e uniquement).
       operationId: resetRateLimits
+      responses:
+        "200":
+          description: Limiteurs de débit réinitialisés
+          content:
+            '*/*':
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        "401":
+          description: Non authentifié
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Accès réservé aux administrateurs
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - bearerAuth: []
+  /api/admin/reset-rate-limits:
+    post:
+      tags:
+      - Administration & Modération
+      summary: Réinitialiser les limiteurs de débit
+      description: Vide le cache des limiteurs de débit en mémoire (profils dev et
+        e2e uniquement).
+      operationId: resetRateLimits_1
       responses:
         "200":
           description: Limiteurs de débit réinitialisés
@@ -997,6 +1028,10 @@ paths:
       responses:
         "404":
           description: Répertoire introuvable ou listage interdit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /uploads:
     get:
       tags:
@@ -1007,6 +1042,10 @@ paths:
       responses:
         "404":
           description: Répertoire introuvable ou listage interdit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /api/public/route:
     get:
       tags:
@@ -1901,14 +1940,14 @@ components:
     PageableObject:
       type: object
       properties:
-        paged:
-          type: boolean
         pageNumber:
           type: integer
           format: int32
         pageSize:
           type: integer
           format: int32
+        paged:
+          type: boolean
         offset:
           type: integer
           format: int64

@@ -684,8 +684,8 @@ export const MyAddressesPage: React.FC = () => {
        * Liste des Adresses : Chargement, Erreur, Vide ou Résultats
        * ========================================================================= */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[400px]" aria-label="Chargement des adresses">
-          {[1, 2, 3, 4].map((n) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 min-h-[750px]" aria-label="Chargement des adresses">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
             <div
               key={n}
               className="rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm p-4 min-h-[196px] animate-pulse space-y-3"
@@ -705,7 +705,7 @@ export const MyAddressesPage: React.FC = () => {
           <button
             type="button"
             onClick={() => fetchAddresses(false)}
-            className="px-4 py-2 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-white text-xs font-bold transition cursor-pointer touch-target shrink-0"
+            className="px-4 py-2 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-[#FBF7EF] text-xs font-bold transition cursor-pointer touch-target shrink-0"
           >
             Réessayer
           </button>
@@ -776,7 +776,7 @@ export const MyAddressesPage: React.FC = () => {
                     )}
 
                     {uploadingAddressId === address.id && (
-                      <div className="absolute inset-0 bg-[#231A15]/60 flex items-center justify-center text-white">
+                      <div className="absolute inset-0 bg-[#231A15]/60 flex items-center justify-center text-[#FBF7EF]">
                         <Loader2 className="w-4 h-4 animate-spin" />
                       </div>
                     )}
@@ -808,7 +808,7 @@ export const MyAddressesPage: React.FC = () => {
                         {new Date(address.createdAt).toLocaleDateString('fr-FR')}
                       </span>
                       {address.listed && (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1D528F]/10 text-[#1D528F] border border-[#1D528F]/30">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-bold bg-[#1D528F]/10 text-[#1D528F] border border-[#1D528F]/30">
                           Dans l'annuaire
                         </span>
                       )}
@@ -978,7 +978,7 @@ export const MyAddressesPage: React.FC = () => {
                           </span>
                         )}
                         {address.listed && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#1D528F]/10 text-[#1D528F] border border-[#1D528F]/30">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-[#1D528F]/10 text-[#1D528F] border border-[#1D528F]/30">
                             Dans l'annuaire
                           </span>
                         )}

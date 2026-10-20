@@ -11,12 +11,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
+import lombok.extern.slf4j.Slf4j;
 import sn.samaadresse.dto.ErrorResponse;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -368,18 +370,18 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-        IllegalArgumentException.class,
         org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
         org.springframework.web.bind.MissingServletRequestParameterException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(
         Exception ex, HttpServletRequest request
     ) {
+        log.warn("[BAD-REQUEST] Paramètre ou syntaxe invalide sur {} : {}", request.getRequestURI(), ex.getMessage());
         ErrorResponse response = ErrorResponse.builder()
             .timestamp(Instant.now())
             .status(HttpStatus.BAD_REQUEST.value())
             .error("Bad Request")
-            .message(ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : "Paramètre ou requête invalide")
+            .message("Paramètre ou syntaxe de requête invalide.")
             .path(request.getRequestURI())
             .build();
 

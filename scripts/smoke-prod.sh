@@ -529,10 +529,8 @@ if admin_email and admin_password:
         if err_reset:
             record("POST /api/admin/reset-rate-limits avec jeton ADMIN (404 en profil prod)", False, f"Erreur réseau reset: {err_reset}")
         else:
-            prod_disabled_ok = (st_reset == 404) or (st_reset == 500 and "onrender.com" in base_url)
+            prod_disabled_ok = (st_reset == 404)
             detail_msg = f"HTTP {st_reset} (contrôleur dev désactivé en profil prod)"
-            if st_reset == 500 and "onrender.com" in base_url:
-                detail_msg += " [instance cloud Render antérieure au patch NoResourceFoundException 404]"
             record(
                 "POST /api/admin/reset-rate-limits avec jeton ADMIN (404 en profil prod)",
                 prod_disabled_ok,
@@ -551,6 +549,24 @@ else:
         "ADMIN_EMAIL ou ADMIN_PASSWORD non défini dans l'environnement",
         is_unverified=True
     )
+
+# 20. Limiteur de débit login D-02 (5 tentatives autorisées, 6e tentative -> HTTP 429 avec Retry-After > 0)
+fake_email = f"smoke-nonexistent-{int(time.time())}@example.sn"
+fake_payload = json.dumps({"email": fake_email, "password": "WrongPassword123!"}).encode("utf-8")
+login_statuses = []
+last_retry_after = None
+for i in range(6):
+    s_try, h_try, b_try, _ = req("POST", "/api/auth/login", {"Content-Type": "application/json"}, fake_payload)
+    login_statuses.append(s_try)
+    if s_try == 429:
+        last_retry_after = h_try.get("retry-after")
+
+rate_limit_triggered = (429 in login_statuses) or (len(login_statuses) == 6 and login_statuses[5] == 429)
+record(
+    "Limiteur de débit login D-02 (6 tentatives, 429 attendu sur identifiant inexistant)",
+    rate_limit_triggered,
+    f"Codes HTTP observés : {login_statuses}, Retry-After={last_retry_after}"
+)
 
 now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
 lines = [

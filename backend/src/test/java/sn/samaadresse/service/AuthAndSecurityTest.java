@@ -138,8 +138,16 @@ class AuthAndSecurityTest {
 
         // Refresh absent ou expiré
         assertThrows(TokenRefreshException.class, () -> authService.refreshToken("", response));
-        tokenEntity.setRevoked(true);
-        assertThrows(TokenRefreshException.class, () -> authService.refreshToken(rawRefresh, response));
+
+        String revokedRefresh = "revoked-refresh-token-456";
+        RefreshToken revokedEntity = RefreshToken.builder()
+                .tokenHash(HashUtils.hashSha256(revokedRefresh))
+                .user(testUser)
+                .expiryDate(Instant.now().plus(1, ChronoUnit.DAYS))
+                .revoked(true)
+                .build();
+        when(refreshTokenRepository.findByTokenHash(HashUtils.hashSha256(revokedRefresh))).thenReturn(Optional.of(revokedEntity));
+        assertThrows(TokenRefreshException.class, () -> authService.refreshToken(revokedRefresh, response));
 
         // Logout et profil
         authService.logout(rawRefresh, response);

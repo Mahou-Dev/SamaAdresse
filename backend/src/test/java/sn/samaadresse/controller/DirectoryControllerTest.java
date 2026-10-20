@@ -289,4 +289,18 @@ class DirectoryControllerTest {
                 .andExpect(jsonPath("$.totalElements").value(0))
                 .andExpect(jsonPath("$.content").isEmpty());
     }
+
+    @Test
+    @DisplayName("4. Requêtes avec apostrophe (' , %27 , N'Diaye , M'Bodj , Sant'Anna, ' OR 1=1--) : 200 liste vide, jamais 500")
+    void directory_searchWithApostrophes_returns200EmptyListNever500() throws Exception {
+        String[] testQueries = {"'", "%27", "N'Diaye", "M'Bodj", "Sant'Anna", "' OR 1=1--"};
+
+        for (String query : testQueries) {
+            mockMvc.perform(get("/api/public/directory").param("q", query))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(org.springframework.http.MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$.status").doesNotExist()) // Pas d'objet ErrorResponse
+                    .andExpect(jsonPath("$.content").isArray());
+        }
+    }
 }

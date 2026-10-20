@@ -20,6 +20,7 @@ import sn.samaadresse.security.RateLimiterService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -37,6 +38,10 @@ public class AuthService {
 
     @Value("${app.security.login-rate-limit:5}")
     private int loginRateLimit = 5;
+
+    private final Map<String, CachedRefreshResponse> rotationGracePeriodCache = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private record CachedRefreshResponse(String accessToken, String newRawRefreshToken, User user, Instant expiry) {}
 
     public void setLoginRateLimit(int loginRateLimit) {
         this.loginRateLimit = loginRateLimit;
@@ -109,6 +114,18 @@ public class AuthService {
 
         String tokenHash = HashUtils.hashSha256(rawRefreshToken);
 
+        // Période de grâce de 30 secondes pour les requêtes concurrentes / rechargement rapide de page
+        CachedRefreshResponse cached = rotationGracePeriodCache.get(tokenHash);
+        if (cached != null && cached.expiry().isAfter(Instant.now())) {
+            setRefreshTokenCookie(response, cached.newRawRefreshToken(), 7 * 24 * 60 * 60);
+            return AuthResponse.builder()
+                .accessToken(cached.accessToken())
+                .tokenType("Bearer")
+                .expiresIn(jwtProvider.getAccessTokenExpirationMs() / 1000)
+                .user(mapToProfileResponse(cached.user()))
+                .build();
+        }
+
         RefreshToken refreshToken = refreshTokenRepository.findByTokenHash(tokenHash)
             .orElseThrow(() -> {
                 clearRefreshTokenCookie(response);
@@ -145,6 +162,12 @@ public class AuthService {
 
         String newAccessToken = jwtProvider.generateAccessToken(user);
 
+        // Mettre en cache de grâce pour 30s et nettoyer les entrées expirées
+        rotationGracePeriodCache.put(tokenHash, new CachedRefreshResponse(
+            newAccessToken, newRawRefreshToken, user, Instant.now().plusSeconds(30)
+        ));
+        rotationGracePeriodCache.entrySet().removeIf(e -> e.getValue().expiry().isBefore(Instant.now()));
+
         return AuthResponse.builder()
             .accessToken(newAccessToken)
             .tokenType("Bearer")
@@ -157,6 +180,7 @@ public class AuthService {
     public void logout(String rawRefreshToken, HttpServletResponse response) {
         if (StringUtils.hasText(rawRefreshToken)) {
             String tokenHash = HashUtils.hashSha256(rawRefreshToken);
+            rotationGracePeriodCache.remove(tokenHash);
             refreshTokenRepository.deleteByTokenHash(tokenHash);
         }
         clearRefreshTokenCookie(response);

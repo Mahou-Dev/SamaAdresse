@@ -309,7 +309,7 @@ export const AccountPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleInstallClick}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm cursor-pointer touch-target shrink-0"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer touch-target shrink-0"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Installer</span>
@@ -471,7 +471,7 @@ export const AccountPage: React.FC = () => {
             <div className="pt-3 border-t border-[#766B5B]/30 flex justify-end">
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm cursor-pointer touch-target"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
               >
                 <span>Enregistrer les préférences</span>
               </button>
@@ -548,7 +548,7 @@ export const AccountPage: React.FC = () => {
               </div>
               <Link
                 to={`/a/${demoCode}`}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#12304F] hover:bg-[#0C233B] text-white text-xs font-bold transition shadow-sm cursor-pointer touch-target shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#12304F] hover:bg-[#0C233B] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer touch-target shrink-0"
               >
                 <span>Voir la fiche {demoCode}</span>
                 <ExternalLink className="w-3.5 h-3.5" />

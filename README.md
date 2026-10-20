@@ -58,14 +58,15 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 └───────────┬───────────────────────────────┬──────────────────────────────┘
             │ JDBC SSL                      │ HTTPS (proxy serveur)
             ▼                               ▼
-┌───────────────────────────────┐ ┌────────────────────────────────────────┐
-│ PostgreSQL 16 (Neon / Docker) │ │ Services externes                      │
-│  ├─ users, refresh_tokens     │ │  ├─ OpenRouteService (itinéraires)     │
-│  ├─ addresses, reserved_codes │ │  └─ Fournisseur SMS (Mock/Twilio/...)  │
-│  ├─ address_reports           │ └────────────────────────────────────────┘
-│  ├─ admin_actions             │
-│  └─ photo_blobs (bytea)       │
-└───────────────────────────────┘
+┌────────────────────────────────────────────────────────┐ ┌────────────────────────────────────────┐
+│ PostgreSQL 18 sur Neon (production)                    │ │ Services externes                      │
+│ PostgreSQL 16 dans l'image Docker de test local        │ │  ├─ OpenRouteService (itinéraires)     │
+│  ├─ users, refresh_tokens                              │ │  └─ Fournisseur SMS (Mock/Twilio/...)  │
+│  ├─ addresses, reserved_codes                          │ └────────────────────────────────────────┘
+│  ├─ address_reports                                    │
+│  ├─ admin_actions                                      │
+│  └─ photo_blobs (bytea)                                │
+└────────────────────────────────────────────────────────┘
 ```
 
 Les diagrammes PlantUML détaillés et leur rapport de vérification sont disponibles dans :
@@ -223,7 +224,7 @@ Aucun secret n'est présent dans les fichiers suivis par Git. Le modèle [`.env.
 | `JWT_REFRESH_EXP` | Durée de validité du jeton de rafraîchissement en millisecondes | Non (défaut `604800000` = 7 jours) | `604800000` |
 | `COOKIE_SECURE` | Active l'attribut `Secure` sur le cookie de rafraîchissement (`true` en HTTPS) | Non (défaut `true` en `prod`, `false` en dev) | `true` |
 | `TRUSTED_PROXY_HOPS` | Nombre de sauts de proxy inverse de confiance pour l'extraction de l'IP cliente (`1` derrière Render/Cloudflare, `0` en local) | Non (défaut `1` en `prod`, `0` en dev) | `1` |
-| `LOGIN_RATE_LIMIT` | Limite de débit des tentatives de connexion par minute et par adresse IP (HTTP 429 avec en-tête Retry-After si dépassé) | Non (défaut `5`) | `5` |
+| `LOGIN_RATE_LIMIT` | Limite de débit des tentatives de connexion par minute et par adresse IP (HTTP 429 avec en-tête Retry-After si dépassé). Note : les connexions réussies comptent également dans la limite (consommation globale du seau par appel à l'endpoint). | Non (défaut `5`) | `5` |
 | `FRONTEND_BASE_URL` | URL publique de l'application (utilisée dans les QR codes et les liens partagés, doit débuter par `https://` en production) | Oui | `https://samaadresse.onrender.com` |
 | `PHOTO_STORAGE` | Mode de stockage des photos de façade : `disk` (système de fichiers local) ou `db` (table PostgreSQL `photo_blobs`) | Non (défaut `db` en `prod`, `disk` en dev) | `db` |
 | `UPLOAD_DIR` | Répertoire local de stockage des photos lorsque `PHOTO_STORAGE=disk` | Non (défaut `./uploads`) | `./uploads` |
@@ -277,13 +278,13 @@ Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et g�
 
 ## 11. Déploiement sur Neon + Render
 
-Le dépôt inclut le fichier Blueprint [`render.yaml`](render.yaml) prêt pour Render :
+Le dépôt inclut le fichier Blueprint [`render.yaml`](render.yaml) configuré pour déployer automatiquement depuis la branche `main` :
 
-1. **Base de données Neon (PostgreSQL 16)** :
-   - Créer un projet PostgreSQL 16 sur [Neon](https://neon.tech) dans la région `eu-central-1` (Francfort).
+1. **Base de données Neon (PostgreSQL 18 sur Neon en production, PostgreSQL 16 dans l'image Docker de test local)** :
+   - Créer un projet PostgreSQL 18 sur [Neon](https://neon.tech) dans la région `eu-central-1` (Francfort). L'environnement de test local conteneurisé utilise quant à lui PostgreSQL 16 (`postgres:16-alpine`).
    - Copier l'URL de connexion directe (non poolée, format `postgresql://user:pass@ep-...neon.tech/neondb?sslmode=require`) : Flyway nécessite une connexion directe pour ses verrous de migration, et HikariCP est plafonné à 5 connexions (`max-lifetime: 540000`).
-2. **Service Web Render (Docker)** :
-   - Connecter votre dépôt GitHub à [Render](https://render.com) et créer un **Web Service** (ou importer le Blueprint `render.yaml`).
+2. **Service Web Render (Docker, déploiement continu depuis `main`)** :
+   - Connecter votre dépôt GitHub à [Render](https://render.com) en sélectionnant la branche **`main`** et créer un **Web Service** (ou importer directement le Blueprint [`render.yaml`](render.yaml)).
    - Dans l'onglet **Environment**, renseigner les variables `sync: false` :
      - `DATABASE_URL` : l'URL Neon copiée à l'étape 1.
      - `FRONTEND_BASE_URL` : l'URL HTTPS de votre service Render (ex. `https://samaadresse.onrender.com`).

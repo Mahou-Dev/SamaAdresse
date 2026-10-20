@@ -413,7 +413,7 @@ export const NewAddressPage: React.FC = () => {
   const numLng = parseFloat(longitude) || -16.271944;
 
   return (
-    <div className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8">
+    <div className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 min-h-[900px]">
       {/* Lien retour léger */}
       <div className="mb-4">
         <Link

@@ -30,9 +30,16 @@ const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ defaul
 const DirectoryPage = lazy(() => (directoryPreload ?? import('./pages/DirectoryPage')).then(m => ({ default: m.DirectoryPage })));
 
 const RouteLoadingFallback = () => (
-  <div className="max-w-5xl mx-auto w-full px-4 py-8 space-y-4 animate-pulse min-h-[calc(100vh-8rem)]">
-    <div className="h-8 bg-[#E6DDD0] rounded w-1/3" />
-    <div className="h-32 bg-[#E6DDD0]/60 rounded-xl" />
+  <div className="max-w-[1120px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-h-[1100px] animate-pulse">
+    <div className="h-9 bg-[#E6DDD0] rounded-lg w-1/3" />
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
+      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
+      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
+      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
+    </div>
+    <div className="h-44 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
+    <div className="h-96 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
   </div>
 );
 
@@ -60,7 +67,14 @@ export function App() {
                         </ProtectedRoute>
                       }
                     />
-                    <Route path="/account" element={<AccountPage />} />
+                    <Route
+                      path="/account"
+                      element={
+                        <ProtectedRoute>
+                          <AccountPage />
+                        </ProtectedRoute>
+                      }
+                    />
                     <Route path="/a/:code" element={<PublicAddressPage />} />
                     <Route
                       path="/addresses/new"

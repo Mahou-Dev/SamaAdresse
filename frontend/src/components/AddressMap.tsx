@@ -40,9 +40,21 @@ export const AddressMap: React.FC<AddressMapProps> = ({
   const [loadingGps, setLoadingGps] = useState<boolean>(false);
   const [mapReady, setMapReady] = useState<boolean>(false);
 
+  const [isOffline, setIsOffline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? !navigator.onLine : false
+  );
+
   useEffect(() => {
     const timer = setTimeout(() => setMapReady(true), 80);
-    return () => clearTimeout(timer);
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const handleOpenDirections = () => {
@@ -73,7 +85,15 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     <div className="space-y-3">
       {/* Cadre de carte émaillé et sobre */}
       <div className="relative rounded-xl overflow-hidden border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.08)] h-64 sm:h-80 bg-[#F2ECE1] z-0">
-        {mapReady ? (
+        {isOffline ? (
+          <div className="leaflet-container w-full h-full bg-[#F2ECE1] flex flex-col items-center justify-center gap-2 text-[#5C4D44] p-4 text-center">
+            <MapPin className="w-8 h-8 text-[#766B5B] opacity-60" />
+            <span className="text-sm font-semibold text-[#231A15]">Carte indisponible hors ligne</span>
+            <p className="text-xs text-[#5C4D44] max-w-xs">
+              Les tuiles cartographiques ne peuvent pas être chargées sans connexion réseau.
+            </p>
+          </div>
+        ) : mapReady ? (
           <Suspense fallback={<MapSkeleton />}>
             <LazyLeafletMapInner
               latitude={latitude}

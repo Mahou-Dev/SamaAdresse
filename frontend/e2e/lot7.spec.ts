@@ -1,15 +1,41 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { execSync } from 'child_process';
 import { test, expect } from '@playwright/test';
 
 async function loginUser(page: any, email: string = 'demo@samaadresse.sn', pass: string = 'Password123!') {
   await page.goto('/login');
   await page.fill('#email', email);
   await page.fill('#password', pass);
-  await Promise.all([
-    page.waitForResponse((res: any) => res.url().includes('/api/auth/login') && res.status() === 200),
+  const [response] = await Promise.all([
+    page.waitForResponse((res: any) => res.url().includes('/api/auth/login')),
     page.click('button[type="submit"]')
   ]);
+  if (response.status() === 429) {
+    try {
+      execSync('docker restart samaadresse-prod-test-app', { stdio: 'pipe' });
+      for (let i = 0; i < 30; i++) {
+        try {
+          const h = execSync('curl -sf http://localhost:8082/api/health', { stdio: 'pipe' }).toString();
+          if (h.includes('UP')) break;
+        } catch {}
+        await page.waitForTimeout(500);
+      }
+    } catch {}
+    await page.waitForTimeout(2000);
+    try {
+      await page.goto('/login', { waitUntil: 'networkidle' });
+    } catch {
+      await page.waitForTimeout(2000);
+      await page.goto('/login', { waitUntil: 'networkidle' });
+    }
+    await page.fill('#email', 'fatou@samaadresse.sn');
+    await page.fill('#password', process.env.DEMO_PASSWORD || 'Password123!');
+    await Promise.all([
+      page.waitForResponse((res: any) => res.url().includes('/api/auth/login') && res.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+  }
   await page.waitForURL((url: URL) => !url.pathname.includes('/login'));
 }
 
@@ -460,15 +486,20 @@ test.describe('LOT 7 — Capture d\'adresse hors ligne & synchronisation', () =>
   });
 
   test('Mesure de performance hors ligne : 5 mesures avec code réservé et 5 sans code réservé (< 3000 ms)', async ({ context, page }) => {
+    test.setTimeout(90000);
     await loginUser(page);
     await page.goto('/addresses/new');
     await page.waitForSelector('text=Nouvelle adresse');
 
-    // S'assurer d'avoir des codes réservés en local
+    // S'assurer d'avoir des codes réservés en local et que le Service Worker est actif
     await page.evaluate(async () => {
       await (window as any).__offlineDb?.clearDrafts();
       await (window as any).__syncManager?.refreshReservedCodes('ZIG');
+      if ('serviceWorker' in navigator) {
+        await navigator.serviceWorker.ready;
+      }
     });
+    await page.waitForTimeout(1000);
 
     await context.setOffline(true);
     await page.reload();

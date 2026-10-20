@@ -539,6 +539,42 @@
               ]
             }
           }
+        },
+        {
+          "name": "POST /api/admin/system/reset-rate-limits — Réinitialiser les limiteurs de débit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/system/reset-rate-limits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "system",
+                "reset-rate-limits"
+              ],
+              "query": []
+            },
+            "description": "Vide le cache des limiteurs de débit en mémoire (profils dev et e2e uniquement).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         }
       ]
     },

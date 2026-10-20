@@ -77,17 +77,17 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     danger: {
       iconBg: 'bg-[#FBF7EF] border-[#8A3112]/30 text-[#8A3112]',
       icon: AlertCircle,
-      confirmBtn: 'bg-[#8A3112] hover:bg-[#9A3816] text-white',
+      confirmBtn: 'bg-[#8A3112] hover:bg-[#9A3816] text-[#FBF7EF]',
     },
     warning: {
       iconBg: 'bg-[#F2ECE1] border-[#8A3112]/30 text-[#8A3112]',
       icon: AlertTriangle,
-      confirmBtn: 'bg-[#B84A24] hover:bg-[#8A3112] text-white',
+      confirmBtn: 'bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF]',
     },
     info: {
       iconBg: 'bg-[#F2ECE1] border-[#1D528F]/30 text-[#1D528F]',
       icon: Info,
-      confirmBtn: 'bg-[#12304F] hover:bg-[#0C233B] text-white',
+      confirmBtn: 'bg-[#12304F] hover:bg-[#0C233B] text-[#FBF7EF]',
     },
   }[variant];
 

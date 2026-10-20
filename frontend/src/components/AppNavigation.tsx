@@ -174,7 +174,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <Home className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Accueil</span>
+              <span className="text-xs font-medium">Accueil</span>
             </Link>
 
             <Link
@@ -187,7 +187,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <BookOpen className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Annuaire</span>
+              <span className="text-xs font-medium">Annuaire</span>
             </Link>
 
             <Link
@@ -199,7 +199,7 @@ export const AppNavigation: React.FC = () => {
               <div className="w-10 h-10 rounded-full bg-[#B84A24] text-white flex items-center justify-center shadow-[0_3px_6px_rgba(184,74,36,0.35)] group-active:scale-95 transition">
                 <Plus className="w-5 h-5 stroke-[2.5]" />
               </div>
-              <span className="text-[9px] font-bold text-[#B84A24] mt-0.5 whitespace-nowrap">Créer</span>
+              <span className="text-xs font-bold text-[#B84A24] mt-0.5 whitespace-nowrap">Créer</span>
             </Link>
 
             <Link
@@ -212,7 +212,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <MapPin className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Adresses</span>
+              <span className="text-xs font-medium">Adresses</span>
             </Link>
 
             <Link
@@ -225,7 +225,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <User className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Compte</span>
+              <span className="text-xs font-medium">Compte</span>
             </Link>
           </div>
         ) : (
@@ -241,7 +241,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <Home className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Accueil</span>
+              <span className="text-xs font-medium">Accueil</span>
             </Link>
 
             <Link
@@ -254,7 +254,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <BookOpen className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Annuaire</span>
+              <span className="text-xs font-medium">Annuaire</span>
             </Link>
 
             <Link
@@ -266,7 +266,7 @@ export const AppNavigation: React.FC = () => {
               <div className="w-10 h-10 rounded-full bg-[#B84A24] text-white flex items-center justify-center shadow-[0_3px_6px_rgba(184,74,36,0.35)] group-active:scale-95 transition">
                 <Plus className="w-5 h-5 stroke-[2.5]" />
               </div>
-              <span className="text-[9px] font-bold text-[#B84A24] mt-0.5 whitespace-nowrap">Créer</span>
+              <span className="text-xs font-bold text-[#B84A24] mt-0.5 whitespace-nowrap">Créer</span>
             </Link>
 
             <Link
@@ -279,7 +279,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <Eye className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Exemple</span>
+              <span className="text-xs font-medium">Exemple</span>
             </Link>
 
             <Link
@@ -292,7 +292,7 @@ export const AppNavigation: React.FC = () => {
               }`}
             >
               <LogIn className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">Connexion</span>
+              <span className="text-xs font-medium">Connexion</span>
             </Link>
           </div>
         )}

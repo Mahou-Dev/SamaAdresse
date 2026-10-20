@@ -3,32 +3,32 @@
 
 Fichier                                    Taille brute           Gzip
 ----------------------------------------------------------------------
-AccountPage-D1O8HMgT.js                        19.71 Ko        5.36 Ko
-AdminPage-CDGrK43w.js                          27.37 Ko        6.58 Ko
-ConnectedLayout-CNkxWDnj.js                    10.58 Ko        3.45 Ko
-DashboardPage-CE3hPiml.js                      12.17 Ko        3.30 Ko
-DirectoryPage-BA01XfV_.js                      12.04 Ko        3.64 Ko
-EditAddressPage-CMuBnie0.js                    10.54 Ko        3.21 Ko
-LeafletMapInner-BZ4aLIIG.js                   154.77 Ko       45.31 Ko
-MyAddressesPage-CW3IplPV.js                    26.16 Ko        7.13 Ko
-NewAddressPage-Ci07auOD.js                     26.24 Ko        7.05 Ko
+AccountPage-Crb25dBG.js                        19.72 Ko        5.36 Ko
+AdminPage-DqZYKlZx.js                          27.44 Ko        6.57 Ko
+ConnectedLayout-M11rQ87J.js                    10.61 Ko        3.45 Ko
+DashboardPage-C7HmJsId.js                      12.20 Ko        3.30 Ko
+DirectoryPage-ChEJb9Yg.js                      12.23 Ko        3.73 Ko
+EditAddressPage-CmshiwA0.js                    10.54 Ko        3.21 Ko
+LeafletMapInner-B67BmzdX.js                   154.77 Ko       45.31 Ko
+MyAddressesPage-D1suPURh.js                    26.16 Ko        7.13 Ko
+NewAddressPage-D_4EbLA5.js                     26.26 Ko        7.05 Ko
 arrow-right-DSI94n68.js                         0.19 Ko        0.17 Ko
 camera-fzzKfyoa.js                              0.35 Ko        0.26 Ko
 chevron-right-iz8meur6.js                       0.15 Ko        0.15 Ko
 download-077YBLp6.js                            0.25 Ko        0.20 Ko
-formValidation-tqUU6DHL.js                      3.94 Ko        2.03 Ko
-index-BzsbKpFf.js                             325.70 Ko       90.94 Ko
+formValidation-BXOQHJ57.js                      3.94 Ko        2.03 Ko
+index-RG2zlHoF.js                             327.04 Ko       91.13 Ko
 jsx-runtime-Dk72oS4N.js                         8.57 Ko        3.25 Ko
 rotate-ccw-DiqQR2nY.js                          0.22 Ko        0.19 Ko
 search-DkWC-zs1.js                              0.19 Ko        0.18 Ko
 trash-DJaVwN9b.js                               0.36 Ko        0.24 Ko
 triangle-alert-B77fhVlt.js                      0.31 Ko        0.23 Ko
-ui-eFpeqnD_.js                                 12.50 Ko        3.95 Ko
+ui-BVT3oPr4.js                                 12.54 Ko        3.96 Ko
 workbox-window.prod.es5-Bd17z0YL.js             5.52 Ko        2.15 Ko
 x-BlsJ82s3.js                                  48.93 Ko       17.41 Ko
 ----------------------------------------------------------------------
 
-Chunk d'entrée : index-BzsbKpFf.js
-Taille gzip : 90.94 Ko (Seuil max : 125.00 Ko, Objectif : <= 105.00 Ko)
+Chunk d'entrée : index-RG2zlHoF.js
+Taille gzip : 91.13 Ko (Seuil max : 125.00 Ko, Objectif : <= 105.00 Ko)
 
-SUCCES : Le chunk d'entrée est inférieur ou égal à l'objectif de 105 Ko gzip (90.94 Ko <= 105 Ko) !
+SUCCES : Le chunk d'entrée est inférieur ou égal à l'objectif de 105 Ko gzip (91.13 Ko <= 105 Ko) !

@@ -45,3 +45,4 @@ lot*/
 !docs/audit/lot*/
 scratch/
 assets-sources/
+__pycache__/

@@ -35,7 +35,7 @@ public class AdminDevController {
     private final RateLimiterService rateLimiterService;
     private final ReportRateLimiter reportRateLimiter;
 
-    @PostMapping("/reset-rate-limits")
+    @PostMapping({"/reset-rate-limits", "/system/reset-rate-limits"})
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Réinitialiser les limiteurs de débit", description = "Vide le cache des limiteurs de débit en mémoire (profils dev et e2e uniquement).")
     @ApiResponses({

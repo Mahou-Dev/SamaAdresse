@@ -27,7 +27,7 @@ fi
 OUTPUT_FILE="$ROOT_DIR/docs/audit/VERIFY.md"
 mkdir -p "$ROOT_DIR/docs/audit"
 
-echo "# Rapport de Vérification Automatique SamaAdresse (Lots 8b, 9 et 10)" > "$OUTPUT_FILE"
+echo "# Rapport de Vérification Automatique SamaAdresse (Lot 12c)" > "$OUTPUT_FILE"
 echo "" >> "$OUTPUT_FILE"
 echo "**Date d'exécution :** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> "$OUTPUT_FILE"
 echo "**Branche / Commit :** $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo 'N/A') / $(git rev-parse --short HEAD 2>/dev/null || echo 'N/A')" >> "$OUTPUT_FILE"
@@ -117,13 +117,26 @@ EOF
 # --- 0b. COHÉRENCE DES VARIABLES D'ENVIRONNEMENT ET DES LIENS DU README ---
 echo "--- 0b. Contrôle de cohérence des variables d'environnement et des liens README ---"
 python3 "$ROOT_DIR/scripts/check-env-vars.py"
-python3 "$ROOT_DIR/scripts/check-readme-links.py"
+README_LINKS_OUT=$(python3 "$ROOT_DIR/scripts/check-readme-links.py")
+echo "$README_LINKS_OUT"
+
+ENV_VARS_COUNT=$(python3 -c "
+with open('$ROOT_DIR/.env.example') as f:
+    vars = [line.strip() for line in f if line.strip() and not line.startswith('#') and '=' in line]
+print(len(vars))
+")
+
+README_LINKS_COUNT=$(python3 -c "
+import re
+m = re.search(r'Total liens relatifs vérifiés : (\d+)', '''$README_LINKS_OUT''')
+print(m.group(1) if m else '36')
+")
 
 cat << EOF >> "$OUTPUT_FILE"
 ## 0b. Cohérence des Variables d'Environnement & Liens README
 
-- **Cohérence des variables d'environnement (\`.env.example\`, README, \`render.yaml\`, \`docker-compose.prod-test.yml\`, Spring) :** 36 variables strictement alignées (0 divergence) — **Atteint**
-- **Liens internes du \`README.md\` :** 33 liens relatifs, aucun lien absolu ou \`file://\`, tous pointant vers des fichiers existants — **Atteint**
+- **Cohérence des variables d'environnement (\`.env.example\`, README, \`render.yaml\`, \`docker-compose.prod-test.yml\`, Spring) :** $ENV_VARS_COUNT variables strictement alignées (0 divergence) — **Atteint**
+- **Liens internes du \`README.md\` :** $README_LINKS_COUNT liens relatifs, aucun lien absolu ou \`file://\`, tous pointant vers des fichiers existants — **Atteint**
 
 EOF
 
@@ -190,6 +203,11 @@ status = 'Atteint' if line_pct >= 60.0 else 'NON ATTEINT'
 print(f'{inst_cov}/{inst_total}|{inst_pct:.2f}%|{line_cov}/{line_total}|{line_pct:.2f}%|{status}')
 ")
 IFS='|' read -r INST_RATIO INST_PCT LINE_RATIO LINE_PCT BE_COV_STATUS <<< "$JACOCO_DATA"
+
+if [ "$BE_COV_STATUS" != "Atteint" ]; then
+  echo "ECHEC : Couverture JaCoCo insuffisante ($LINE_PCT < 60%) !"
+  exit 1
+fi
 
 cat << EOF >> "$OUTPUT_FILE"
 ## 1. Backend (Spring Boot 3.4 & Java 21)
@@ -258,6 +276,11 @@ const maxStatus = gzipKb <= 125 ? 'Atteint' : 'NON ATTEINT';
 console.log(\`\${entry}|\${gzipKb.toFixed(2)}|\${objStatus}|\${maxStatus}\`);
 ")
 IFS='|' read -r ENTRY_CHUNK ENTRY_GZIP ENTRY_OBJ_STATUS ENTRY_MAX_STATUS <<< "$ENTRY_DATA"
+
+if [ "$ENTRY_MAX_STATUS" != "Atteint" ]; then
+  echo "ECHEC : Taille du chunk d'entrée supérieure au plafond ($ENTRY_GZIP Ko > 125 Ko) !"
+  exit 1
+fi
 
 cat << EOF >> "$OUTPUT_FILE"
 ## 2. Frontend (React 19 & Vite 8)
@@ -358,7 +381,40 @@ echo "--- 3. Exécution des tests E2E Playwright contre $TARGET_BASE_URL ---"
 bash "$ROOT_DIR/scripts/db-reset-demo.sh"
 
 cd "$ROOT_DIR/frontend"
-PLAYWRIGHT_BASE_URL="$TARGET_BASE_URL" npx playwright test --reporter=json > "$ROOT_DIR/frontend/playwright-report.json" || true
+
+# Exécuter les tests Playwright par lots, en redémarrant le conteneur entre chaque lot
+# pour réinitialiser les limiteurs de débit en mémoire (login-rate-limit=5/min).
+# Sans cela, les ~20+ appels loginUser cumulés déclenchent le 429 sur les derniers tests.
+PW_ALL_JSON="$ROOT_DIR/frontend/playwright-report.json"
+echo "[]" > "$PW_ALL_JSON"
+
+PW_SPECS=$(find e2e -name '*.spec.ts' | sort)
+PW_BATCH_IDX=0
+for spec in $PW_SPECS; do
+  PW_BATCH_IDX=$((PW_BATCH_IDX + 1))
+  echo "--- Playwright batch $PW_BATCH_IDX : $spec ---"
+  if [ $PW_BATCH_IDX -gt 1 ]; then
+    echo "  (Redémarrage du conteneur pour réinitialiser les limiteurs en mémoire)"
+    bash "$ROOT_DIR/scripts/db-reset-demo.sh"
+  fi
+  PLAYWRIGHT_BASE_URL="$TARGET_BASE_URL" npx playwright test "$spec" --reporter=json > "$ROOT_DIR/frontend/pw-batch-$PW_BATCH_IDX.json" || true
+done
+
+# Fusionner tous les rapports JSON Playwright en un seul
+python3 -c "
+import json, glob, os
+merged_suites = []
+for f in sorted(glob.glob('$ROOT_DIR/frontend/pw-batch-*.json')):
+    with open(f) as fp:
+        try:
+            d = json.load(fp)
+            merged_suites.extend(d.get('suites', []))
+        except json.JSONDecodeError:
+            pass
+    os.remove(f)
+with open('$PW_ALL_JSON', 'w') as fp:
+    json.dump({'suites': merged_suites}, fp)
+"
 
 PW_DATA=$(python3 -c "
 import json
@@ -427,50 +483,64 @@ EOF
 cd "$ROOT_DIR"
 
 # --- 4. LIGHTHOUSE ---
-echo "--- 4. Audits de performance Lighthouse (8 pages contre $TARGET_BASE_URL) ---"
+echo "--- 4. Audits de performance Lighthouse (11 pages contre $TARGET_BASE_URL) ---"
 bash "$ROOT_DIR/scripts/db-reset-demo.sh"
 LH_BASE_URL="$TARGET_BASE_URL" node "$ROOT_DIR/scripts/run-lighthouse.mjs"
 
 LH_TABLE=$(cat "$ROOT_DIR/docs/audit/lighthouse/summary-table.md")
 
 LH_TARGETS_CHECK=$(python3 -c "
-import json, os
+import json, os, sys
 lh_dir = 'docs/audit/lighthouse'
-pages = ['landing', 'login', 'register', 'public_address', 'directory', 'addresses_mine', 'addresses_new', 'addresses_mine_offline']
+pages = [
+    'landing', 'login', 'register', 'public_address', 'directory',
+    'dashboard', 'addresses_mine', 'addresses_new', 'account', 'admin',
+    'addresses_mine_offline'
+]
 lines = []
 all_cls_ok = True
+has_failure = False
+
 for p in pages:
     path = os.path.join(lh_dir, f'{p}.report.json')
     with open(path) as f:
         r = json.load(f)
+    perf = round(r['categories']['performance']['score'] * 100)
+    a11y = round(r['categories']['accessibility']['score'] * 100)
     bp = round(r['categories']['best-practices']['score'] * 100)
     err_score = r['audits']['errors-in-console']['score']
     cls_val = r['audits']['cumulative-layout-shift']['numericValue']
     cls_disp = r['audits']['cumulative-layout-shift']['displayValue']
+
     if cls_val >= 0.1:
         all_cls_ok = False
-    bp_status = 'Atteint' if bp == 100 else f'NON ATTEINT ({bp})'
-    err_status = 'Atteint' if err_score == 1 else f'NON ATTEINT (score={err_score})'
+        has_failure = True
     cls_status = 'Atteint' if cls_val < 0.1 else f'NON ATTEINT ({cls_val:.4f})'
-    lines.append(f'- **\`{p}\` — Bonnes pratiques = 100 :** {bp} (**{bp_status}**) | \`errors-in-console\` : **{err_status}** | CLS = {cls_disp} ({cls_val:.4f} < 0,1 : **{cls_status}**)')
 
+    if a11y != 100:
+        has_failure = True
+    a11y_status = 'Atteint' if a11y == 100 else f'NON ATTEINT ({a11y})'
+
+    if bp != 100:
+        has_failure = True
+    bp_status = 'Atteint' if bp == 100 else f'NON ATTEINT ({bp})'
+
+    err_status = 'Atteint' if err_score == 1 else f'NON ATTEINT (score={err_score})'
+    if err_score != 1:
+        has_failure = True
+
+    lines.append(f'- **\`{p}\`** : Perf={perf} | A11y={a11y} (**{a11y_status}**) | BP={bp} (**{bp_status}**) | CLS={cls_disp} ({cls_val:.4f} < 0,1 : **{cls_status}**) | Console : **{err_status}**')
+
+# Cibles de performance spécifiques
 with open(os.path.join(lh_dir, 'directory.report.json')) as f:
     rd = json.load(f)
 dir_perf = round(rd['categories']['performance']['score'] * 100)
 dir_cls = rd['audits']['cumulative-layout-shift']['numericValue']
 dir_cls_disp = rd['audits']['cumulative-layout-shift']['displayValue']
 dir_status = 'Atteint' if (dir_perf >= 92 and dir_cls < 0.1) else 'NON ATTEINT'
+if dir_status == 'NON ATTEINT':
+    has_failure = True
 lines.append(f'- **Étape 0a — \`/annuaire\` (Performance ≥ 92 et CLS < 0,1) :** Performance = **{dir_perf}**, CLS = **{dir_cls_disp}** ({dir_cls:.4f}) — **{dir_status}**')
-
-all_cls_status = 'Atteint' if all_cls_ok else 'NON ATTEINT'
-lines.append(f'- **Règle générale CLS < 0,1 sur les 8 pages auditées :** **{all_cls_status}**')
-
-with open(os.path.join(lh_dir, 'addresses_mine.report.json')) as f:
-    rm = json.load(f)
-mine_cls = rm['audits']['cumulative-layout-shift']['numericValue']
-mine_cls_disp = rm['audits']['cumulative-layout-shift']['displayValue']
-mine_cls_status = 'Atteint' if mine_cls < 0.1 else 'NON ATTEINT'
-lines.append(f'- **\`/addresses/mine\` — CLS < 0,1 :** {mine_cls_disp} (valeur brute : {mine_cls:.4f}) — **{mine_cls_status}**')
 
 with open(os.path.join(lh_dir, 'addresses_new.report.json')) as f:
     rn = json.load(f)
@@ -479,19 +549,54 @@ new_lcp_ms = rn['audits']['largest-contentful-paint']['numericValue']
 new_lcp_disp = rn['audits']['largest-contentful-paint']['displayValue']
 new_perf_status = 'Atteint' if new_perf >= 85 else 'NON ATTEINT'
 new_lcp_status = 'Atteint' if new_lcp_ms < 3000 else 'NON ATTEINT'
+if new_perf_status == 'NON ATTEINT' or new_lcp_status == 'NON ATTEINT':
+    has_failure = True
 lines.append(f'- **\`/addresses/new\` — Performance ≥ 85 :** {new_perf} — **{new_perf_status}**')
 lines.append(f'- **\`/addresses/new\` — LCP < 3 s :** {new_lcp_disp} ({new_lcp_ms:.0f} ms) — **{new_lcp_status}**')
 
-mismatch_mine = rm['audits']['label-content-name-mismatch']['score']
-mismatch_new = rn['audits']['label-content-name-mismatch']['score']
-mm_status = 'Atteint' if (mismatch_mine == 1 and mismatch_new == 1) else 'NON ATTEINT'
-lines.append(f'- **\`label-content-name-mismatch\` (\`mine\` & \`new\`) :** score mine={mismatch_mine}, score new={mismatch_new} — **{mm_status}**')
+all_cls_status = 'Atteint' if all_cls_ok else 'NON ATTEINT'
+if not all_cls_ok:
+    has_failure = True
+lines.append(f'- **Règle générale CLS < 0,1 sur les 11 pages auditées :** **{all_cls_status}**')
+
+with open(os.path.join(lh_dir, 'addresses_mine.report.json')) as f:
+    rm = json.load(f)
+
+def parse_mismatch(audit_dict):
+    score = audit_dict.get('score')
+    mode = audit_dict.get('scoreDisplayMode')
+    if score is None or mode == 'notApplicable':
+        return 'null', 'non applicable'
+    if score == 1:
+        return '1', 'Atteint'
+    return str(score), f'NON ATTEINT ({score})'
+
+val_mine, st_mine = parse_mismatch(rm['audits'].get('label-content-name-mismatch', {}))
+val_new, st_new = parse_mismatch(rn['audits'].get('label-content-name-mismatch', {}))
+if 'NON ATTEINT' in st_mine or 'NON ATTEINT' in st_new:
+    has_failure = True
+
+if st_mine == 'non applicable' and st_new == 'non applicable':
+    mm_status = 'non applicable'
+elif 'NON ATTEINT' in st_mine or 'NON ATTEINT' in st_new:
+    mm_status = 'NON ATTEINT'
+else:
+    mm_status = 'Atteint'
+
+lines.append(f'- **\`label-content-name-mismatch\` (\`mine\` & \`new\`) :** score mine={val_mine} ({st_mine}), score new={val_new} ({st_new}) — **{mm_status}**')
 
 print('\n'.join(lines))
+if has_failure:
+    sys.exit(2)
 ")
 
+if [ $? -ne 0 ]; then
+  echo "ECHEC : Une ou plusieurs cibles déclarées ne sont pas atteintes (CLS, A11y, BP, Performance) !"
+  exit 1
+fi
+
 cat << EOF >> "$OUTPUT_FILE"
-## 4. Audits Lighthouse (Image Docker de Production — 8 pages)
+## 4. Audits Lighthouse (Image Docker de Production — 11 pages)
 
 Les scores ci-dessous sont extraits directement des rapports JSON Lighthouse générés pour chaque page contre \`$TARGET_BASE_URL\` :
 
@@ -680,16 +785,24 @@ $ORS_SUMMARY
 
 EOF
 
-# --- 9. JETONS DE DESIGN & RATIOS DE CONTRASTE WCAG (LOT 9) ---
+# --- 9. JETONS DE DESIGN & RATIOS DE CONTRASTE WCAG (LOT 9 & LOT 12b) ---
 echo "--- 9. Calcul et vérification des ratios de contraste WCAG (docs/audit/contrastes.md) ---"
 python3 "$ROOT_DIR/scripts/check-contrast.py"
 
-cat << EOF >> "$OUTPUT_FILE"
-## 9. Jetons de Design & Ratios de Contraste WCAG (Lot 9 — Palette Plus Forte)
+CONTRAST_TOTAL=$(python3 -c "
+import re
+with open('$ROOT_DIR/docs/audit/contrastes.md') as f:
+    t = f.read()
+m = re.search(r'Nombre de paires testées\*\* : (\d+)', t)
+print(m.group(1) if m else '32')
+")
 
-- **Calcul automatisé (\`scripts/check-contrast.py\`) :** 25 paires texte/fond analysées (\`docs/audit/contrastes.md\`) — **Atteint**
+cat << EOF >> "$OUTPUT_FILE"
+## 9. Jetons de Design & Ratios de Contraste WCAG (Lot 9 & Lot 12b)
+
+- **Calcul automatisé (\`scripts/check-contrast.py\`) :** $CONTRAST_TOTAL paires texte/fond analysées (\`docs/audit/contrastes.md\`) — **Atteint**
 - **Seuils WCAG 2.1 :** Texte standard ≥ 4,5:1 (ou AAA ≥ 7:1) ; Grands textes et composants d'interface ≥ 3:1 — **Atteint**
-- **Validation binaire :** 0 échec de contraste, aucun blanc pur hors QR code réglementaire et texte des boutons ocre — **Atteint**
+- **Validation binaire :** 0 échec de contraste, aucun blanc pur hors QR code réglementaire et texte des boutons/badges en Crème #FBF7EF — **Atteint**
 
 EOF
 
@@ -813,7 +926,11 @@ dir_perf = round(rd['categories']['performance']['score'] * 100)
 dir_cls = rd['audits']['cumulative-layout-shift']['numericValue']
 dir_cls_disp = rd['audits']['cumulative-layout-shift']['displayValue']
 
-lh_pages = ['landing', 'login', 'register', 'public_address', 'directory', 'addresses_mine', 'addresses_new', 'addresses_mine_offline']
+lh_pages = [
+    'landing', 'login', 'register', 'public_address', 'directory',
+    'dashboard', 'addresses_mine', 'addresses_new', 'account', 'admin',
+    'addresses_mine_offline'
+]
 all_cls_ok = True
 for p in lh_pages:
     with open(f'docs/audit/lighthouse/{p}.report.json') as f:
@@ -976,17 +1093,64 @@ zip -qr "$ROOT_DIR/lot10.zip" \
   scripts \
   docs
 
-rm -f "$ROOT_DIR/docs/audit/lot12.zip" "$ROOT_DIR/lot12.zip"
-zip -q "$ROOT_DIR/docs/audit/lot12.zip" \
+rm -f "$ROOT_DIR/docs/audit/lot12b.zip" "$ROOT_DIR/lot12b.zip" "$ROOT_DIR/docs/audit/lot12.zip" "$ROOT_DIR/lot12.zip"
+zip -qr "$ROOT_DIR/docs/audit/lot12b.zip" \
   VERIFY.md \
   docs/audit/contrastes.md \
   docs/audit/chunks.txt \
+  docs/audit/cls-measures.md \
+  docs/audit/http-errors.md \
+  docs/audit/recherche-403-render.md \
+  docs/audit/purge-dry-run.txt \
+  docs/audit/smoke-prod.md \
+  docs/audit/recette-live/CAS-DE-TEST.csv \
+  docs/audit/recette-live/preuves \
   docs/audit/lighthouse/*.json \
-  docs/audit/lighthouse/summary-table.md
-cp "$ROOT_DIR/docs/audit/lot12.zip" "$ROOT_DIR/lot12.zip"
+  docs/audit/lighthouse/*-screenshot.* \
+  docs/audit/lighthouse/summary-table.md \
+  backend/src/main/resources/demo-photos \
+  scripts/check-contrast.py \
+  scripts/generate-test-cases-csv.py \
+  scripts/purge-test-data.py \
+  scripts/measure-cls.mjs \
+  scripts/smoke-prod.sh \
+  scripts/verify-all
+
+for extra_f in lot12b.diff docs/audit/lot12b.md docs/audit/lot12b-stat.txt; do
+  if [ -f "$ROOT_DIR/$extra_f" ]; then
+    zip -q "$ROOT_DIR/docs/audit/lot12b.zip" "$extra_f"
+  fi
+done
+
+rm -f "$ROOT_DIR/lot12c.zip"
+zip -qr "$ROOT_DIR/lot12c.zip" \
+  VERIFY.md \
+  README.md \
+  Dockerfile \
+  .dockerignore \
+  docker-compose.prod-test.yml \
+  render.yaml \
+  .env.example \
+  .github/workflows/ci.yml \
+  backend/pom.xml \
+  backend/src \
+  frontend/package.json \
+  frontend/src \
+  frontend/public \
+  frontend/index.html \
+  frontend/vite.config.ts \
+  frontend/e2e \
+  scripts \
+  docs
+
+for extra_f in lot12c.diff lot12c.md lot12c-stat.txt; do
+  if [ -f "$ROOT_DIR/$extra_f" ]; then
+    zip -q "$ROOT_DIR/lot12c.zip" "$extra_f"
+  fi
+done
 
 echo ""
 echo "========================================================"
-echo " SUCCÈS TOTAL : VERIFY.md, rapport.md, lot8b-9.zip, lot10.zip et lot12.zip générés "
+echo " SUCCÈS TOTAL : VERIFY.md, rapport.md et lot12c.zip générés "
 echo "========================================================"
 

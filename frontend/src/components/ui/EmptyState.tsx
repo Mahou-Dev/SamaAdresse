@@ -5,6 +5,7 @@ export interface EmptyStateProps {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   description: string;
+  headingLevel?: 'h2' | 'h3' | 'p';
   action?: {
     label: string;
     onClick?: () => void;
@@ -18,9 +19,11 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   icon: Icon,
   title,
   description,
+  headingLevel = 'h2',
   action,
   className = '',
 }) => {
+  const HeadingTag = headingLevel;
   return (
     <div
       className={`p-8 sm:p-12 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] flex flex-col items-center justify-center space-y-3.5 ${className}`}
@@ -29,7 +32,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <Icon className="w-6 h-6" />
       </div>
       <div className="max-w-md space-y-1">
-        <h3 className="text-base font-bold text-[#231A15]">{title}</h3>
+        <HeadingTag className="text-base font-bold text-[#231A15]">{title}</HeadingTag>
         <p className="text-xs sm:text-sm text-[#5C4D44] leading-relaxed">
           {description}
         </p>
@@ -39,7 +42,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           {action.to ? (
             <Link
               to={action.to}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm touch-target"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target"
             >
               {action.icon && <action.icon className="w-4 h-4" />}
               <span>{action.label}</span>
@@ -48,7 +51,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <button
               type="button"
               onClick={action.onClick}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm touch-target cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target cursor-pointer"
             >
               {action.icon && <action.icon className="w-4 h-4" />}
               <span>{action.label}</span>

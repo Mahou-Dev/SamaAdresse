@@ -374,7 +374,12 @@ public class AddressService {
         boolean hasFilter = (quartier != null && !quartier.isBlank()) || (type != null);
 
         if (!trimmedQ.isEmpty() && trimmedQ.length() < 2 && !hasFilter) {
-            throw new IllegalArgumentException("Le terme de recherche doit comporter au moins 2 caractères.");
+            // Un terme de recherche de moins de 2 caractères sans filtre retourne une liste vide (200), sans lever d'exception
+            return new org.springframework.data.domain.PageImpl<>(
+                    java.util.Collections.emptyList(),
+                    org.springframework.data.domain.PageRequest.of(pageIndex, pageSize),
+                    0
+            );
         }
 
         String qRaw = trimmedQ.isEmpty() ? null : trimmedQ;

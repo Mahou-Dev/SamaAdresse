@@ -164,6 +164,9 @@ export const DirectoryPage: React.FC = () => {
           setRetryAfterSeconds(waitTime);
           setError('Trop de recherches. Merci de patienter un instant.');
           setLiveAnnouncement('Trop de recherches. Merci de patienter un instant.');
+        } else if (err instanceof ApiError && err.status === 403) {
+          setError('Votre requête a été bloquée par le pare-feu de sécurité (terme non autorisé ou suspect).');
+          setLiveAnnouncement('Requête bloquée par la sécurité.');
         } else if (!navigator.onLine) {
           setIsOffline(true);
         } else {
@@ -469,7 +472,7 @@ export const DirectoryPage: React.FC = () => {
                     ) : (
                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg bg-[#F2ECE1] border border-[#766B5B] flex flex-col items-center justify-center text-[#5C4D44] shrink-0">
                         <MapPin className="w-6 h-6 text-[#1D528F]" />
-                        <span className="text-[10px] font-medium mt-1">Sans photo</span>
+                        <span className="text-xs font-semibold text-[#5C4D44] mt-0.5">Sans photo</span>
                       </div>
                     )}
 

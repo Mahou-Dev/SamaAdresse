@@ -57,7 +57,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition shadow-sm touch-target ${
                 action.variant === 'secondary'
                   ? 'border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15]'
-                  : 'bg-[#B84A24] hover:bg-[#8A3112] text-white'
+                  : 'bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF]'
               }`}
             >
               {action.icon && <action.icon className="w-4 h-4" />}
@@ -70,7 +70,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
               className={`inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition shadow-sm touch-target cursor-pointer ${
                 action.variant === 'secondary'
                   ? 'border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15]'
-                  : 'bg-[#B84A24] hover:bg-[#8A3112] text-white'
+                  : 'bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF]'
               }`}
             >
               {action.icon && <action.icon className="w-4 h-4" />}

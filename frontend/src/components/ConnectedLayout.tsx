@@ -128,7 +128,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
                 <p className="text-xs font-bold text-[#231A15] truncate" title={user?.fullName}>
                   {user?.fullName || 'Utilisateur'}
                 </p>
-                <span className="inline-block text-[10px] font-semibold text-[#5C4D44] truncate">
+                <span className="inline-block text-xs font-semibold text-[#5C4D44] truncate">
                   {user?.role === 'ADMIN' ? 'Administrateur' : 'Propriétaire'}
                 </span>
               </div>
@@ -155,7 +155,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
           <div>
             <Link
               to="/addresses/new"
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-white text-xs font-bold transition shadow-sm touch-target"
+              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target"
             >
               <Plus className="w-4 h-4 stroke-[2.5]" />
               <span>Nouvelle adresse</span>
@@ -207,7 +207,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
       {/* =========================================================================
        * Zone de contenu principale (max 1120 px)
        * ========================================================================= */}
-      <div className="flex-1 w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-h-[calc(100vh-8rem)]">
+      <div className="flex-1 w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-24 sm:pb-8 space-y-6 min-h-[1100px]">
         {title && (
           <PageHeader
             title={title}
