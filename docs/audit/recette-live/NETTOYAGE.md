@@ -79,3 +79,27 @@ Aucune adresse ni aucun compte de démonstration (`demo@samaadresse.sn`, `ZIG-KB
 - Adresse créée pour test SMS : `ZIG-KBG-3010` (par compte `test+b1792373843187@example.com`)
 - Compte test modération H2 : `test+h2_1792374032359@example.com` (Adresse: `ZIG-KBG-9309`, ID: `ffad5fe7-e633-4e87-8cf9-16dac67730a0`)
 - Adresse créée par Newman Parcours démo (I6) : `ZIG-KND-6422` (par compte demo)
+
+---
+
+## 3. Procédure et Script de Purge Automatisé (Lot 12)
+
+Le script automatisé [`scripts/purge-test-data.py`](../../scripts/purge-test-data.py) a été implémenté pour exécuter la purge sélective des entités de test dans le strict respect de la règle R5.
+
+### Commandes d'exécution :
+- **En local / Docker :**
+  ```bash
+  python3 scripts/purge-test-data.py
+  ```
+- **Sur Neon / Production Render :**
+  ```bash
+  DATABASE_URL="postgres://user:password@ep-xxx.eu-central-1.aws.neon.tech/samaadresse?sslmode=require" python3 scripts/purge-test-data.py
+  ```
+
+### Périmètre de suppression garanti :
+1. Suppression des signalements (`address_reports`) ciblant des adresses créées par des comptes `test+%` ou `TEST-%`.
+2. Suppression des codes réservés (`reserved_codes`) des comptes de test.
+3. Suppression des adresses (`addresses`) associées aux comptes de test.
+4. Suppression des jetons de rafraîchissement (`refresh_tokens`) des comptes de test.
+5. Suppression des utilisateurs (`users`) dont l'e-mail correspond à `test+%` ou `TEST-%`.
+6. **Préservation absolue :** Comptes et adresses de démonstration (`demo@samaadresse.sn`, `admin@samaadresse.sn`, `ZIG-KBG-4271`, `ZIG-ESC-1042`, etc.) strictement préservés.

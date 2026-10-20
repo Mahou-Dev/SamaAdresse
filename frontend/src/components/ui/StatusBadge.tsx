@@ -30,9 +30,9 @@ const STATUS_CONFIG: Record<
   },
   SUSPENDED: {
     label: 'Suspendue',
-    bg: 'bg-[#FEF2F2]',
-    text: 'text-[#991B1B]',
-    border: 'border-[#DC2626]/30',
+    bg: 'bg-[#FBF7EF]',
+    text: 'text-[#8A3112]',
+    border: 'border-[#8A3112]/40',
     icon: AlertCircle,
   },
   ARCHIVED: {

@@ -26,6 +26,9 @@ spring:
 server:
   port: ${PORT:8082}
   forward-headers-strategy: framework
+  error:
+    whitelabel:
+      enabled: false
   compression:
     enabled: true
     mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json,application/manifest+json,image/svg+xml
@@ -45,6 +48,7 @@ app:
     secure: ${COOKIE_SECURE:true}
   security:
     trusted-proxy-hops: ${TRUSTED_PROXY_HOPS:1}
+    login-rate-limit: ${LOGIN_RATE_LIMIT:5}
 
 storage:
   type: ${PHOTO_STORAGE:db}

@@ -27,7 +27,7 @@ public class RateLimiterService {
         Bucket bucket = cache.computeIfAbsent(key, k -> Bucket.builder()
                 .addLimit(Bandwidth.builder()
                         .capacity(requestsPerMinute)
-                        .refillIntervally(requestsPerMinute, Duration.ofMinutes(1))
+                        .refillGreedy(requestsPerMinute, Duration.ofMinutes(1))
                         .build())
                 .build());
 
@@ -62,8 +62,8 @@ public class RateLimiterService {
 
     private Bucket createNewBucket(String key) {
         Bandwidth limit = Bandwidth.builder()
-            .capacity(100)
-            .refillIntervally(100, Duration.ofMinutes(1))
+            .capacity(5)
+            .refillIntervally(5, Duration.ofMinutes(1))
             .build();
 
         return Bucket.builder()

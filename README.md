@@ -223,6 +223,7 @@ Aucun secret n'est présent dans les fichiers suivis par Git. Le modèle [`.env.
 | `JWT_REFRESH_EXP` | Durée de validité du jeton de rafraîchissement en millisecondes | Non (défaut `604800000` = 7 jours) | `604800000` |
 | `COOKIE_SECURE` | Active l'attribut `Secure` sur le cookie de rafraîchissement (`true` en HTTPS) | Non (défaut `true` en `prod`, `false` en dev) | `true` |
 | `TRUSTED_PROXY_HOPS` | Nombre de sauts de proxy inverse de confiance pour l'extraction de l'IP cliente (`1` derrière Render/Cloudflare, `0` en local) | Non (défaut `1` en `prod`, `0` en dev) | `1` |
+| `LOGIN_RATE_LIMIT` | Limite de débit des tentatives de connexion par minute et par adresse IP (HTTP 429 avec en-tête Retry-After si dépassé) | Non (défaut `5`) | `5` |
 | `FRONTEND_BASE_URL` | URL publique de l'application (utilisée dans les QR codes et les liens partagés, doit débuter par `https://` en production) | Oui | `https://samaadresse.onrender.com` |
 | `PHOTO_STORAGE` | Mode de stockage des photos de façade : `disk` (système de fichiers local) ou `db` (table PostgreSQL `photo_blobs`) | Non (défaut `db` en `prod`, `disk` en dev) | `db` |
 | `UPLOAD_DIR` | Répertoire local de stockage des photos lorsque `PHOTO_STORAGE=disk` | Non (défaut `./uploads`) | `./uploads` |

@@ -243,6 +243,7 @@ npm run build
 echo "Vérification des tailles de blocs..."
 SIZE_REPORT=$(node scripts/check-size.mjs)
 echo "$SIZE_REPORT"
+echo "$SIZE_REPORT" > "$ROOT_DIR/docs/audit/chunks.txt"
 
 ENTRY_DATA=$(node -e "
 import fs from 'node:fs';
@@ -975,8 +976,17 @@ zip -qr "$ROOT_DIR/lot10.zip" \
   scripts \
   docs
 
+rm -f "$ROOT_DIR/docs/audit/lot12.zip" "$ROOT_DIR/lot12.zip"
+zip -q "$ROOT_DIR/docs/audit/lot12.zip" \
+  VERIFY.md \
+  docs/audit/contrastes.md \
+  docs/audit/chunks.txt \
+  docs/audit/lighthouse/*.json \
+  docs/audit/lighthouse/summary-table.md
+cp "$ROOT_DIR/docs/audit/lot12.zip" "$ROOT_DIR/lot12.zip"
+
 echo ""
 echo "========================================================"
-echo " SUCCÈS TOTAL : VERIFY.md, rapport.md, lot8b-9.zip et lot10.zip générés "
+echo " SUCCÈS TOTAL : VERIFY.md, rapport.md, lot8b-9.zip, lot10.zip et lot12.zip générés "
 echo "========================================================"
 

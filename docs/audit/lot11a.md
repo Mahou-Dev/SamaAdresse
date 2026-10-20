@@ -18,7 +18,7 @@ Le **Lot 11A** a pour mission de refondre complètement l'ergonomie, la structur
 ### Principes directeurs appliqués
 - **Zéro fantaisie visuelle :** Interdiction stricte du glassmorphism, du néon, des dégradés décoratifs, des emojis utilisés comme icônes ou des libellés en capitales espacées (`uppercase tracking-*`).
 - **Sincérité totale des données :** Aucune métrique inventée, aucune statistique factice. Chaque tuile, badge ou indicateur est relié à une source de vérité réelle (endpoint Spring Boot existant ou état IndexedDB local).
-- **Sobriété et densité :** Palette historique respectée (Bleu nuit `#12304F`, Sable doré `#F2ECE1`, Crème `#FBF7EF`, Encre `#231A15`, Brun terre `#766B5B`, Ocre chaud `#B84A24`, Vert feuillage `#2A6B44`, Rouge alerte `#DC2626`).
+- **Sobriété et densité :** Palette historique respectée (Bleu nuit `#12304F`, Sable doré `#EADFC8`, Sienne clair `#F2ECE1`, Crème `#FBF7EF`, Encre `#231A15`, Brun terre `#766B5B`, Ocre chaud `#B84A24`, Ocre accent alerte `#8A3112`, Vert feuillage `#2A6B44`).
 - **Budget de performance respecté :** Code-splitting via `React.lazy` sur l'ensemble des pages d'espaces (`DashboardPage`, `MyAddressesPage`, `AccountPage`, `AdminPage`) maintenant le point d'entrée à **90.93 Ko gzip** ($\le 105$ Ko).
 - **Zéro régression fonctionnelle :** Conservation intégrale des comportements et passage à 100% des 25 tests E2E existants (Lots 4b, 5, 6 et 7) en sus des 5 nouveaux tests de parcours du Lot 11A.
 
@@ -64,8 +64,8 @@ Chaque élément d'information affiché dans les interfaces du Lot 11A provient 
 | **Admin** | StatTile 1 | Signalements ouverts | `reports.filter(r => r.status === 'OPEN').length` ou total serveur |
 | **Admin** | StatTile 2 | Signalements traités | `reports.filter(r => r.status === 'RESOLVED').length` |
 | **Admin** | StatTile 3 | Signalements classés sans suite | `reports.filter(r => r.status === 'DISMISSED').length` |
-| **Admin** | StatTile 4 | Total signalements | Total d'éléments renvoyé par `GET /api/admin/moderation/reports` |
-| **Admin** | File de modération | Table/cartes des signalements | Objets `AdminReportResponse` issus de `GET /api/admin/moderation/reports` |
+| **Admin** | StatTile 4 | Total signalements | Total d'éléments renvoyé par `GET /api/admin/reports` |
+| **Admin** | File de modération | Table/cartes des signalements | Objets `AdminReportResponse` issus de `GET /api/admin/reports` |
 | **Admin** | Journal d'audit | Historique des actions de la session | Tableau local `sessionAuditLogs` alimenté à chaque action admin (suspension, rétablissement, clôture) |
 
 ---
@@ -100,21 +100,46 @@ Pour garantir l'accessibilité, l'absence de duplication de code et la cohérenc
 
 ---
 
-## 4. Ratios de Contraste WCAG (Vérification Stricte)
+## 4. Ratios de Contraste WCAG (Sortie Automatique de `scripts/check-contrast.py`)
 
-L'ensemble des couleurs utilisées dans les composants du Lot 11A a été validé par `scripts/check-contrast.py` contre les normes WCAG AA (ratios $\ge 4.5:1$ pour texte normal, $\ge 3:1$ pour texte large et composants d'interface) :
+Les contrastes sont vérifiés automatiquement par `scripts/check-contrast.py` et documentés dans [`docs/audit/contrastes.md`](contrastes.md). Les 32 paires déclarées (y compris les couples des nouveaux composants et les alertes basées sur les teintes de la palette `Ocre accent #8A3112` sur `Carte crème #FBF7EF` et `Sienne #F2ECE1`) respectent strictement les seuils WCAG :
 
-| Élément | Couleur de texte | Couleur de fond | Ratio mesuré | Seuil WCAG | Statut |
-|---|---|---|:---:|:---:|:---:|
-| Texte principal | `#231A15` (Encre noire) | `#FBF7EF` (Crème) | **13.48:1** | $\ge 4.5:1$ | **Conforme AA/AAA** |
-| Texte secondaire | `#5C4D44` (Brun foncé) | `#FBF7EF` (Crème) | **5.74:1** | $\ge 4.5:1$ | **Conforme AA** |
-| Lien interactif | `#1D528F` (Bleu enseigne) | `#FBF7EF` (Crème) | **6.12:1** | $\ge 4.5:1$ | **Conforme AA** |
-| Badge Actif | `#2A6B44` (Vert feuillage) | `#F2ECE1` (Sable) | **4.91:1** | $\ge 4.5:1$ | **Conforme AA** |
-| Badge Suspendu | `#991B1B` (Rouge sombre) | `#FEF2F2` (Fond alerte) | **6.89:1** | $\ge 4.5:1$ | **Conforme AA** |
-| Bouton d'action Ocre | `#FFFFFF` (Blanc pur) | `#B84A24` (Ocre terre) | **4.82:1** | $\ge 4.5:1$ | **Conforme AA** |
-| En-tête de tableau | `#231A15` (Encre noire) | `#F2ECE1` (Sable) | **12.35:1** | $\ge 4.5:1$ | **Conforme AA/AAA** |
+| Rôle & Usage | Couleur Texte / Avant-plan | Couleur Fond | Ratio Mesuré | Seuil Requis | Niveau | Statut |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+| Texte principal sur fond de page | Encre (`#231A15`) | Sable doré (`#EADFC8`) | **12.92:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Texte principal sur carte | Encre (`#231A15`) | Carte crème (`#FBF7EF`) | **15.98:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Texte principal sur bandeau secondaire | Encre (`#231A15`) | Sienne (`#F2ECE1`) | **14.52:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Texte secondaire sur fond de page | Texte secondaire (`#5C4D44`) | Sable doré (`#EADFC8`) | **6.11:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Texte secondaire sur carte | Texte secondaire (`#5C4D44`) | Carte crème (`#FBF7EF`) | **7.56:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Texte secondaire sur bandeau secondaire | Texte secondaire (`#5C4D44`) | Sienne (`#F2ECE1`) | **6.87:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Texte d'accent sur fond clair | Ocre accent (`#8A3112`) | Sable doré (`#EADFC8`) | **6.28:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Texte d'accent sur carte | Ocre accent (`#8A3112`) | Carte crème (`#FBF7EF`) | **7.77:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Texte d'accent sur bandeau secondaire | Ocre accent (`#8A3112`) | Sienne (`#F2ECE1`) | **7.06:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Bouton principal sur fond clair | Blanc pur (`#FFFFFF`) | Bouton ocre (`#B84A24`) | **5.19:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Titre et logo de l'en-tête | Carte crème (`#FBF7EF`) | Bleu nuit (`#12304F`) | **12.59:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Sous-titre de l'en-tête | Sable doré (`#EADFC8`) | Bleu nuit (`#12304F`) | **10.18:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Bouton inversé sur fond sombre | Encre (`#231A15`) | Jaune soleil (`#F2B233`) | **9.10:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Bouton jaune soleil sur fond bleu nuit (Composant UI) | Jaune soleil (`#F2B233`) | Bleu nuit (`#12304F`) | **7.17:1** | 3.0:1 | Composant UI (>= 3.0:1) | **Atteint** |
+| Onglet actif et liens de navigation | Bleu (`#1D528F`) | Carte crème (`#FBF7EF`) | **7.40:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Liens et navigation sur fond de page | Bleu (`#1D528F`) | Sable doré (`#EADFC8`) | **5.98:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Bouton secondaire d'action | Blanc pur (`#FFFFFF`) | Bleu (`#1D528F`) | **7.91:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Statut actif / succès sur carte | Vert (`#2A6B44`) | Carte crème (`#FBF7EF`) | **5.98:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Statut actif / succès sur fond de page | Vert (`#2A6B44`) | Sable doré (`#EADFC8`) | **4.84:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Bouton d'envoi SMS / messagerie | Blanc pur (`#FFFFFF`) | Vert (`#2A6B44`) | **6.39:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| Pied de page : texte | Carte crème (`#FBF7EF`) | Encre (`#231A15`) | **15.98:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Pied de page : liens | Jaune soleil (`#F2B233`) | Encre (`#231A15`) | **9.10:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Bordure de carte sur fond de page | Bordure (`#766B5B`) | Sable doré (`#EADFC8`) | **3.95:1** | 3.0:1 | Composant UI (>= 3.0:1) | **Atteint** |
+| Bordure de champ sur carte crème | Bordure (`#766B5B`) | Carte crème (`#FBF7EF`) | **4.88:1** | 3.0:1 | Composant UI (>= 3.0:1) | **Atteint** |
+| Bordure sur bandeau sienne | Bordure (`#766B5B`) | Sienne (`#F2ECE1`) | **4.44:1** | 3.0:1 | Composant UI (>= 3.0:1) | **Atteint** |
+| Badge Suspendu / Alerte sur carte crème (Composant StatusBadge / StatTile) | Ocre accent (`#8A3112`) | Carte crème (`#FBF7EF`) | **7.77:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Badge Suspendu / Alerte sur bandeau sienne (Composant StatusBadge / StatTile) | Ocre accent (`#8A3112`) | Sienne (`#F2ECE1`) | **7.06:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Bouton d'action destructive / confirmation d'alerte (Composant ConfirmDialog) | Blanc pur (`#FFFFFF`) | Ocre accent (`#8A3112`) | **8.30:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Badge Actif / Succès sur bandeau sienne (Composant StatusBadge) | Vert (`#2A6B44`) | Sienne (`#F2ECE1`) | **5.44:1** | 4.5:1 | AA (>= 4.5:1) | **Atteint** |
+| En-tête de tableau de données sur sienne (Composant DataTable / Mes adresses) | Encre (`#231A15`) | Sienne (`#F2ECE1`) | **14.52:1** | 4.5:1 | AAA (>= 7.0:1) | **Atteint** |
+| Bordure d'alerte sur carte crème (Composant StatTile / SidePanel) | Ocre accent (`#8A3112`) | Carte crème (`#FBF7EF`) | **7.77:1** | 3.0:1 | Composant UI (>= 3.0:1) | **Atteint** |
+| Bordure d'alerte sur fond sable doré (Composant UI) | Ocre accent (`#8A3112`) | Sable doré (`#EADFC8`) | **6.28:1** | 3.0:1 | Composant UI (>= 3.0:1) | **Atteint** |
 
-*Résultat du script :* **25 / 25 paires conformes, 0 échec.**
+*Résultat du script :* **32 / 32 paires conformes, 0 échec.** (Rapport complet généré dans `docs/audit/contrastes.md`)
 
 ---
 
@@ -230,9 +255,9 @@ Toutes les captures d'écran requises par le cahier des charges ont été géné
 
 ---
 
-## 8. Synthèse Finale de Recette
+## 8. Synthèse Finale des Résultats
 
-Le Lot 11A est intégralement validé. Toutes les exigences du cahier des charges ont été rigoureusement prouvées et documentées :
+Synthèse des statuts mesurés et vérifiés pour le Lot 11A :
 1. ✅ **Gabarit connecté :** Barre latérale 248 px fixe ($\ge 1024$ px), barre basse mobile préservée, zone centrale $\le 1120$ px.
 2. ✅ **Tableau de bord :** Salutation prénom, 4 tuiles métriques réelles, bloc « À traiter », adresses récentes avec plaques.
 3. ✅ **Mes adresses :** Recherche, multi-filtres, bascule liste/grille, menu d'actions, CLS nul, gestion des brouillons hors ligne.

@@ -35,6 +35,13 @@ public class AuthService {
     @Value("${app.cookie.secure:false}")
     private boolean cookieSecure;
 
+    @Value("${app.security.login-rate-limit:5}")
+    private int loginRateLimit = 5;
+
+    public void setLoginRateLimit(int loginRateLimit) {
+        this.loginRateLimit = loginRateLimit;
+    }
+
     @Transactional
     public UserProfileResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -56,9 +63,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse login(LoginRequest request, String ipAddress, HttpServletResponse response) {
-        if (!rateLimiterService.tryConsume(ipAddress)) {
-            throw new RateLimitExceededException("Trop de tentatives de connexion. Veuillez patienter 1 minute.");
-        }
+        rateLimiterService.checkRateLimit("login", ipAddress, loginRateLimit);
 
         User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
             .orElseThrow(() -> new InvalidCredentialsException("Adresse email ou mot de passe incorrect"));

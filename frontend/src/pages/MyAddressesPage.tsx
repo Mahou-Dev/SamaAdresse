@@ -494,7 +494,7 @@ export const MyAddressesPage: React.FC = () => {
                       Enregistrée le {formattedDate} ({draft.quartier})
                     </p>
                     {draft.lastError && (
-                      <p className="text-[11px] text-[#991B1B]">{draft.lastError}</p>
+                      <p className="text-[11px] text-[#8A3112]">{draft.lastError}</p>
                     )}
                   </div>
 
@@ -697,15 +697,15 @@ export const MyAddressesPage: React.FC = () => {
           ))}
         </div>
       ) : errorMsg ? (
-        <div className="p-6 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-6 rounded-xl bg-[#FBF7EF] border border-[#8A3112]/40 text-[#8A3112] text-xs sm:text-sm flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0" />
+            <AlertCircle className="w-5 h-5 text-[#8A3112] shrink-0" />
             <span>{errorMsg}</span>
           </div>
           <button
             type="button"
             onClick={() => fetchAddresses(false)}
-            className="px-4 py-2 rounded-lg bg-[#991B1B] hover:bg-[#7F1D1D] text-white text-xs font-bold transition cursor-pointer touch-target shrink-0"
+            className="px-4 py-2 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-white text-xs font-bold transition cursor-pointer touch-target shrink-0"
           >
             Réessayer
           </button>
@@ -734,7 +734,7 @@ export const MyAddressesPage: React.FC = () => {
         />
       ) : viewMode === 'grid' || window.innerWidth < 1024 ? (
         /* VUE GRILLE (Cartes denses avec AddressPlate) */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div data-testid="addresses-grid-view" className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {filteredAddresses.map((address) => {
             const hasPhoto = !!address.photoUrl && !failedPhotos[address.id];
             const photoSrc = address.photoUrl?.startsWith('http')
@@ -750,7 +750,7 @@ export const MyAddressesPage: React.FC = () => {
               >
                 {/* Alerte suspension */}
                 {isSuspended && (
-                  <div className="px-2.5 py-1.5 rounded-lg bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-[11px] font-bold flex items-center gap-1.5">
+                  <div className="px-2.5 py-1.5 rounded-lg bg-[#FBF7EF] border border-[#8A3112]/40 text-[#8A3112] text-[11px] font-bold flex items-center gap-1.5">
                     <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
                     <span>
                       Suspendue par la modération{address.moderationNotice ? ` (${address.moderationNotice})` : ''}
@@ -906,7 +906,7 @@ export const MyAddressesPage: React.FC = () => {
                                   setOpenMenuId(null);
                                   setArchiveTarget(address);
                                 }}
-                                className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#991B1B] hover:bg-[#FEF2F2] flex items-center gap-2 cursor-pointer"
+                                className="w-full px-3.5 py-2 text-left text-xs font-semibold text-[#8A3112] hover:bg-[#F2ECE1] flex items-center gap-2 cursor-pointer"
                               >
                                 <Archive className="w-3.5 h-3.5" />
                                 <span>Archiver</span>
@@ -945,7 +945,7 @@ export const MyAddressesPage: React.FC = () => {
         </div>
       ) : (
         /* VUE LISTE (Desktop >= 1024 px : Tableau dense) */
-        <div className="rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm overflow-hidden">
+        <div data-testid="addresses-list-view" className="rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-[#F2ECE1] border-b border-[#766B5B] text-[#231A15] font-bold">
@@ -973,7 +973,7 @@ export const MyAddressesPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <StatusBadge status={address.status} size="sm" />
                         {isSuspended && (
-                          <span className="text-[11px] font-bold text-[#991B1B]">
+                          <span className="text-[11px] font-bold text-[#8A3112]">
                             Suspendue par la modération
                           </span>
                         )}
@@ -1014,7 +1014,7 @@ export const MyAddressesPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setArchiveTarget(address)}
-                          className="font-semibold text-[#991B1B] hover:underline cursor-pointer"
+                          className="font-semibold text-[#8A3112] hover:underline cursor-pointer"
                         >
                           Archiver
                         </button>

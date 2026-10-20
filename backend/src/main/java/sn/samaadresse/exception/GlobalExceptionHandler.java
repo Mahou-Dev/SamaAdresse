@@ -189,13 +189,13 @@ public class GlobalExceptionHandler {
     ) {
         ErrorResponse response = ErrorResponse.builder()
             .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("Bad Request")
+            .status(HttpStatus.PAYLOAD_TOO_LARGE.value())
+            .error("Payload Too Large")
             .message("Le fichier dépasse la taille maximale autorisée de 5 Mo.")
             .path(request.getRequestURI())
             .build();
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
     }
 
     @ExceptionHandler(InvalidCoordinatesException.class)
@@ -335,6 +335,55 @@ public class GlobalExceptionHandler {
             .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(
+        org.springframework.web.HttpRequestMethodNotSupportedException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.METHOD_NOT_ALLOWED.value())
+            .error("Method Not Allowed")
+            .message("Méthode HTTP " + ex.getMethod() + " non autorisée pour cette ressource.")
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaTypeNotSupported(
+        org.springframework.web.HttpMediaTypeNotSupportedException ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
+            .error("Unsupported Media Type")
+            .message("Type de média non supporté : " + ex.getContentType())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(response);
+    }
+
+    @ExceptionHandler({
+        IllegalArgumentException.class,
+        org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+        org.springframework.web.bind.MissingServletRequestParameterException.class
+    })
+    public ResponseEntity<ErrorResponse> handleBadRequest(
+        Exception ex, HttpServletRequest request
+    ) {
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Bad Request")
+            .message(ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : "Paramètre ou requête invalide")
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(Exception.class)

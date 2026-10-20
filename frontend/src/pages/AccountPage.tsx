@@ -270,9 +270,9 @@ export const AccountPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLogoutClick}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#DC2626]/40 bg-[#FBF7EF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border border-[#8A3112]/40 bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#8A3112] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
               >
-                <LogOut className="w-4 h-4 text-[#991B1B]" />
+                <LogOut className="w-4 h-4 text-[#8A3112]" />
                 <span>Se déconnecter</span>
               </button>
             </div>
@@ -405,7 +405,7 @@ export const AccountPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowClearCacheModal(true)}
-                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg border border-[#DC2626]/40 bg-[#FBF7EF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition cursor-pointer touch-target shrink-0"
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg border border-[#8A3112]/40 bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#8A3112] text-xs font-bold transition cursor-pointer touch-target shrink-0"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Vider le cache hors ligne</span>

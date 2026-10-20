@@ -44,3 +44,4 @@ backend/src/main/resources/static/
 lot*/
 !docs/audit/lot*/
 scratch/
+assets-sources/

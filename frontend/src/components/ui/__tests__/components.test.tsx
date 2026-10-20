@@ -60,7 +60,7 @@ describe('Composants UI réutilisables (Lot 11A)', () => {
     it('rend correctement le badge SUSPENDED', () => {
       const html = renderToStaticMarkup(<StatusBadge status="SUSPENDED" />);
       expect(html).toContain('Suspendue');
-      expect(html).toContain('text-[#991B1B]');
+      expect(html).toContain('text-[#8A3112]');
     });
 
     it('rend correctement le badge ARCHIVED', () => {

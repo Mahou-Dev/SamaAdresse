@@ -133,7 +133,7 @@ export const DashboardPage: React.FC = () => {
 
       {/* État de chargement avec hauteur réservée pour CLS */}
       {loading ? (
-        <div className="space-y-6 min-h-[500px]" aria-label="Chargement du tableau de bord">
+        <div className="space-y-6 min-h-[640px]" aria-label="Chargement du tableau de bord">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Skeleton className="h-28" count={4} />
           </div>
@@ -141,7 +141,7 @@ export const DashboardPage: React.FC = () => {
           <Skeleton className="h-64" />
         </div>
       ) : errorMsg ? (
-        <div className="p-6 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs sm:text-sm flex items-center justify-between gap-4">
+        <div className="p-6 rounded-xl bg-[#FBF7EF] border border-[#8A3112]/40 text-[#8A3112] text-xs sm:text-sm flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <span>{errorMsg}</span>
@@ -149,7 +149,7 @@ export const DashboardPage: React.FC = () => {
           <button
             type="button"
             onClick={() => loadData(false)}
-            className="px-3 py-1.5 rounded-lg bg-[#991B1B] text-white text-xs font-bold shrink-0 hover:bg-[#7F1D1D] transition"
+            className="px-3 py-1.5 rounded-lg bg-[#8A3112] text-white text-xs font-bold shrink-0 hover:bg-[#9A3816] transition"
           >
             Réessayer
           </button>
@@ -164,16 +164,16 @@ export const DashboardPage: React.FC = () => {
               <StatTile
                 label="Adresses actives"
                 value={activeCount}
-                sublabel={activeCount <= 1 ? 'Adresse validée' : 'Adresses validées'}
+                sublabel={activeCount <= 1 ? 'Visible via son code' : 'Visibles via leur code'}
                 icon={MapPin}
                 to="/addresses/mine?status=ACTIVE"
                 variant="success"
                 dataTestId="stat-active"
               />
               <StatTile
-                label="Signalées"
+                label="Suspendues"
                 value={suspendedCount}
-                sublabel={suspendedCount === 0 ? 'Aucun signalement' : 'Action requise'}
+                sublabel="Retirées de la vue publique par la modération"
                 icon={ShieldAlert}
                 to="/addresses/mine?status=SUSPENDED"
                 variant={suspendedCount > 0 ? 'alert' : 'neutral'}
@@ -243,10 +243,10 @@ export const DashboardPage: React.FC = () => {
                   {suspendedAddresses.map((addr) => (
                     <div
                       key={addr.id}
-                      className="p-3.5 sm:p-4 rounded-lg bg-[#FEF2F2] border border-[#DC2626]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+                      className="p-3.5 sm:p-4 rounded-lg bg-[#FBF7EF] border border-[#8A3112]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#DC2626]/10 text-[#991B1B] flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="w-8 h-8 rounded-full bg-[#8A3112]/10 text-[#8A3112] flex items-center justify-center shrink-0 mt-0.5">
                           <ShieldAlert className="w-4 h-4" />
                         </div>
                         <div className="space-y-1">
@@ -256,7 +256,7 @@ export const DashboardPage: React.FC = () => {
                             </span>
                             <StatusBadge status="SUSPENDED" size="sm" />
                           </div>
-                          <p className="text-[#991B1B] leading-relaxed">
+                          <p className="text-[#8A3112] leading-relaxed">
                             {addr.moderationNotice
                               ? `Motif de modération : ${addr.moderationNotice}`
                               : "Cette adresse est suspendue suite à un signalement. Elle n'est plus accessible en public."}
@@ -265,7 +265,7 @@ export const DashboardPage: React.FC = () => {
                       </div>
                       <Link
                         to={`/addresses/${addr.id}/edit`}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#DC2626]/40 bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#991B1B] font-bold shrink-0 touch-target"
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#8A3112]/40 bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#8A3112] font-bold shrink-0 touch-target"
                       >
                         <span>Corriger l'adresse</span>
                         <ArrowRight className="w-3.5 h-3.5" />

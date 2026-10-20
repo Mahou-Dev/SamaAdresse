@@ -1231,6 +1231,52 @@
       "name": "Photos",
       "item": [
         {
+          "name": "GET /uploads — Accès au répertoire des téléversements (interdit/introuvable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/uploads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads"
+              ],
+              "query": []
+            },
+            "description": "Empêche le listage du répertoire /uploads/ et renvoie 404 Not Found."
+          }
+        },
+        {
+          "name": "GET /uploads/ — Accès au répertoire des téléversements (interdit/introuvable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/uploads/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads"
+              ],
+              "query": []
+            },
+            "description": "Empêche le listage du répertoire /uploads/ et renvoie 404 Not Found."
+          }
+        },
+        {
           "name": "GET /uploads/{filename} — Récupérer une photo de façade",
           "request": {
             "method": "GET",

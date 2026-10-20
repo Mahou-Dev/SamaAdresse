@@ -73,11 +73,23 @@
 
 - Aucune erreur console.
 
+### dashboard (`http://localhost:8082/tableau-de-bord`) — score : 1
+
+- Aucune erreur console.
+
 ### addresses_mine (`http://localhost:8082/addresses/mine`) — score : 1
 
 - Aucune erreur console.
 
 ### addresses_new (`http://localhost:8082/addresses/new`) — score : 1
+
+- Aucune erreur console.
+
+### account (`http://localhost:8082/account`) — score : 1
+
+- Aucune erreur console.
+
+### admin (`http://localhost:8082/admin`) — score : 1
 
 - Aucune erreur console.
 

@@ -196,7 +196,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
           <button
             type="button"
             onClick={handleLogoutClick}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-[#991B1B] hover:bg-[#FEF2F2] border border-transparent hover:border-[#DC2626]/30 transition touch-target cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F2B233]"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-[#8A3112] hover:bg-[#F2ECE1] border border-transparent hover:border-[#8A3112]/30 transition touch-target cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F2B233]"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             <span>Se déconnecter</span>
@@ -207,7 +207,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
       {/* =========================================================================
        * Zone de contenu principale (max 1120 px)
        * ========================================================================= */}
-      <main className="flex-1 w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      <div className="flex-1 w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-h-[calc(100vh-8rem)]">
         {title && (
           <PageHeader
             title={title}
@@ -218,7 +218,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
           />
         )}
         {children}
-      </main>
+      </div>
 
       {/* Modale de confirmation de déconnexion si brouillons hors ligne */}
       <ConfirmDialog

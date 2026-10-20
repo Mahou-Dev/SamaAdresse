@@ -303,7 +303,7 @@ export const AdminPage: React.FC = () => {
           <WifiOff className="w-8 h-8 text-[#8A3112] mx-auto" />
           <h2 className="text-base font-bold text-[#231A15]">Mode hors ligne actif</h2>
           <p className="text-xs text-[#5C4D44] leading-relaxed">
-            La gestion des signalements et la modération des adresses nécessitent une connexion réseau active.
+            La modération et la consultation des signalements nécessitent une connexion réseau active.
           </p>
         </div>
       </ConnectedLayout>
@@ -348,7 +348,7 @@ export const AdminPage: React.FC = () => {
             dataTestId="admin-stat-dismissed"
           />
           <StatTile
-            label="Total traités"
+            label="Total des signalements"
             value={openCount + resolvedCount + dismissedCount}
             sublabel="Tous statuts confondus"
             icon={FileText}
@@ -426,12 +426,12 @@ export const AdminPage: React.FC = () => {
 
           {/* Tableau DataTable / Cartes mobiles */}
           {loading ? (
-            <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3">
+            <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3 min-h-[460px] flex flex-col items-center justify-center">
               <Loader2 className="w-7 h-7 animate-spin text-[#12304F] mx-auto" />
               <p className="text-xs text-[#5C4D44]">Chargement de la file de modération...</p>
             </div>
           ) : errorMsg ? (
-            <div className="p-6 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs sm:text-sm flex items-center justify-between gap-4">
+            <div className="p-6 rounded-xl bg-[#FBF7EF] border border-[#8A3112]/40 text-[#8A3112] text-xs sm:text-sm flex items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <span>{errorMsg}</span>
@@ -439,7 +439,7 @@ export const AdminPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => fetchReports(statusFilter)}
-                className="px-3 py-1.5 rounded-lg bg-[#991B1B] text-white text-xs font-bold hover:bg-[#7F1D1D] transition cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-[#8A3112] text-[#FBF7EF] text-xs font-bold hover:bg-[#9A3816] transition cursor-pointer"
               >
                 Réessayer
               </button>
@@ -736,7 +736,7 @@ export const AdminPage: React.FC = () => {
                   type="button"
                   disabled={processing}
                   onClick={() => setShowSuspendModal(true)}
-                  className="px-3.5 py-2 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold transition shadow-sm cursor-pointer touch-target"
+                  className="px-3.5 py-2 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer touch-target"
                 >
                   Suspendre l'adresse
                 </button>
@@ -860,9 +860,9 @@ export const AdminPage: React.FC = () => {
                   e.preventDefault();
                   handleConfirmSuspend();
                 }}
-                className="p-4 rounded-xl bg-[#FBF7EF] border border-[#DC2626]/30 space-y-3"
+                className="p-4 rounded-xl bg-[#FBF7EF] border border-[#8A3112]/40 space-y-3"
               >
-                <div className="flex items-center gap-2 text-[#991B1B]">
+                <div className="flex items-center gap-2 text-[#8A3112]">
                   <ShieldAlert className="w-4 h-4 shrink-0" />
                   <span className="font-bold text-xs">Modération de l'adresse</span>
                 </div>
@@ -884,12 +884,12 @@ export const AdminPage: React.FC = () => {
                   />
                 </div>
                 {suspendError && (
-                  <p className="text-[11px] font-bold text-[#991B1B]">{suspendError}</p>
+                  <p className="text-[11px] font-bold text-[#8A3112]">{suspendError}</p>
                 )}
                 <button
                   type="submit"
                   disabled={processing}
-                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 touch-target"
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-[#FBF7EF] text-xs font-bold transition shadow-sm cursor-pointer disabled:opacity-50 touch-target"
                 >
                   {processing ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -902,8 +902,8 @@ export const AdminPage: React.FC = () => {
             )}
 
             {selectedReport.addressStatus === 'SUSPENDED' && (
-              <div className="p-4 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 space-y-3">
-                <div className="flex items-center gap-2 text-[#991B1B] text-xs font-bold">
+              <div className="p-4 rounded-xl bg-[#FBF7EF] border border-[#8A3112]/40 space-y-3">
+                <div className="flex items-center gap-2 text-[#8A3112] text-xs font-bold">
                   <ShieldAlert className="w-4 h-4 shrink-0" />
                   <span>Cette adresse est actuellement suspendue par la modération.</span>
                 </div>
@@ -938,7 +938,7 @@ export const AdminPage: React.FC = () => {
         >
           <div className="bg-[#FBF7EF] rounded-2xl border border-[#766B5B] shadow-2xl p-6 max-w-md w-full space-y-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-full border border-[#DC2626]/30 bg-[#FEF2F2] flex items-center justify-center text-[#991B1B] shrink-0">
+              <div className="w-10 h-10 rounded-full border border-[#8A3112]/40 bg-[#FBF7EF] flex items-center justify-center text-[#8A3112] shrink-0">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -967,7 +967,7 @@ export const AdminPage: React.FC = () => {
                 className="w-full p-2.5 text-xs rounded-lg border border-[#766B5B] bg-[#F2ECE1] text-[#231A15] placeholder-[#5C4D44] focus:outline-none focus:border-[#12304F]"
               />
               {suspendError && (
-                <p className="text-[11px] font-bold text-[#991B1B]">{suspendError}</p>
+                <p className="text-[11px] font-bold text-[#8A3112]">{suspendError}</p>
               )}
             </div>
 
@@ -984,7 +984,7 @@ export const AdminPage: React.FC = () => {
                 type="button"
                 disabled={processing}
                 onClick={handleConfirmSuspend}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#DC2626] hover:bg-[#B91C1C] text-white text-xs font-bold transition min-h-[44px] cursor-pointer touch-target shadow-sm disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#8A3112] hover:bg-[#9A3816] text-white text-xs font-bold transition min-h-[44px] cursor-pointer touch-target shadow-sm disabled:opacity-50"
               >
                 {processing && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Confirmer la suspension</span>

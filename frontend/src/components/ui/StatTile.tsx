@@ -35,9 +35,9 @@ export const StatTile: React.FC<StatTileProps> = ({
       hover: 'hover:border-[#2A6B44] hover:bg-[#2A6B44]/5',
     },
     alert: {
-      border: 'border-[#DC2626]/40',
-      iconBg: 'bg-[#FEF2F2] text-[#991B1B]',
-      hover: 'hover:border-[#DC2626] hover:bg-[#FEF2F2]/60',
+      border: 'border-[#8A3112]/40',
+      iconBg: 'bg-[#FBF7EF] text-[#8A3112]',
+      hover: 'hover:border-[#8A3112] hover:bg-[#F2ECE1]/60',
     },
     warning: {
       border: 'border-[#8A3112]/40',

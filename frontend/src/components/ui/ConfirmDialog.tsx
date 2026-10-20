@@ -75,9 +75,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   const variantConfig = {
     danger: {
-      iconBg: 'bg-[#FEF2F2] border-[#DC2626]/30 text-[#991B1B]',
+      iconBg: 'bg-[#FBF7EF] border-[#8A3112]/30 text-[#8A3112]',
       icon: AlertCircle,
-      confirmBtn: 'bg-[#DC2626] hover:bg-[#B91C1C] text-white',
+      confirmBtn: 'bg-[#8A3112] hover:bg-[#9A3816] text-white',
     },
     warning: {
       iconBg: 'bg-[#F2ECE1] border-[#8A3112]/30 text-[#8A3112]',

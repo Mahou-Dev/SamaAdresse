@@ -12,26 +12,27 @@ if (!fs.existsSync(OUT_DIR)) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
 }
 
-async function createProfile(dir, targetUrl) {
-  if (fs.existsSync(dir)) {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
+async function createProfile(dir, targetUrl, isAdmin = false) {
   const executablePath = chromium.executablePath();
   const ctx = await chromium.launchPersistentContext(dir, {
     executablePath,
     headless: true,
   });
   const page = ctx.pages()[0] || await ctx.newPage();
-  await page.goto(`${BASE_URL}/login`);
-  await page.fill('#email', 'demo@samaadresse.sn');
-  await page.fill('#password', 'Password123!');
-  await Promise.all([
-    page.waitForResponse(res => res.url().includes('/api/auth/login') && res.status() === 200),
-    page.click('button[type="submit"]')
-  ]);
-  await page.waitForURL(url => !url.pathname.includes('/login'));
-  console.log(`[Lighthouse Auth] Session établie. Navigation vers ${targetUrl} et attente du Service Worker...`);
   await page.goto(`${BASE_URL}${targetUrl}`);
+  if (page.url().includes('/login')) {
+    const email = isAdmin ? (process.env.ADMIN_EMAIL || 'admin@samaadresse.sn') : 'demo@samaadresse.sn';
+    const pass = isAdmin ? (process.env.ADMIN_PASSWORD || 'Password123!') : (process.env.DEMO_PASSWORD || 'Password123!');
+    await page.fill('#email', email);
+    await page.fill('#password', pass);
+    await Promise.all([
+      page.waitForResponse(res => res.url().includes('/api/auth/login') && res.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+    await page.waitForURL(url => !url.pathname.includes('/login'));
+    await page.goto(`${BASE_URL}${targetUrl}`);
+  }
+  console.log(`[Lighthouse Auth] Session prête pour ${targetUrl}. Attente du Service Worker...`);
   await page.evaluate(async () => {
     if ('serviceWorker' in navigator) {
       await navigator.serviceWorker.ready;
@@ -47,9 +48,12 @@ const auditsToRun = [
   { name: 'register', path: '/register', auth: false, offline: false },
   { name: 'public_address', path: '/a/ZIG-KBG-4271', auth: false, offline: false },
   { name: 'directory', path: '/annuaire', auth: false, offline: false },
-  { name: 'addresses_mine', path: '/addresses/mine', auth: true, offline: false, profileDir: '/tmp/lh-mine-profile' },
-  { name: 'addresses_new', path: '/addresses/new', auth: true, offline: false, profileDir: '/tmp/lh-new-profile' },
-  { name: 'addresses_mine_offline', path: '/addresses/mine', auth: true, offline: true, profileDir: '/tmp/lh-mine-offline-profile' },
+  { name: 'dashboard', path: '/tableau-de-bord', auth: true, offline: false, profileDir: '/tmp/lh-user-profile' },
+  { name: 'addresses_mine', path: '/addresses/mine', auth: true, offline: false, profileDir: '/tmp/lh-user-profile' },
+  { name: 'addresses_new', path: '/addresses/new', auth: true, offline: false, profileDir: '/tmp/lh-user-profile' },
+  { name: 'account', path: '/account', auth: true, offline: false, profileDir: '/tmp/lh-user-profile' },
+  { name: 'admin', path: '/admin', auth: true, admin: true, offline: false, profileDir: '/tmp/lh-admin-profile' },
+  { name: 'addresses_mine_offline', path: '/addresses/mine', auth: true, offline: true, profileDir: '/tmp/lh-user-profile' },
 ];
 
 async function main() {
@@ -60,7 +64,7 @@ async function main() {
     let chromeFlags = '--headless=new --no-sandbox';
 
     if (item.auth) {
-      await createProfile(item.profileDir, item.path);
+      await createProfile(item.profileDir, item.path, !!item.admin);
       chromeFlags = `--headless=new --user-data-dir=${item.profileDir} --no-sandbox`;
     }
 

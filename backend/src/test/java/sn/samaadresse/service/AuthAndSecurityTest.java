@@ -157,4 +157,24 @@ class AuthAndSecurityTest {
         seeder.run(new DefaultApplicationArguments());
         verify(userRepository, atLeast(2)).save(any(User.class));
     }
+
+    @Test
+    @DisplayName("5. Limiteur de débit login : 5 tentatives autorisées puis rejet HTTP 429 avec Retry-After à la 6e")
+    void authService_loginRateLimit() {
+        LoginRequest req = LoginRequest.builder()
+                .email("mamadou@samaadresse.sn")
+                .password("MauvaisMotDePasse")
+                .build();
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        String ip = "192.168.10.55";
+        for (int i = 0; i < 5; i++) {
+            assertThrows(InvalidCredentialsException.class, () -> authService.login(req, ip, res));
+        }
+
+        RateLimitExceededException ex = assertThrows(RateLimitExceededException.class,
+                () -> authService.login(req, ip, res));
+        assertTrue(ex.getRetryAfterSeconds() > 0, "Le délai Retry-After doit être strictement positif");
+    }
 }

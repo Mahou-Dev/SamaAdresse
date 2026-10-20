@@ -31,6 +31,7 @@ services:
       PHOTO_STORAGE: db
       COOKIE_SECURE: "false"
       TRUSTED_PROXY_HOPS: "0"
+      LOGIN_RATE_LIMIT: "100"
       DEMO_SEED: "true"
       DEMO_PASSWORD: ${DEMO_PASSWORD}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@samaadresse.sn}

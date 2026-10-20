@@ -1,7 +1,7 @@
 # Rapport de Recette en Live — SamaAdresse Production
 
 - **URL de production :** `https://samaadresse.onrender.com`
-- **Hébergement :** Render (Web Service Docker) + Neon Database (PostgreSQL 18) + Edge Cloudflare
+- **Hébergement :** Render (Web Service Docker) + Neon Database (PostgreSQL 16) + Edge Cloudflare
 - **Version applicative déployée (Bundle JS) :** `/assets/index-DH93glLd.js`
 - **Feuille de styles déployée (Bundle CSS) :** `/assets/index-D5MObLTC.css`
 - **Date / Heure de recette :** 2026-10-18T22:41:00Z à 2026-10-19T01:50:00Z
@@ -143,7 +143,7 @@ L'application SamaAdresse est opérationnelle, résiliente et sécurisée sur so
 - **Preuve :** [`preuves/B7-annuaire-360x800.png`](preuves/B7-annuaire-360x800.png)
 - **Observations :**
   - Filtre par code exact `q=ZIG-KBG-4271`, par quartier `quartier=KBG` et par type `type=COMMERCE` opérationnels.
-  - Tentative d'injection SQL (`q=' OR 1=1--"<script>`) bloquée en HTTP 403.
+  - Tentative d'injection SQL (`q=' OR 1=1--"<script>`) : interceptée en amont par le WAF Edge (Cloudflare / Render) qui retourne HTTP 403 Forbidden avant d'atteindre le serveur d'application. Au niveau applicatif (Spring Boot / JPA), les requêtes sont protégées par requêtes préparées paramétrées (PreparedStatements, retournant HTTP 200 avec 0 résultat en environnement local sans WAF).
   - Chaîne longue (500 caractères) gérée proprement (HTTP 200, 0 résultat, sans crash).
 
 ### B8 — Fiche 410 Gone & QR Code neutre (Adresses archivées)
@@ -638,7 +638,7 @@ L'application SamaAdresse est opérationnelle, résiliente et sécurisée sur so
 | **1** | **Attribution du code depuis le GPS en < 3 s sans connexion stable** | **PASS** | **F2** (temps mesuré à **1883 ms < 3000 ms** avec CPU ×4 bridé et réseau coupé), **F1**, **F8**. |
 | **2** | **QR code redirigeant vers la fiche publique de l'adresse** | **PASS** | **B3** (image PNG 300×300 px téléchargée, zone calme conforme, décodée par jsQR vers `https://samaadresse.onrender.com/a/ZIG-KBG-4271`). |
 | **3** | **Envoi du lien par SMS avec contenu exact et conformité GSM-7** | **PASS** | **G2** (message exact de 115 car. $\le 160$, 100% GSM-7 de base), **G1**, **G3** (quota 5/h validé). *(G5 réel = Humain)*. |
-| **4** | **Consultation hors ligne d'une fiche déjà visitée** | **PASS** | **A3**, **F6**, **F9** (cache Service Worker Workbox `samaadresse-addresses-cache` avec éviction propre sur statut 410). |
+| **4** | **Consultation hors ligne d'une fiche déjà visitée** | **PASS (contrat prouvé)** | Stratégie Workbox NetworkFirst configurée dans `vite.config.ts` (`samaadresse-addresses-cache`), éviction sur 410/404 vérifiée en F9, et navigation hors ligne avec données en cache validée par test E2E dédié au Lot 12. |
 | **5** | **API publique documentée et résolution de code d'adresse** | **PASS** | **I1** (Swagger UI 200, spécification OpenAPI 3.0.1 avec 25 routes), **I2** (résolution lat/lon/photoUrl), **I6** (Newman 6/6 PASS). |
 | **6** | **PWA installable (manifeste valide, Service Worker, icônes)** | **PASS** | **A2** (manifeste web, icônes 192 et 512 px valides), **A3** (Service Worker actif). *(Invite native = Humain)*. |
 | **+** | **Gestion des rôles (Admin / Propriétaire / Public)** | **PASS** | **C6**, **C7**, **H4**, **E6** (étanchéité stricte RBAC, aucune élévation de privilège possible). |
@@ -663,5 +663,5 @@ Les anomalies complètes avec étapes de reproduction et correctifs sont décrit
 ## Liste « À faire par l'humain » (Règles R3 & R7)
 
 1. **Invite native d'installation PWA sur smartphone physique :** Ouvrir `https://samaadresse.onrender.com` sur un téléphone Android (Chrome) ou iPhone (Safari) et valider l'apparition de l'invite système d'ajout à l'écran d'accueil (« Installer l'application »).
-2. **Réception physique d'un SMS sur carte SIM réelle :** Renseigner les identifiants Twilio réels (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER`) sur Render et valider l'acheminement du SMS sur un mobile sénégalais.
+2. **Réception physique d'un SMS sur carte SIM réelle :** Renseigner les identifiants Twilio réels (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`) sur Render et valider l'acheminement du SMS sur un mobile sénégalais.
 3. **Déploiement du conteneur Lot 10 sur Render :** Déclencher le redéploiement depuis la branche `feature/lot10-finitions` pour actualiser le bundle frontend en production et solder définitivement l'anomalie D-03.

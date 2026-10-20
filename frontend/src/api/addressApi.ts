@@ -315,7 +315,25 @@ export const getPublicAddress = async (code: string): Promise<PublicAddressRespo
 };
 
 export const getMyAddresses = async (): Promise<AddressResponse[]> => {
-  return customFetch<AddressResponse[]>('/api/addresses/mine');
+  try {
+    const data = await customFetch<AddressResponse[]>('/api/addresses/mine');
+    try {
+      localStorage.setItem('sa_cached_my_addresses', JSON.stringify(data));
+    } catch {
+      // ignore storage quota error
+    }
+    return data;
+  } catch (err) {
+    try {
+      const cached = localStorage.getItem('sa_cached_my_addresses');
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch {
+      // ignore parse error
+    }
+    throw err;
+  }
 };
 
 export const createPublicReport = async (

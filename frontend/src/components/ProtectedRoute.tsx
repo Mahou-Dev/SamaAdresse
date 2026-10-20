@@ -35,7 +35,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     return (
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="max-w-md w-full p-6 sm:p-8 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] text-center space-y-4">
-          <div className="w-12 h-12 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#8A3112]/40 text-[#8A3112] flex items-center justify-center mx-auto">
             <ShieldAlert className="w-6 h-6" />
           </div>
           <h1 className="text-lg font-bold text-[#231A15]">Accès réservé</h1>

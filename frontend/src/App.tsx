@@ -30,7 +30,7 @@ const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ defaul
 const DirectoryPage = lazy(() => (directoryPreload ?? import('./pages/DirectoryPage')).then(m => ({ default: m.DirectoryPage })));
 
 const RouteLoadingFallback = () => (
-  <div className="max-w-5xl mx-auto w-full px-4 py-8 space-y-4 animate-pulse min-h-[1200px]">
+  <div className="max-w-5xl mx-auto w-full px-4 py-8 space-y-4 animate-pulse min-h-[calc(100vh-8rem)]">
     <div className="h-8 bg-[#E6DDD0] rounded w-1/3" />
     <div className="h-32 bg-[#E6DDD0]/60 rounded-xl" />
   </div>

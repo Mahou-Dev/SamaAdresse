@@ -27,6 +27,18 @@ public class PhotoController {
     private final PhotoStorage photoStorage;
 
     @Operation(
+            summary = "Accès au répertoire des téléversements (interdit/introuvable)",
+            description = "Empêche le listage du répertoire /uploads/ et renvoie 404 Not Found."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "404", description = "Répertoire introuvable ou listage interdit")
+    })
+    @GetMapping(value = {"/uploads", "/uploads/"})
+    public ResponseEntity<Void> uploadsDirectory() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @Operation(
             summary = "Récupérer une photo de façade",
             description = "Sert l'image stockée sur disque (dev) ou en base PostgreSQL bytea (prod) avec Cache-Control: public, max-age=31536000, immutable et ETag."
     )

@@ -1,28 +1,28 @@
 {
-  "measuredAt": "2026-10-19T12:11:18.117Z",
+  "measuredAt": "2026-10-20T00:17:44.664Z",
   "criterionMaxMs": 3000,
   "excludedFromMeasurement": "Acquisition matérielle du signal GPS et saisie préalable des étapes 1 et 2 (la mesure chronomètre avec performance.now() le délai entre le clic final d'enregistrement et l'affichage de la plaque d'adresse hors ligne après résolution locale de la grille et écriture dans IndexedDB)",
   "cpuThrottling": "4x slowdown (CDP Emulation.setCPUThrottlingRate rate=4)",
   "withReservedCode": {
     "samplesMs": [
-      47,
-      30.9,
-      29.4,
-      36.2,
-      18
+      47.3,
+      22.1,
+      29.1,
+      29.8,
+      25.3
     ],
-    "medianMs": 30.9
+    "medianMs": 29.1
   },
   "withoutReservedCode": {
     "samplesMs": [
-      17.1,
-      26.7,
-      37.2,
-      24,
-      15.8
+      28.4,
+      23.6,
+      15.1,
+      17.9,
+      19.4
     ],
-    "medianMs": 24
+    "medianMs": 19.4
   },
-  "overallMedianMs": 29.4,
+  "overallMedianMs": 25.3,
   "status": "Atteint"
 }
