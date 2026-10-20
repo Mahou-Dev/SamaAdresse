@@ -12,6 +12,7 @@ import {
 import { searchDirectory } from '../api/addressApi';
 import type { DirectoryItemResponse, LocationType } from '../api/addressApi';
 import { ApiError } from '../api/apiClient';
+import { EmptyState } from '../components/ui/EmptyState';
 
 const QUARTIERS = [
   { value: '', label: 'Tous les quartiers' },
@@ -437,19 +438,13 @@ export const DirectoryPage: React.FC = () => {
 
             {/* État vide */}
             {hasSearched && items.length === 0 && !error && (
-              <div className="p-8 sm:p-12 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm space-y-3">
-                <div className="w-12 h-12 rounded-xl bg-[#F2ECE1] border border-[#766B5B] flex items-center justify-center text-[#8A3112] mx-auto">
-                  <Search className="w-6 h-6" />
-                </div>
-                <div className="space-y-1">
-                  <h2 className="text-base font-bold text-[#231A15]">
-                    Aucune adresse ne correspond à votre recherche.
-                  </h2>
-                  <p className="text-xs text-[#5C4D44] max-w-sm mx-auto">
-                    Essayez avec un mot-clé plus court, ou retirez les filtres par quartier ou type de lieu.
-                  </p>
-                </div>
-              </div>
+              <EmptyState
+                illustration="/images/etat-vide-144w.webp"
+                illustrationSrcSet="/images/etat-vide-144w.webp 144w, /images/etat-vide-288w.webp 288w, /images/etat-vide-480w.webp 480w"
+                illustrationSizes="(max-width: 640px) 112px, 144px"
+                title="Aucune adresse ne correspond à votre recherche."
+                description="Essayez avec un mot-clé plus court, ou retirez les filtres par quartier ou type de lieu."
+              />
             )}
 
             {/* Liste des cartes d'adresses compactes */}
@@ -539,6 +534,21 @@ export const DirectoryPage: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Bandeau panoramique illustré */}
+      <div className="mt-8 rounded-xl overflow-hidden border border-[#766B5B] shadow-sm bg-[#F2ECE1]">
+        <img
+          src="/images/bandeau-annuaire-800w.webp"
+          srcSet="/images/bandeau-annuaire-480w.webp 480w, /images/bandeau-annuaire-800w.webp 800w, /images/bandeau-annuaire-1280w.webp 1280w"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 768px, 1024px"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="1280"
+          height="320"
+          className="w-full h-24 md:h-40 object-cover"
+        />
+      </div>
       </div>
     </div>
   );

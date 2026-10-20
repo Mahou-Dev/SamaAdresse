@@ -24,6 +24,7 @@ export default defineConfig({
         'icons/icon-512.png',
         'fonts/outfit-latin.woff2',
         'fonts/jetbrains-mono-latin.woff2',
+        'images/hero-accueil-800w.webp',
       ],
       manifest: {
         name: "SamaAdresse",
@@ -144,6 +145,22 @@ export default defineConfig({
               expiration: {
                 maxEntries: 300,
                 maxAgeSeconds: 14 * 24 * 60 * 60, // 14 jours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Images d'ambiance /images/** : CacheFirst, 30 jours, 12 entrées max
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' && /^\/images\//.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'samaadresse-images-cache',
+              expiration: {
+                maxEntries: 12,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 jours
               },
               cacheableResponse: {
                 statuses: [0, 200],

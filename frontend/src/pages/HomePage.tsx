@@ -168,10 +168,26 @@ export const HomePage: React.FC = () => {
   return (
     <div className="flex-1 w-full flex flex-col">
       {/* ---------------------------------------------------------------------
-       * 1. BANDEAU D'OUVERTURE : Bleu nuit avec plaque d'adresse mise en valeur
+       * 1. BANDEAU D'OUVERTURE : Bleu nuit avec image d'ambiance et plaque d'adresse
        * --------------------------------------------------------------------- */}
-      <section className="w-full border-b border-[#766B5B] bg-[#12304F] text-[#FBF7EF] py-8 sm:py-12 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto space-y-6">
+      <section className="relative w-full border-b border-[#766B5B] bg-[#12304F] text-[#FBF7EF] overflow-hidden">
+        {/* Image héros WebP d'ambiance responsive */}
+        <img
+          src="/images/hero-accueil-800w.webp"
+          srcSet="/images/hero-accueil-480w.webp 480w, /images/hero-accueil-800w.webp 800w, /images/hero-accueil-1280w.webp 1280w"
+          sizes="100vw"
+          width="1280"
+          height="853"
+          alt=""
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 w-full h-full object-cover object-right md:object-center pointer-events-none"
+        />
+
+        {/* Voile uni Bleu nuit d'opacité minimale garantissant WCAG AA >= 4.5:1 sur zone réelle */}
+        <div className="absolute inset-0 bg-[#12304F]/65 pointer-events-none" aria-hidden="true" />
+
+        <div className="relative z-10 max-w-5xl mx-auto py-8 sm:py-12 px-4 sm:px-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
             {/* Texte et actions du bandeau d'ouverture */}
             <div className="space-y-4">
@@ -351,66 +367,98 @@ export const HomePage: React.FC = () => {
             </p>
           </div>
 
-          {/* Frise numérotée avec trait continu de liaison */}
-          <div className="relative pt-1">
-            {/* Trait de liaison horizontal (Desktop) */}
-            <div
-              className="hidden md:block absolute top-6 left-[16%] right-[16%] h-0.5 bg-[#766B5B]"
-              aria-hidden="true"
-            />
-            {/* Trait de liaison vertical (Mobile) */}
-            <div
-              className="md:hidden absolute top-6 bottom-6 left-5 w-0.5 bg-[#766B5B]"
-              aria-hidden="true"
-            />
-
-            <ol className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 relative">
-              {/* Étape 1 */}
-              <li className="flex md:flex-col items-start md:items-center gap-4 md:text-center">
-                <div className="w-10 h-10 rounded-full bg-[#B84A24] text-white font-mono text-sm font-extrabold flex items-center justify-center shrink-0 shadow-sm ring-4 ring-[#FBF7EF] relative z-10">
-                  1
-                </div>
-                <div className="space-y-1.5 pt-0.5 md:pt-0">
+          {/* 3 cartes d'étapes avec visuels d'ambiance et texte réel */}
+          <ol className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 relative">
+            {/* Étape 1 */}
+            <li className="flex flex-col rounded-2xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm overflow-hidden">
+              <div className="h-44 sm:h-48 bg-[#F2ECE1] overflow-hidden border-b border-[#766B5B]/30">
+                <img
+                  src="/images/etape-1-localiser-480w.webp"
+                  srcSet="/images/etape-1-localiser-320w.webp 320w, /images/etape-1-localiser-480w.webp 480w, /images/etape-1-localiser-800w.webp 800w"
+                  sizes="(max-width: 768px) 100vw, 320px"
+                  width="480"
+                  height="480"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 sm:p-5 flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-7 h-7 rounded-full bg-[#B84A24] text-[#FBF7EF] font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                    1
+                  </span>
                   <h3 className="text-sm sm:text-base font-bold text-[#231A15] leading-snug">
-                    Placez-vous devant chez vous, l'application relève votre position
+                    Capturer la position
                   </h3>
-                  <p className="text-xs text-[#5C4D44] leading-relaxed">
-                    Votre smartphone capture vos coordonnées géographiques directement devant l'entrée de votre parcelle.
-                  </p>
                 </div>
-              </li>
+                <p className="text-xs text-[#5C4D44] leading-relaxed">
+                  Relevez votre position par signal GPS directement devant l'entrée de votre bâtiment ou saisissez vos coordonnées manuellement.
+                </p>
+              </div>
+            </li>
 
-              {/* Étape 2 */}
-              <li className="flex md:flex-col items-start md:items-center gap-4 md:text-center">
-                <div className="w-10 h-10 rounded-full bg-[#1D528F] text-white font-mono text-sm font-extrabold flex items-center justify-center shrink-0 shadow-sm ring-4 ring-[#FBF7EF] relative z-10">
-                  2
-                </div>
-                <div className="space-y-1.5 pt-0.5 md:pt-0">
+            {/* Étape 2 */}
+            <li className="flex flex-col rounded-2xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm overflow-hidden">
+              <div className="h-44 sm:h-48 bg-[#F2ECE1] overflow-hidden border-b border-[#766B5B]/30">
+                <img
+                  src="/images/etape-2-plaque-480w.webp"
+                  srcSet="/images/etape-2-plaque-320w.webp 320w, /images/etape-2-plaque-480w.webp 480w, /images/etape-2-plaque-800w.webp 800w"
+                  sizes="(max-width: 768px) 100vw, 320px"
+                  width="480"
+                  height="480"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 sm:p-5 flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-7 h-7 rounded-full bg-[#1D528F] text-[#FBF7EF] font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                    2
+                  </span>
                   <h3 className="text-sm sm:text-base font-bold text-[#231A15] leading-snug">
-                    Recevez votre code et votre QR
+                    Obtenir un code et une plaque avec QR
                   </h3>
-                  <p className="text-xs text-[#5C4D44] leading-relaxed">
-                    Le système associe votre position à votre quartier et génère votre plaque avec son QR code.
-                  </p>
                 </div>
-              </li>
+                <p className="text-xs text-[#5C4D44] leading-relaxed">
+                  Le système associe un code unique rattaché à votre quartier et génère une plaque de repérage numérique prête à l'emploi.
+                </p>
+              </div>
+            </li>
 
-              {/* Étape 3 */}
-              <li className="flex md:flex-col items-start md:items-center gap-4 md:text-center">
-                <div className="w-10 h-10 rounded-full bg-[#2A6B44] text-white font-mono text-sm font-extrabold flex items-center justify-center shrink-0 shadow-sm ring-4 ring-[#FBF7EF] relative z-10">
-                  3
-                </div>
-                <div className="space-y-1.5 pt-0.5 md:pt-0">
+            {/* Étape 3 */}
+            <li className="flex flex-col rounded-2xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm overflow-hidden">
+              <div className="h-44 sm:h-48 bg-[#F2ECE1] overflow-hidden border-b border-[#766B5B]/30">
+                <img
+                  src="/images/etape-3-partager-480w.webp"
+                  srcSet="/images/etape-3-partager-320w.webp 320w, /images/etape-3-partager-480w.webp 480w, /images/etape-3-partager-800w.webp 800w"
+                  sizes="(max-width: 768px) 100vw, 320px"
+                  width="480"
+                  height="480"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 sm:p-5 flex-1 flex flex-col gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-7 h-7 rounded-full bg-[#2A6B44] text-[#FBF7EF] font-mono text-xs font-extrabold flex items-center justify-center shrink-0">
+                    3
+                  </span>
                   <h3 className="text-sm sm:text-base font-bold text-[#231A15] leading-snug">
-                    Partagez-le par WhatsApp, SMS ou lien
+                    Partager le lien ou le QR pour être retrouvé
                   </h3>
-                  <p className="text-xs text-[#5C4D44] leading-relaxed">
-                    Transmettez votre fiche en un clic. Vos visiteurs ouvrent l'itinéraire directement sur leur carte GPS habituelle.
-                  </p>
                 </div>
-              </li>
-            </ol>
-          </div>
+                <p className="text-xs text-[#5C4D44] leading-relaxed">
+                  Transmettez votre fiche en un clic par lien direct ou QR code imprimé pour guider vos visiteurs jusqu'au pas de votre porte.
+                </p>
+              </div>
+            </li>
+          </ol>
         </div>
       </section>
 

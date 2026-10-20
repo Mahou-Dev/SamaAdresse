@@ -146,6 +146,7 @@ L'API REST est intégralement spécifiée au format OpenAPI 3.0 (`springdoc.api-
 - **Typographie d'interface** : Police *Outfit* conçue par Rodrigo Fuenzalida (licence [SIL Open Font License 1.1](https://openfontlicense.org)).
 - **Typographie des codes d'adresses** : Police *JetBrains Mono* conçue par JetBrains (licence [SIL Open Font License 1.1](https://openfontlicense.org)).
 - **Icônes d'interface** : Collection *Lucide Icons* (licence ISC).
+- **Illustrations d'ambiance** : Illustrations générées avec un outil d'IA (ChatGPT / OpenAI) à partir de prompts de l'auteur ; ce ne sont pas des photographies de lieux réels (détails et rôles consignés dans [docs/assets-prompts.md](docs/assets-prompts.md)).
 
 ---
 

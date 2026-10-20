@@ -712,7 +712,9 @@ export const MyAddressesPage: React.FC = () => {
         </div>
       ) : addresses.length === 0 && drafts.length === 0 ? (
         <EmptyState
-          icon={AlertCircle}
+          illustration="/images/etat-vide-144w.webp"
+          illustrationSrcSet="/images/etat-vide-144w.webp 144w, /images/etat-vide-288w.webp 288w, /images/etat-vide-480w.webp 480w"
+          illustrationSizes="(max-width: 640px) 112px, 144px"
           title="Vous n'avez pas encore d'adresse enregistrée"
           description="Créez votre première adresse en renseignant votre position GPS devant votre bâtiment."
           action={{

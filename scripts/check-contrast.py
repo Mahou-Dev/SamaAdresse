@@ -361,6 +361,15 @@ DECLARED_PAIRS = [
         "type": "Composant UI",
         "min_ratio": 3.0,
     },
+    {
+        "role": "Texte héros sur image d'ambiance avec voile Bleu nuit 65% (Pire pixel)",
+        "fg_name": "Carte crème",
+        "fg_hex": "#FBF7EF",
+        "bg_name": "Bleu nuit 65% sur ciel étoilé héros",
+        "bg_hex": "#646657",
+        "type": "Texte normal",
+        "min_ratio": 4.5,
+    },
 ]
 
 def scan_frontend_colors(src_dir: Path):

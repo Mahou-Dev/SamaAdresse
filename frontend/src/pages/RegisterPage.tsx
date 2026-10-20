@@ -72,37 +72,39 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <div className="flex-1 flex flex-col justify-center p-4 sm:p-8 font-sans">
-      <main className="max-w-lg mx-auto w-full pt-8 pb-12 flex-1 flex flex-col justify-center">
-        {/* Brand Logo Cliquable */}
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 mx-auto mb-6 group focus-visible:outline-2 focus-visible:outline-[#1D528F] rounded-lg p-1"
-        >
-          <div className="w-9 h-9 rounded-lg bg-[#1D528F] flex items-center justify-center text-white shadow-[0_2px_0_rgba(35,26,21,0.12)]">
-            <MapPin className="w-5 h-5 text-white" />
-          </div>
+      <main className="max-w-lg lg:max-w-5xl mx-auto w-full pt-8 pb-12 flex-1 flex flex-col justify-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
           <div>
-            <span className="font-extrabold text-xl text-[#231A15] tracking-tight block leading-tight">
-              SamaAdresse
-            </span>
-            <span className="text-[11px] font-medium text-[#5C4D44] block">
-              Projet étudiant — Ziguinchor, Sénégal
-            </span>
-          </div>
-        </Link>
+            {/* Brand Logo Cliquable */}
+            <Link
+              to="/"
+              className="flex items-center gap-2.5 mx-auto lg:mx-0 mb-6 group focus-visible:outline-2 focus-visible:outline-[#1D528F] rounded-lg p-1 w-fit"
+            >
+              <div className="w-9 h-9 rounded-lg bg-[#1D528F] flex items-center justify-center text-white shadow-[0_2px_0_rgba(35,26,21,0.12)]">
+                <MapPin className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="font-extrabold text-xl text-[#231A15] tracking-tight block leading-tight">
+                  SamaAdresse
+                </span>
+                <span className="text-[11px] font-medium text-[#5C4D44] block">
+                  Projet étudiant — Ziguinchor, Sénégal
+                </span>
+              </div>
+            </Link>
 
-        {/* Title */}
-        <div className="text-center mb-8 space-y-2">
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#231A15]">
-            Créer un compte
-          </h1>
-          <p className="text-sm text-[#5C4D44]">
-            Créez votre compte pour enregistrer et partager vos adresses
-          </p>
-        </div>
+            {/* Title */}
+            <div className="text-center lg:text-left mb-8 space-y-2">
+              <h1 className="text-3xl font-extrabold tracking-tight text-[#231A15]">
+                Créer un compte
+              </h1>
+              <p className="text-sm text-[#5C4D44]">
+                Créez votre compte pour enregistrer et partager vos adresses
+              </p>
+            </div>
 
-        {/* Form Card */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm">
+            {/* Form Card */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-sm">
           {errorMsg && (
             <div className="mb-6 p-4 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
@@ -302,7 +304,7 @@ export const RegisterPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading || strengthScore < 3 || !passwordsMatch}
-              className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#B84A24] hover:bg-[#9A3816] text-white font-bold text-sm shadow-sm active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-4 py-3.5 px-4 rounded-xl bg-[#B84A24] hover:bg-[#9A3816] text-[#FBF7EF] font-bold text-sm shadow-sm active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -326,7 +328,24 @@ export const RegisterPage: React.FC = () => {
             </Link>
           </div>
         </div>
-      </main>
+      </div>
+
+      {/* Panneau latéral illustré (desktop uniquement) */}
+      <div className="hidden lg:block relative rounded-2xl overflow-hidden border border-[#766B5B] shadow-sm bg-[#F2ECE1] h-full min-h-[580px]">
+        <img
+          src="/images/panneau-connexion-640w.webp"
+          srcSet="/images/panneau-connexion-640w.webp 640w, /images/panneau-connexion-1024w.webp 1024w"
+          sizes="(min-width: 1024px) 480px, 0px"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width="1024"
+          height="1536"
+          className="w-full h-full object-cover"
+        />
+      </div>
     </div>
+  </main>
+</div>
   );
 };
