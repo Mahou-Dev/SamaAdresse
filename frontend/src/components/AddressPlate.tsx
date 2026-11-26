@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Copy, Check } from 'lucide-react';
 import { getLocationTypeLabel } from '../utils/locationTypes';
 import { getZoneName } from '../utils/geoGrid';
+import { cn } from '../utils/cn';
 
 export interface AddressPlateProps {
   code: string;
@@ -13,6 +14,60 @@ export interface AddressPlateProps {
   isExample?: boolean;
   animated?: boolean;
 }
+
+const SIZE_CONFIG = {
+  sm: {
+    container: 'p-1 rounded-lg w-full',
+    inner: 'px-2 py-1.5 rounded-md gap-1',
+    rivetSize: 'w-1.5 h-1.5',
+    bandeauPadding: 'pb-0.5',
+    bandeauText: 'text-[11px] tracking-wide',
+    codeText: 'text-[clamp(15px,4.2vw,18px)] font-extrabold whitespace-nowrap leading-tight',
+    badgeText: 'text-[11px] leading-none px-1.5 py-0.5',
+    codeMinHeight: 'min-h-0',
+  },
+  md: {
+    container: 'p-1.5 rounded-xl max-w-sm sm:max-w-md w-full',
+    inner: 'px-3 py-2 sm:px-4 sm:py-3 rounded-lg gap-1.5',
+    rivetSize: 'w-2 h-2',
+    bandeauPadding: 'pb-1',
+    bandeauText: 'text-[11px] sm:text-xs tracking-wider',
+    codeText: 'text-[clamp(1.35rem,5.8vw,1.95rem)] font-extrabold whitespace-nowrap leading-tight',
+    badgeText: 'text-[11px] sm:text-xs leading-none px-2 py-0.5',
+    codeMinHeight: 'min-h-[2rem]',
+  },
+  lg: {
+    container: 'p-2 rounded-2xl max-w-lg w-full',
+    inner: 'px-3.5 py-3 sm:p-5 rounded-xl gap-2',
+    rivetSize: 'w-2.5 h-2.5',
+    bandeauPadding: 'pb-1.5',
+    bandeauText: 'text-[11px] sm:text-xs tracking-widest',
+    codeText: 'text-[clamp(1.5rem,6.8vw,2.6rem)] font-extrabold whitespace-nowrap leading-none',
+    badgeText: 'text-[11px] sm:text-xs leading-none px-2 py-1',
+    codeMinHeight: 'min-h-[2.5rem]',
+  },
+} as const;
+
+interface PlateRivetProps {
+  position: string;
+  sizeClass: string;
+}
+
+const PlateRivet: React.FC<PlateRivetProps> = ({ position, sizeClass }) => (
+  <svg
+    className={cn(
+      'absolute text-border-strong print:hidden pointer-events-none',
+      position,
+      sizeClass
+    )}
+    viewBox="0 0 10 10"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <circle cx="5" cy="5" r="4.5" className="fill-surface stroke-border-strong" strokeWidth="1" />
+    <circle cx="5" cy="5" r="1.5" className="fill-ink-muted" />
+  </svg>
+);
 
 export const AddressPlate: React.FC<AddressPlateProps> = ({
   code,
@@ -29,6 +84,7 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
   const zoneCode = zone?.toUpperCase() || (code ? code.split('-')[0]?.toUpperCase() : '');
   const zoneName = getZoneName(zoneCode).toUpperCase();
   const typeLabel = getLocationTypeLabel(type);
+  const sizeConfig = SIZE_CONFIG[size];
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -45,64 +101,14 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
       document.body.removeChild(textarea);
     }
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    window.setTimeout(() => setCopied(false), 2000);
   };
-
-  // Dimensions et typographies adaptées avec clamp() :
-  // - Aucun retour à la ligne du code de 320 à 1440 px (whitespace-nowrap)
-  // - Tag de type >= 11 px partout
-  // - Code >= 15 px dans les listes (sm), et occupe l'essentiel de la largeur sur la fiche (lg)
-  const sizeConfig = {
-    sm: {
-      container: 'p-1 rounded-md w-full',
-      inner: 'px-2 py-1.5 rounded-sm gap-1',
-      rivetSize: 'w-1.5 h-1.5',
-      bandeauPadding: 'pb-0.5',
-      bandeauText: 'text-[11px] tracking-wide',
-      codeText: 'text-[clamp(15px,4.2vw,18px)] font-extrabold whitespace-nowrap leading-tight',
-      badgeText: 'text-[11px] leading-none px-1.5 py-0.5',
-      codeMinHeight: 'min-h-0',
-    },
-    md: {
-      container: 'p-1.5 rounded-lg max-w-sm sm:max-w-md w-full',
-      inner: 'px-3 py-2 sm:px-4 sm:py-3 rounded-md gap-1.5',
-      rivetSize: 'w-2 h-2',
-      bandeauPadding: 'pb-1',
-      bandeauText: 'text-[11px] sm:text-xs tracking-wider',
-      codeText: 'text-[clamp(1.35rem,5.8vw,1.95rem)] font-extrabold whitespace-nowrap leading-tight',
-      badgeText: 'text-[11px] sm:text-xs leading-none px-2 py-0.5',
-      codeMinHeight: 'min-h-[2rem]',
-    },
-    lg: {
-      container: 'p-2 rounded-xl max-w-lg w-full',
-      inner: 'px-3.5 py-3 sm:p-5 rounded-lg gap-2',
-      rivetSize: 'w-2.5 h-2.5',
-      bandeauPadding: 'pb-1.5',
-      bandeauText: 'text-[11px] sm:text-xs tracking-widest',
-      codeText: 'text-[clamp(1.5rem,6.8vw,2.6rem)] font-extrabold whitespace-nowrap leading-none',
-      badgeText: 'text-[11px] sm:text-xs leading-none px-2 py-1',
-      codeMinHeight: 'min-h-[2.5rem]',
-    },
-  }[size];
-
-  // Rivet SVG léger représentant les fixations des plaques de rue
-  const Rivet = ({ position }: { position: string }) => (
-    <svg
-      className={`absolute ${position} ${sizeConfig.rivetSize} text-[#8C8272] print:hidden pointer-events-none`}
-      viewBox="0 0 10 10"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <circle cx="5" cy="5" r="4.5" fill="#E6DDD0" stroke="#8C8272" strokeWidth="1" />
-      <circle cx="5" cy="5" r="1.5" fill="#5C4D44" />
-    </svg>
-  );
 
   const renderBadges = () => (
     <div className="flex items-center gap-1.5 shrink-0">
       {isExample && (
         <span
-          className="font-bold text-[#8A3112] bg-[#F2ECE1] border border-[#8C8272] rounded px-1.5 py-0.5 text-[11px] leading-none tracking-wide print:border-black print:text-black shadow-[0_1px_0_rgba(35,26,21,0.05)] shrink-0"
+          className="font-bold text-brand-hover bg-brand-soft border border-brand-border rounded-md px-1.5 py-0.5 text-[11px] leading-none tracking-wide print:border-black print:text-black shrink-0"
           title="Plaque de démonstration (Exemple)"
         >
           Exemple
@@ -111,7 +117,10 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
 
       {typeLabel && (
         <span
-          className={`font-semibold text-[#231A15] bg-[#F2ECE1] border border-[#D4CEBF] rounded-sm print:border-black print:bg-white print:text-black shrink-0 ${sizeConfig.badgeText}`}
+          className={cn(
+            'font-semibold text-ink-secondary bg-surface border border-border rounded-md print:border-black print:bg-white print:text-black shrink-0',
+            sizeConfig.badgeText
+          )}
         >
           {typeLabel}
         </span>
@@ -120,31 +129,39 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
   );
 
   return (
-    <div className={`flex flex-col items-center ${className}`}>
+    <div className={cn('flex flex-col items-center', className)}>
       <div
-        className={`relative bg-[#1D528F] border-2 border-[#153C6B] shadow-[0_2px_0_rgba(35,26,21,0.12)] print:border-black print:bg-white print:shadow-none transition-shadow ${sizeConfig.container}`}
+        className={cn(
+          'relative bg-institution border-2 border-institution-hover shadow-sm print:border-black print:bg-white print:shadow-none transition-shadow',
+          sizeConfig.container
+        )}
         data-testid="address-plate"
       >
-        {/* 4 Rivets d'angle légers */}
-        <Rivet position="top-1 left-1" />
-        <Rivet position="top-1 right-1" />
-        <Rivet position="bottom-1 left-1" />
-        <Rivet position="bottom-1 right-1" />
+        <PlateRivet position="top-1 left-1" sizeClass={sizeConfig.rivetSize} />
+        <PlateRivet position="top-1 right-1" sizeClass={sizeConfig.rivetSize} />
+        <PlateRivet position="bottom-1 left-1" sizeClass={sizeConfig.rivetSize} />
+        <PlateRivet position="bottom-1 right-1" sizeClass={sizeConfig.rivetSize} />
 
-        {/* Cadre intérieur émaillé (double bordure) avec relief subtil */}
+        {/* Cadre intérieur émaillé */}
         <div
-          className={`relative flex flex-col items-center justify-center text-center bg-[#FFFFFF] border border-[#1D528F]/30 shadow-[inset_0_1px_2px_rgba(255,255,255,0.9),inset_0_-2px_4px_rgba(29,82,143,0.08)] print:border-black print:bg-white print:shadow-none ${sizeConfig.inner}`}
+          className={cn(
+            'relative flex flex-col items-center justify-center text-center bg-canvas border border-institution/25 shadow-xs print:border-black print:bg-white print:shadow-none',
+            sizeConfig.inner
+          )}
         >
-          {/* Bandeau supérieur : JAMAIS tronqué. Sous 400 px (ou en taille sm), SAMAADRESSE s'affiche seul en haut */}
+          {/* Bandeau supérieur : jamais tronqué */}
           <div
-            className={`w-full flex items-center ${
-              size === 'sm'
-                ? 'justify-center'
-                : 'justify-center min-[400px]:justify-between'
-            } gap-1.5 border-b border-[#E6DDD0] print:border-black min-w-0 ${sizeConfig.bandeauPadding}`}
+            className={cn(
+              'w-full flex items-center gap-1.5 border-b border-border print:border-black min-w-0',
+              size === 'sm' ? 'justify-center' : 'justify-center min-[400px]:justify-between',
+              sizeConfig.bandeauPadding
+            )}
           >
             <span
-              className={`font-bold text-[#1D528F] font-sans print:text-black uppercase whitespace-nowrap ${sizeConfig.bandeauText}`}
+              className={cn(
+                'font-bold text-institution font-sans print:text-black uppercase whitespace-nowrap',
+                sizeConfig.bandeauText
+              )}
             >
               SAMAADRESSE
               <span className="hidden min-[400px]:inline">
@@ -152,7 +169,6 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
               </span>
             </span>
 
-            {/* Sur md/lg à partir de 400 px, le tag est à droite dans le bandeau */}
             {size !== 'sm' && (isExample || typeLabel) && (
               <div className="hidden min-[400px]:flex items-center shrink-0">
                 {renderBadges()}
@@ -160,28 +176,34 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
             )}
           </div>
 
-          {/* Code Central : Texte plat JetBrains Mono, sans ombre, JAMAIS sur 2 lignes (white-space: nowrap) */}
+          {/* Code Central : JetBrains Mono plat, jamais sur 2 lignes */}
           <div
             role="group"
-            className={`w-full flex items-center justify-center py-0.5 overflow-hidden ${sizeConfig.codeMinHeight}`}
+            className={cn(
+              'w-full flex items-center justify-center py-0.5 overflow-hidden',
+              sizeConfig.codeMinHeight
+            )}
             aria-label={code}
           >
             <span
-              className={`font-mono font-extrabold tracking-tight text-[#1D528F] select-all print:text-black inline-block text-center whitespace-nowrap ${sizeConfig.codeText} ${
-                animated ? 'motion-safe:animate-[pulse_4s_ease-in-out_infinite]' : ''
-              }`}
+              className={cn(
+                'font-mono font-extrabold tracking-tight text-institution select-all print:text-black inline-block text-center whitespace-nowrap',
+                sizeConfig.codeText,
+                animated && 'motion-safe:animate-[pulse_4s_ease-in-out_infinite]'
+              )}
               style={{ textShadow: 'none' }}
             >
               {code}
             </span>
           </div>
 
-          {/* Ligne inférieure pour le tag de type : toujours sur sa propre ligne sous 400 px (et en taille sm) */}
+          {/* Ligne inférieure pour le tag de type */}
           {(isExample || typeLabel) && (
             <div
-              className={`w-full flex items-center justify-end pt-0.5 border-t border-[#E6DDD0]/60 ${
+              className={cn(
+                'w-full flex items-center justify-end pt-0.5 border-t border-border/70',
                 size === 'sm' ? 'flex' : 'flex min-[400px]:hidden'
-              }`}
+              )}
             >
               {renderBadges()}
             </div>
@@ -189,23 +211,22 @@ export const AddressPlate: React.FC<AddressPlateProps> = ({
         </div>
       </div>
 
-      {/* Bouton "Copier le code" placé DESSOUS de la plaque avec retour visuel "Copié" */}
       {showCopy && (
-        <div className="w-full flex justify-center mt-2 print:hidden">
+        <div className="w-full flex justify-center mt-2.5 print:hidden">
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-xs font-bold text-[#1D528F] transition shadow-[0_1px_0_rgba(35,26,21,0.06)] cursor-pointer touch-target"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border-strong bg-surface-elevated hover:bg-surface text-xs font-semibold text-institution transition shadow-xs cursor-pointer min-h-[40px] focus-visible:outline-2 focus-visible:outline-institution"
             title="Copier le code de la plaque"
           >
             {copied ? (
               <>
-                <Check className="w-3.5 h-3.5 text-[#2A6B44]" />
-                <span className="text-[#2A6B44]">Copié !</span>
+                <Check className="w-3.5 h-3.5 text-success" aria-hidden="true" />
+                <span className="text-success">Copié !</span>
               </>
             ) : (
               <>
-                <Copy className="w-3.5 h-3.5" />
+                <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                 <span>Copier le code</span>
               </>
             )}

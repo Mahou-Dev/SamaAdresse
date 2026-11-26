@@ -1,5 +1,13 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { cn } from '../../utils/cn';
+import { Button } from './Button';
+
+export interface EmptyStateAction {
+  label: string;
+  onClick?: () => void;
+  to?: string;
+  icon?: React.ComponentType<{ className?: string }>;
+}
 
 export interface EmptyStateProps {
   icon?: React.ComponentType<{ className?: string }>;
@@ -9,12 +17,9 @@ export interface EmptyStateProps {
   title: string;
   description: string;
   headingLevel?: 'h2' | 'h3' | 'p';
-  action?: {
-    label: string;
-    onClick?: () => void;
-    to?: string;
-    icon?: React.ComponentType<{ className?: string }>;
-  };
+  action?: EmptyStateAction;
+  secondaryAction?: EmptyStateAction;
+  compact?: boolean;
   className?: string;
 }
 
@@ -27,15 +32,22 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   headingLevel = 'h2',
   action,
-  className = '',
+  secondaryAction,
+  compact = false,
+  className,
 }) => {
   const HeadingTag = headingLevel;
+
   return (
     <div
-      className={`p-8 sm:p-12 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] flex flex-col items-center justify-center space-y-3.5 ${className}`}
+      className={cn(
+        'text-center rounded-2xl bg-surface-elevated border border-border shadow-xs flex flex-col items-center justify-center',
+        compact ? 'p-6 space-y-3' : 'p-8 sm:p-12 space-y-4',
+        className
+      )}
     >
       {illustration ? (
-        <div className="w-28 sm:w-36 h-28 sm:h-36 rounded-2xl overflow-hidden border border-[#766B5B] shadow-sm mb-1 bg-[#F2ECE1]">
+        <div className="w-28 sm:w-36 h-28 sm:h-36 rounded-2xl overflow-hidden border border-border shadow-xs mb-1 bg-surface-secondary">
           <img
             src={illustration}
             srcSet={illustrationSrcSet}
@@ -49,36 +61,40 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           />
         </div>
       ) : Icon ? (
-        <div className="w-12 h-12 rounded-2xl bg-[#F2ECE1] border border-[#766B5B] flex items-center justify-center text-[#12304F]">
-          <Icon className="w-6 h-6" />
+        <div className="w-12 h-12 rounded-2xl bg-surface border border-border flex items-center justify-center text-institution">
+          <Icon className="w-6 h-6" aria-hidden="true" />
         </div>
       ) : null}
-      <div className="max-w-md space-y-1">
-        <HeadingTag className="text-base font-bold text-[#231A15]">{title}</HeadingTag>
-        <p className="text-xs sm:text-sm text-[#5C4D44] leading-relaxed">
-          {description}
-        </p>
+
+      <div className="max-w-md space-y-1.5">
+        <HeadingTag className="text-base sm:text-lg font-bold text-ink">{title}</HeadingTag>
+        <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">{description}</p>
       </div>
-      {action && (
-        <div className="pt-2">
-          {action.to ? (
-            <Link
+
+      {(action || secondaryAction) && (
+        <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
+          {action && (
+            <Button
+              variant="primary"
+              size="md"
               to={action.to}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target"
-            >
-              {action.icon && <action.icon className="w-4 h-4" />}
-              <span>{action.label}</span>
-            </Link>
-          ) : action.onClick ? (
-            <button
-              type="button"
               onClick={action.onClick}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target cursor-pointer"
+              leftIcon={action.icon}
             >
-              {action.icon && <action.icon className="w-4 h-4" />}
-              <span>{action.label}</span>
-            </button>
-          ) : null}
+              {action.label}
+            </Button>
+          )}
+          {secondaryAction && (
+            <Button
+              variant="outline"
+              size="md"
+              to={secondaryAction.to}
+              onClick={secondaryAction.onClick}
+              leftIcon={secondaryAction.icon}
+            >
+              {secondaryAction.label}
+            </Button>
+          )}
         </div>
       )}
     </div>

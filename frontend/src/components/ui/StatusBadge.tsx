@@ -1,16 +1,18 @@
 import React from 'react';
-import { CheckCircle2, AlertCircle, Archive, Clock, Check, X } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Archive, Clock, Check, X, Flag } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 export type StatusType =
   | 'ACTIVE'
   | 'SUSPENDED'
   | 'ARCHIVED'
+  | 'SIGNALED'
   | 'PENDING'
   | 'OPEN'
   | 'RESOLVED'
   | 'DISMISSED';
 
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   status: StatusType | string;
   label?: string;
   size?: 'sm' | 'md';
@@ -19,55 +21,50 @@ interface StatusBadgeProps {
 
 const STATUS_CONFIG: Record<
   StatusType,
-  { label: string; bg: string; text: string; border: string; icon: React.ComponentType<{ className?: string }> }
+  {
+    label: string;
+    classes: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }
 > = {
   ACTIVE: {
     label: 'Active',
-    bg: 'bg-[#2A6B44]/10',
-    text: 'text-[#2A6B44]',
-    border: 'border-[#2A6B44]/25',
+    classes: 'bg-success-soft text-success border-success-border',
     icon: CheckCircle2,
   },
   SUSPENDED: {
     label: 'Suspendue',
-    bg: 'bg-[#FBF7EF]',
-    text: 'text-[#8A3112]',
-    border: 'border-[#8A3112]/40',
+    classes: 'bg-danger-soft text-danger border-danger-border',
     icon: AlertCircle,
+  },
+  SIGNALED: {
+    label: 'Signalée',
+    classes: 'bg-warning-soft text-warning border-warning-border',
+    icon: Flag,
   },
   ARCHIVED: {
     label: 'Archivée',
-    bg: 'bg-[#F2ECE1]',
-    text: 'text-[#5C4D44]',
-    border: 'border-[#766B5B]',
+    classes: 'bg-surface text-ink-muted border-border-strong',
     icon: Archive,
   },
   PENDING: {
     label: "En attente d'envoi",
-    bg: 'bg-[#F2ECE1]',
-    text: 'text-[#8A3112]',
-    border: 'border-[#8A3112]/30',
+    classes: 'bg-warning-soft text-warning border-warning-border',
     icon: Clock,
   },
   OPEN: {
     label: 'Ouvert',
-    bg: 'bg-[#F2ECE1]',
-    text: 'text-[#8A3112]',
-    border: 'border-[#8A3112]/30',
+    classes: 'bg-brand-soft text-brand-hover border-brand-border',
     icon: AlertCircle,
   },
   RESOLVED: {
     label: 'Traité',
-    bg: 'bg-[#2A6B44]/10',
-    text: 'text-[#2A6B44]',
-    border: 'border-[#2A6B44]/25',
+    classes: 'bg-success-soft text-success border-success-border',
     icon: Check,
   },
   DISMISSED: {
     label: 'Classé sans suite',
-    bg: 'bg-[#F2ECE1]',
-    text: 'text-[#5C4D44]',
-    border: 'border-[#766B5B]',
+    classes: 'bg-surface text-ink-muted border-border-strong',
     icon: X,
   },
 };
@@ -76,26 +73,29 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
   label,
   size = 'sm',
-  className = '',
+  className,
 }) => {
-  const normalizedStatus = (status.toUpperCase() in STATUS_CONFIG
-    ? (status.toUpperCase() as StatusType)
-    : 'PENDING') as StatusType;
+  const upper = status.toUpperCase();
+  const normalizedStatus: StatusType =
+    upper in STATUS_CONFIG ? (upper as StatusType) : 'PENDING';
 
   const config = STATUS_CONFIG[normalizedStatus];
   const Icon = config.icon;
   const displayLabel = label || config.label;
 
-  const sizeClasses =
-    size === 'sm'
-      ? 'px-2 py-0.5 text-[11px] gap-1'
-      : 'px-2.5 py-1 text-xs gap-1.5';
-
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-md border ${config.bg} ${config.text} ${config.border} ${sizeClasses} ${className}`}
+      className={cn(
+        'inline-flex items-center font-semibold rounded-full border leading-none whitespace-nowrap',
+        size === 'sm' ? 'px-2.5 py-1 text-xs gap-1.5' : 'px-3 py-1.5 text-xs gap-1.5',
+        config.classes,
+        className
+      )}
     >
-      <Icon className={size === 'sm' ? 'w-3 h-3 shrink-0' : 'w-3.5 h-3.5 shrink-0'} />
+      <Icon
+        className={size === 'sm' ? 'w-3.5 h-3.5 shrink-0' : 'w-4 h-4 shrink-0'}
+        aria-hidden="true"
+      />
       <span>{displayLabel}</span>
     </span>
   );

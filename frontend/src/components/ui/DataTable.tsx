@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { cn } from '../../utils/cn';
 
 export interface Column<T> {
   key: string;
@@ -38,7 +39,7 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (data.length === 0) {
     return (
-      <div className="p-8 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] text-xs text-[#5C4D44]">
+      <div className="p-8 text-center rounded-2xl bg-surface-elevated border border-border text-sm text-ink-muted">
         {emptyMessage}
       </div>
     );
@@ -47,11 +48,11 @@ export function DataTable<T>({
   return (
     <div className="w-full">
       {/* Version Table Desktop (>= 768 px) */}
-      <div className="hidden md:block rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-[0_2px_0_rgba(35,26,21,0.06)] overflow-hidden">
+      <div className="hidden md:block rounded-2xl border border-border bg-surface-elevated shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs" aria-label={ariaLabel}>
+          <table className="w-full text-left border-collapse text-sm" aria-label={ariaLabel}>
             <thead>
-              <tr className="bg-[#F2ECE1] border-b border-[#766B5B] text-[#231A15]">
+              <tr className="bg-surface border-b border-border text-ink-secondary">
                 {columns.map((col) => {
                   const isSorted = sortKey === col.key;
                   const sortAria = !col.sortable
@@ -67,23 +68,23 @@ export function DataTable<T>({
                       key={col.key}
                       scope="col"
                       aria-sort={sortAria}
-                      className={`py-3 px-4 font-bold ${col.className || ''}`}
+                      className={cn('py-3.5 px-4 text-xs font-semibold uppercase tracking-wide', col.className)}
                     >
                       {col.sortable && onSort ? (
                         <button
                           type="button"
                           onClick={() => onSort(col.key)}
-                          className="inline-flex items-center gap-1.5 hover:text-[#12304F] transition cursor-pointer font-bold focus-visible:outline-2 focus-visible:outline-[#F2B233] rounded px-1 -mx-1"
+                          className="inline-flex items-center gap-1.5 hover:text-ink transition cursor-pointer font-semibold uppercase tracking-wide focus-visible:outline-2 focus-visible:outline-institution rounded px-1 -mx-1"
                         >
                           <span>{col.header}</span>
                           {isSorted ? (
                             sortDirection === 'asc' ? (
-                              <ArrowUp className="w-3.5 h-3.5 text-[#12304F]" />
+                              <ArrowUp className="w-3.5 h-3.5 text-institution" aria-hidden="true" />
                             ) : (
-                              <ArrowDown className="w-3.5 h-3.5 text-[#12304F]" />
+                              <ArrowDown className="w-3.5 h-3.5 text-institution" aria-hidden="true" />
                             )
                           ) : (
-                            <ArrowUpDown className="w-3.5 h-3.5 text-[#5C4D44]/50" />
+                            <ArrowUpDown className="w-3.5 h-3.5 text-ink-subtle" aria-hidden="true" />
                           )}
                         </button>
                       ) : (
@@ -94,29 +95,30 @@ export function DataTable<T>({
                 })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#766B5B]/30">
+            <tbody className="divide-y divide-border">
               {data.map((row, index) => {
                 const rowKey = keyExtractor(row);
                 const isSelected = selectedId === rowKey;
-                const isClickable = !!onRowClick;
+                const isClickable = Boolean(onRowClick);
 
                 return (
                   <tr
                     key={rowKey}
                     onClick={() => onRowClick?.(row)}
-                    className={`transition ${
+                    className={cn(
+                      'transition-colors',
                       isSelected
-                        ? 'bg-[#F2ECE1] font-semibold'
+                        ? 'bg-institution-soft/70 font-medium'
                         : isClickable
-                        ? 'hover:bg-[#F2ECE1]/60 cursor-pointer'
-                        : 'hover:bg-[#F2ECE1]/30'
-                    }`}
+                        ? 'hover:bg-surface cursor-pointer'
+                        : 'hover:bg-surface/60'
+                    )}
                   >
                     {columns.map((col) => (
-                      <td key={col.key} className={`py-3 px-4 ${col.className || ''}`}>
+                      <td key={col.key} className={cn('py-3.5 px-4 text-ink-secondary', col.className)}>
                         {col.render
                           ? col.render(row, index)
-                          : String((row as Record<string, any>)[col.key] ?? '')}
+                          : String((row as Record<string, unknown>)[col.key] ?? '')}
                       </td>
                     ))}
                   </tr>
@@ -139,22 +141,22 @@ export function DataTable<T>({
             );
           }
 
-          // Fallback par défaut si renderMobileCard n'est pas fourni
           return (
             <div
               key={rowKey}
               onClick={() => onRowClick?.(row)}
-              className={`p-4 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-sm space-y-2 text-xs ${
-                onRowClick ? 'cursor-pointer active:bg-[#F2ECE1]' : ''
-              }`}
+              className={cn(
+                'p-4 rounded-2xl border border-border bg-surface-elevated shadow-xs space-y-2 text-xs',
+                onRowClick && 'cursor-pointer active:bg-surface'
+              )}
             >
               {columns.map((col) => (
                 <div key={col.key} className="flex items-start justify-between gap-2">
-                  <span className="font-semibold text-[#5C4D44] shrink-0">{col.header} :</span>
-                  <div className="text-right text-[#231A15]">
+                  <span className="font-semibold text-ink-muted shrink-0">{col.header} :</span>
+                  <div className="text-right text-ink">
                     {col.render
                       ? col.render(row, index)
-                      : String((row as Record<string, any>)[col.key] ?? '')}
+                      : String((row as Record<string, unknown>)[col.key] ?? '')}
                   </div>
                 </div>
               ))}
