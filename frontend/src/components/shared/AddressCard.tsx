@@ -27,6 +27,7 @@ export interface AddressCardProps {
   onSelect?: (address: AddressCardData) => void;
   showStatus?: boolean;
   copyableCode?: boolean;
+  isSelected?: boolean;
   footer?: React.ReactNode;
   className?: string;
 }
@@ -38,6 +39,7 @@ export const AddressCard: React.FC<AddressCardProps> = ({
   onSelect,
   showStatus = false,
   copyableCode = false,
+  isSelected = false,
   footer,
   className,
 }) => {
@@ -87,9 +89,13 @@ export const AddressCard: React.FC<AddressCardProps> = ({
 
   return (
     <article
+      data-address-code={address.code}
       className={cn(
-        'group rounded-2xl border border-border bg-surface-elevated overflow-hidden shadow-xs',
-        'hover:border-border-strong hover:shadow-card-hover transition-[border-color,box-shadow] duration-200 flex',
+        'group rounded-2xl border bg-surface-elevated overflow-hidden shadow-xs',
+        'transition-[border-color,box-shadow] duration-200 flex',
+        isSelected
+          ? 'border-brand ring-2 ring-brand/25 shadow-card-hover'
+          : 'border-border hover:border-border-strong hover:shadow-card-hover',
         layout === 'vertical' ? 'flex-col' : 'flex-col sm:flex-row',
         className
       )}

@@ -4,6 +4,7 @@ import { cn } from '../../utils/cn';
 import { Spinner } from '../ui/Spinner';
 
 export interface SearchBarProps {
+  inputId?: string;
   value: string;
   onChange: (value: string) => void;
   onSubmit?: (value: string) => void;
@@ -23,6 +24,7 @@ export interface SearchBarProps {
  * (code ZIG-..., quartier, repère ou description).
  */
 export const SearchBar: React.FC<SearchBarProps> = ({
+  inputId: providedInputId,
   value,
   onChange,
   onSubmit,
@@ -36,7 +38,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   showSubmitButton = true,
   className,
 }) => {
-  const inputId = useId();
+  const generatedId = useId();
+  const inputId = providedInputId || generatedId;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

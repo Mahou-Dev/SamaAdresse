@@ -31,16 +31,16 @@ const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ defaul
 const DirectoryPage = lazy(() => (directoryPreload ?? import('./pages/DirectoryPage')).then(m => ({ default: m.DirectoryPage })));
 
 const RouteLoadingFallback = () => (
-  <div className="max-w-[1120px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 min-h-[1100px] animate-pulse">
-    <div className="h-9 bg-[#E6DDD0] rounded-lg w-1/3" />
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
-      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
-      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
-      <div className="h-28 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
+  <div
+    className="max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 min-h-[720px] animate-pulse"
+    aria-label="Chargement de la page"
+  >
+    <div className="h-9 bg-surface-hover rounded-xl w-1/3" />
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="h-64 bg-surface border border-border rounded-2xl" />
+      <div className="h-64 bg-surface border border-border rounded-2xl" />
+      <div className="h-64 bg-surface border border-border rounded-2xl" />
     </div>
-    <div className="h-44 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
-    <div className="h-96 bg-[#FBF7EF] border border-[#766B5B] rounded-xl" />
   </div>
 );
 
@@ -50,10 +50,16 @@ export function App() {
       <AuthProvider>
         <ToastProvider>
           <BrowserRouter>
-            <div className="min-h-screen flex flex-col bg-[#EADFC8] text-[#231A15]">
+            <div className="min-h-screen flex flex-col bg-canvas text-ink">
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[var(--z-tooltip)] focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-institution focus:text-ink-inverse focus:text-sm focus:font-semibold focus:shadow-lg"
+              >
+                Aller au contenu principal
+              </a>
               <AppNavigation />
               <OfflineBanner />
-              <main className="flex-1 flex flex-col">
+              <main id="main-content" className="flex-1 flex flex-col">
                 <ErrorBoundary>
                   <Suspense fallback={<RouteLoadingFallback />}>
                     <Routes>

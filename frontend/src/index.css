@@ -81,19 +81,17 @@
 
 @layer base {
   body {
-    background-color: var(--color-sable-dore);
-    color: var(--color-encre);
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
     min-height: 100vh;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    /* Motif de fond discret en grille cartographique */
-    background-image: radial-gradient(circle at 1px 1px, rgba(35, 26, 21, 0.04) 1px, transparent 0);
-    background-size: 24px 24px;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    background-color: var(--color-ocre);
-    color: #FFFFFF;
+    background-color: var(--color-brand);
+    color: var(--color-ink-inverse);
   }
 
   /* Cibles tactiles et focus clavier visible */
@@ -104,7 +102,7 @@
   ::placeholder,
   input::placeholder,
   textarea::placeholder {
-    color: #5C4D44;
+    color: var(--color-ink-muted);
     opacity: 1;
   }
 
@@ -118,14 +116,14 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-bleu);
+    outline: 2px solid var(--color-institution);
     outline-offset: 2px;
   }
 }
 
-/* Filtre réchauffant pour harmoniser le fond de carte Leaflet avec la charte Terre & Enseigne */
+/* Rendu cartographique net harmonisé avec la charte SamaAdresse Clarté */
 .leaflet-tile-pane {
-  filter: sepia(0.25) saturate(0.85);
+  filter: saturate(0.95) contrast(1.02);
 }
 
 /* Cible tactile minimale recommandée */
