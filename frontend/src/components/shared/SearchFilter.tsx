@@ -51,7 +51,7 @@ export function SearchFilter<T extends string = string>({
             aria-pressed={isActive}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex items-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border whitespace-nowrap shrink-0 transition-all duration-150 cursor-pointer',
+              'inline-flex items-center gap-1.5 min-h-[44px] sm:min-h-[38px] px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold border whitespace-nowrap shrink-0 transition-all duration-150 cursor-pointer',
               'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution',
               isActive
                 ? 'bg-ink text-ink-inverse border-ink shadow-xs'

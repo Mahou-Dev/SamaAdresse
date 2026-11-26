@@ -21,6 +21,7 @@ export interface ButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonE
   href?: string;
   target?: string;
   rel?: string;
+  'data-testid'?: string;
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
@@ -65,6 +66,10 @@ export const Button: React.FC<ButtonProps> = ({
   href,
   target,
   rel,
+  id,
+  title,
+  'aria-label': ariaLabel,
+  'data-testid': dataTestId,
   className,
   onClick,
   ...rest
@@ -97,9 +102,24 @@ export const Button: React.FC<ButtonProps> = ({
     </>
   );
 
+  const handleLinkClick = onClick
+    ? (event: React.MouseEvent<HTMLAnchorElement>) => {
+        onClick(event as unknown as React.MouseEvent<HTMLButtonElement>);
+      }
+    : undefined;
+
   if (to && !isDisabled) {
     return (
-      <Link to={to} className={classes} aria-busy={isLoading || undefined}>
+      <Link
+        id={id}
+        title={title}
+        aria-label={ariaLabel}
+        data-testid={dataTestId}
+        to={to}
+        onClick={handleLinkClick}
+        className={classes}
+        aria-busy={isLoading || undefined}
+      >
         {content}
       </Link>
     );
@@ -108,9 +128,14 @@ export const Button: React.FC<ButtonProps> = ({
   if (href && !isDisabled) {
     return (
       <a
+        id={id}
+        title={title}
+        aria-label={ariaLabel}
+        data-testid={dataTestId}
         href={href}
         target={target}
         rel={rel || (target === '_blank' ? 'noopener noreferrer' : undefined)}
+        onClick={handleLinkClick}
         className={classes}
         aria-busy={isLoading || undefined}
       >
@@ -121,6 +146,10 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      id={id}
+      title={title}
+      aria-label={ariaLabel}
+      data-testid={dataTestId}
       type={type}
       disabled={isDisabled}
       aria-busy={isLoading || undefined}

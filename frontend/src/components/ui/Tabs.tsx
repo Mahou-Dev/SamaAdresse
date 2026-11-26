@@ -29,6 +29,8 @@ export const Tabs: React.FC<TabsProps> = ({
   className,
 }) => {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const hasActiveEnabled = tabs.some((t) => t.id === activeTab && !t.disabled);
+  const firstEnabledIndex = tabs.findIndex((t) => !t.disabled);
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
     const enabledIndices = tabs
@@ -104,7 +106,7 @@ export const Tabs: React.FC<TabsProps> = ({
             aria-controls={`panel-${tab.id}`}
             aria-selected={isActive}
             disabled={tab.disabled}
-            tabIndex={isActive ? 0 : -1}
+            tabIndex={isActive || (!hasActiveEnabled && idx === firstEnabledIndex) ? 0 : -1}
             onClick={() => !tab.disabled && onChange(tab.id)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
             className={cn(

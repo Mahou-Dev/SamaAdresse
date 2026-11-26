@@ -40,6 +40,10 @@ export function RadioGroup<T extends string = string>({
   const labelId = `${groupName}-label`;
   const errorId = `${groupName}-error`;
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const hasEnabledSelection = options.some(
+    (opt) => opt.value === value && !opt.disabled && !disabled
+  );
+  const firstEnabledIndex = options.findIndex((opt) => !opt.disabled && !disabled);
 
   const handleKeyDown = (event: React.KeyboardEvent, currentIndex: number) => {
     const enabledIndices = options
@@ -89,6 +93,7 @@ export function RadioGroup<T extends string = string>({
         {options.map((option, index) => {
           const isSelected = option.value === value;
           const isOptionDisabled = disabled || Boolean(option.disabled);
+          const isTabStop = isSelected || (!hasEnabledSelection && index === firstEnabledIndex);
           const Icon = option.icon;
 
           if (variant === 'segmented') {
@@ -102,7 +107,7 @@ export function RadioGroup<T extends string = string>({
                 role="radio"
                 aria-checked={isSelected}
                 disabled={isOptionDisabled}
-                tabIndex={isSelected ? 0 : -1}
+                tabIndex={isTabStop ? 0 : -1}
                 onClick={() => !isOptionDisabled && onChange(option.value)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 className={cn(
@@ -136,7 +141,7 @@ export function RadioGroup<T extends string = string>({
                 role="radio"
                 aria-checked={isSelected}
                 disabled={isOptionDisabled}
-                tabIndex={isSelected ? 0 : -1}
+                tabIndex={isTabStop ? 0 : -1}
                 onClick={() => !isOptionDisabled && onChange(option.value)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 className={cn(
@@ -182,7 +187,7 @@ export function RadioGroup<T extends string = string>({
               role="radio"
               aria-checked={isSelected}
               disabled={isOptionDisabled}
-              tabIndex={isSelected ? 0 : -1}
+              tabIndex={isTabStop ? 0 : -1}
               onClick={() => !isOptionDisabled && onChange(option.value)}
               onKeyDown={(e) => handleKeyDown(e, index)}
               className={cn(

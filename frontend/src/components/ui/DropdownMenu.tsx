@@ -1,4 +1,4 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useClickOutside } from '../../hooks/useClickOutside';
 import { cn } from '../../utils/cn';
@@ -35,10 +35,26 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<(HTMLElement | null)[]>([]);
+  const focusFirstOnOpenRef = useRef(false);
   const menuId = useId();
 
   useClickOutside(containerRef, () => setIsOpen(false), isOpen);
+
+  useEffect(() => {
+    if (!isOpen || !focusFirstOnOpenRef.current) return;
+    focusFirstOnOpenRef.current = false;
+    const firstEnabledIndex = items.findIndex((item) => !item.disabled);
+    if (firstEnabledIndex !== -1) {
+      itemRefs.current[firstEnabledIndex]?.focus();
+    }
+  }, [isOpen, items]);
+
+  const closeAndRestoreFocus = () => {
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
 
   const handleMenuKeyDown = (event: React.KeyboardEvent) => {
     const enabledIndices = items
@@ -47,7 +63,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
 
     if (event.key === 'Escape') {
       event.preventDefault();
-      setIsOpen(false);
+      closeAndRestoreFocus();
       return;
     }
 
@@ -76,6 +92,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   return (
     <div ref={containerRef} className={cn('relative inline-block', className)}>
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={isOpen}
@@ -85,10 +102,11 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown' && !isOpen) {
             e.preventDefault();
+            focusFirstOnOpenRef.current = true;
             setIsOpen(true);
           } else if (e.key === 'Escape' && isOpen) {
             e.preventDefault();
-            setIsOpen(false);
+            closeAndRestoreFocus();
           }
         }}
         className="inline-flex items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution cursor-pointer"

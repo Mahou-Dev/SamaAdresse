@@ -11,6 +11,7 @@ export interface ErrorStateProps {
   retryLabel?: string;
   homeTo?: string;
   homeLabel?: string;
+  onHomeClick?: () => void;
   compact?: boolean;
   className?: string;
 }
@@ -23,6 +24,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   retryLabel = 'Réessayer',
   homeTo,
   homeLabel = 'Retour à l’accueil',
+  onHomeClick,
   compact = false,
   className,
 }) => {
@@ -57,7 +59,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
             </Button>
           )}
           {homeTo && (
-            <Button variant="outline" size="md" leftIcon={Home} to={homeTo}>
+            <Button variant="outline" size="md" leftIcon={Home} to={homeTo} onClick={onHomeClick}>
               {homeLabel}
             </Button>
           )}

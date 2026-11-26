@@ -43,8 +43,8 @@ export const Avatar: React.FC<AvatarProps> = ({
   status,
   className,
 }) => {
-  const [imgFailed, setImgFailed] = useState(false);
-  const showImage = Boolean(src) && !imgFailed;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImage = Boolean(src) && failedSrc !== src;
   const initials = getInitials(name);
   const label = alt || name || 'Utilisateur';
 
@@ -54,7 +54,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         <img
           src={src!}
           alt={label}
-          onError={() => setImgFailed(true)}
+          onError={() => setFailedSrc(src ?? null)}
           className={cn(
             'rounded-full object-cover border border-border',
             SIZE_CLASSES[size]

@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useEffect, useId, useRef } from 'react';
 import { Check, Minus, AlertCircle } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
@@ -25,7 +25,14 @@ export const Checkbox: React.FC<CheckboxProps> = ({
   const generatedId = useId();
   const checkboxId = providedId || generatedId;
   const feedbackId = `${checkboxId}-feedback`;
+  const inputRef = useRef<HTMLInputElement>(null);
   const hasError = Boolean(error);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.indeterminate = indeterminate;
+    }
+  }, [indeterminate]);
 
   return (
     <div className={cn('space-y-1', containerClassName)}>
@@ -38,10 +45,12 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       >
         <span className="relative flex items-center justify-center mt-0.5 shrink-0">
           <input
+            ref={inputRef}
             id={checkboxId}
             type="checkbox"
             checked={checked}
             disabled={disabled}
+            aria-checked={indeterminate ? 'mixed' : undefined}
             aria-invalid={hasError || undefined}
             aria-describedby={hasError || description ? feedbackId : undefined}
             className={cn('peer sr-only', className)}

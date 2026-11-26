@@ -108,12 +108,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       {showSubmitButton && (
         <button
           type="submit"
+          aria-label={submitLabel}
           disabled={disabled}
           className={cn(
             'inline-flex items-center justify-center gap-2 rounded-full bg-brand hover:bg-brand-hover active:bg-brand-active',
             'text-ink-inverse font-semibold transition-colors cursor-pointer shrink-0 ml-1',
             'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution',
-            variant === 'hero' ? 'min-h-[44px] px-5 text-sm' : 'min-h-[36px] px-3.5 text-xs'
+            variant === 'hero' ? 'min-h-[44px] min-w-[44px] px-3 sm:px-5 text-sm' : 'min-h-[36px] min-w-[36px] px-2.5 sm:px-3.5 text-xs'
           )}
         >
           <Search className="w-4 h-4 sm:hidden" aria-hidden="true" />

@@ -22,6 +22,9 @@ export interface UseFocusTrapOptions {
  * Piège le focus clavier à l'intérieur d'un conteneur (Modal, Drawer),
  * gère la fermeture par Échap, verrouille le défilement du corps et restaure
  * le focus sur l'élément déclencheur à la fermeture (WCAG 2.2 AA).
+ *
+ * `onEscape` est stocké dans une référence stable afin d'éviter toute
+ * réinitialisation intempestive du focus lors des re-rendus du parent.
  */
 export function useFocusTrap({
   isActive,
@@ -31,6 +34,11 @@ export function useFocusTrap({
   lockScroll = true,
 }: UseFocusTrapOptions): void {
   const previousActiveRef = useRef<HTMLElement | null>(null);
+  const onEscapeRef = useRef<(() => void) | undefined>(onEscape);
+
+  useEffect(() => {
+    onEscapeRef.current = onEscape;
+  }, [onEscape]);
 
   useEffect(() => {
     if (!isActive || typeof document === 'undefined') return;
@@ -44,7 +52,7 @@ export function useFocusTrap({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onEscape?.();
+        onEscapeRef.current?.();
         return;
       }
 
@@ -101,5 +109,5 @@ export function useFocusTrap({
       }
       previousActiveRef.current?.focus();
     };
-  }, [isActive, containerRef, onEscape, initialFocusSelector, lockScroll]);
+  }, [isActive, containerRef, initialFocusSelector, lockScroll]);
 }

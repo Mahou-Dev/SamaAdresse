@@ -62,6 +62,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               onRetry={this.handleReset}
               retryLabel="Recharger la section"
               homeTo="/"
+              onHomeClick={this.handleReset}
             />
           </div>
         </div>

@@ -41,8 +41,8 @@ export const AddressCard: React.FC<AddressCardProps> = ({
   footer,
   className,
 }) => {
-  const [imgError, setImgError] = useState(false);
-  const hasPhoto = Boolean(address.photoUrl) && !imgError;
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null);
+  const hasPhoto = Boolean(address.photoUrl) && failedPhotoUrl !== address.photoUrl;
   const targetUrl = to ?? `/a/${address.code}`;
 
   const imageBlock = (
@@ -60,7 +60,7 @@ export const AddressCard: React.FC<AddressCardProps> = ({
           alt={`Façade de l'adresse ${address.code}`}
           loading="lazy"
           decoding="async"
-          onError={() => setImgError(true)}
+          onError={() => setFailedPhotoUrl(address.photoUrl ?? null)}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
         />
       ) : (
