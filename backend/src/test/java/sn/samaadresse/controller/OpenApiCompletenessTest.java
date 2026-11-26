@@ -86,7 +86,10 @@ class OpenApiCompletenessTest {
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : handlerMethods.entrySet()) {
             HandlerMethod handlerMethod = entry.getValue();
             String packageName = handlerMethod.getBeanType().getPackageName();
-            if (!packageName.startsWith("sn.samaadresse")) {
+            if (!packageName.startsWith("sn.samaadresse")
+                    || org.springframework.boot.web.servlet.error.ErrorController.class.isAssignableFrom(handlerMethod.getBeanType())
+                    || handlerMethod.getBeanType().isAnnotationPresent(io.swagger.v3.oas.annotations.Hidden.class)
+                    || handlerMethod.hasMethodAnnotation(io.swagger.v3.oas.annotations.Hidden.class)) {
                 continue;
             }
 

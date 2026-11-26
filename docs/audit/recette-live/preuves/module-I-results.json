@@ -1,0 +1,159 @@
+{
+  "I1": {
+    "pass": true,
+    "status": "PASS",
+    "swaggerStatus": 200,
+    "openapiVersion": "3.0.1",
+    "pathsCount": 25,
+    "paths": [
+      "/api/public/addresses/{code}/reports",
+      "/api/auth/register",
+      "/api/auth/refresh",
+      "/api/auth/logout",
+      "/api/auth/login",
+      "/api/admin/addresses/{id}/suspend",
+      "/api/admin/addresses/{id}/reinstate",
+      "/api/addresses",
+      "/api/addresses/{id}/restore",
+      "/api/addresses/{id}/photo",
+      "/api/addresses/{id}/archive",
+      "/api/addresses/{code}/share/sms",
+      "/api/address-codes/reservations",
+      "/api/admin/reports/{id}",
+      "/api/addresses/{id}",
+      "/api/addresses/{id}/visibility",
+      "/uploads/{filename}",
+      "/api/public/route",
+      "/api/public/directory",
+      "/api/health",
+      "/api/auth/me",
+      "/api/admin/reports",
+      "/api/addresses/{code}",
+      "/api/addresses/{code}/qrcode",
+      "/api/addresses/mine"
+    ],
+    "bearerAuth": {
+      "type": "http",
+      "description": "Jeton d'accès JWT obtenu via POST /api/auth/login ou POST /api/auth/refresh",
+      "scheme": "bearer",
+      "bearerFormat": "JWT"
+    },
+    "missingEndpoints": []
+  },
+  "I2": {
+    "pass": true,
+    "status": "PASS",
+    "codeValidStatus": 200,
+    "validFieldsPresent": true,
+    "inexistentStatus": 404,
+    "inexistentError": {
+      "timestamp": "2026-10-19T01:43:27.521897872Z",
+      "status": 404,
+      "error": "Not Found",
+      "message": "Adresse non trouvée ou inactive : ZIG-XXX-0000",
+      "path": "/api/addresses/ZIG-XXX-0000"
+    },
+    "invalidFormatStatus": 404,
+    "invalidFormatError": {
+      "timestamp": "2026-10-19T01:43:28.024365007Z",
+      "status": 404,
+      "error": "Not Found",
+      "message": "Adresse non trouvée ou inactive : INVALID_CODE_123",
+      "path": "/api/addresses/INVALID_CODE_123"
+    }
+  },
+  "I3": {
+    "pass": true,
+    "status": "PASS",
+    "details": [
+      {
+        "name": "400 (Bad Register)",
+        "status": 400,
+        "hasRequired": true,
+        "leaksStackTrace": false,
+        "leaksSql": false,
+        "sample": {
+          "timestamp": "2026-10-19T01:43:28.227397575Z",
+          "status": 400,
+          "error": "Bad Request",
+          "message": "Erreur de validation des champs",
+          "path": "/api/auth/register",
+          "fieldErrors": {
+            "password": "Le mot de passe est obligatoire",
+            "phoneNumber": "Le numéro de téléphone est obligatoire",
+            "fullName": "Le nom complet est obligatoire",
+            "email": "L'adresse email est obligatoire"
+          }
+        }
+      },
+      {
+        "name": "401 (Private Route)",
+        "status": 401,
+        "hasRequired": true,
+        "leaksStackTrace": false,
+        "leaksSql": false,
+        "sample": {
+          "timestamp": "2026-10-19T01:43:28.427314020Z",
+          "status": 401,
+          "error": "Unauthorized",
+          "message": "Authentification requise",
+          "path": "/api/addresses/mine"
+        }
+      },
+      {
+        "name": "404 (Inexistent Address)",
+        "status": 404,
+        "hasRequired": true,
+        "leaksStackTrace": false,
+        "leaksSql": false,
+        "sample": {
+          "timestamp": "2026-10-19T01:43:29.022346768Z",
+          "status": 404,
+          "error": "Not Found",
+          "message": "Adresse non trouvée ou inactive : ZIG-ZZZ-9999",
+          "path": "/api/addresses/ZIG-ZZZ-9999"
+        }
+      }
+    ]
+  },
+  "I4": {
+    "pass": false,
+    "status": "FAIL",
+    "methodNotAllowedStatus": 500,
+    "unsupportedMediaTypeStatus": 500,
+    "malformedJsonStatus": 400,
+    "hugePayloadStatus": 401
+  },
+  "I5": {
+    "pass": "DENY",
+    "status": "PASS",
+    "corsAllowOrigin": null,
+    "headers": {
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "strict-origin-when-cross-origin",
+      "permissions-policy": "geolocation=(self), camera=(self)",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "x-frame-options": "DENY",
+      "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'"
+    }
+  },
+  "I6": {
+    "pass": true,
+    "status": "PASS",
+    "reportFile": "preuves/newman-live.json",
+    "folder": "Parcours démo",
+    "iterations": { "total": 1, "failed": 0 },
+    "requests": { "total": 6, "failed": 0 },
+    "assertions": { "total": 6, "failed": 0 },
+    "duration": "6.7s",
+    "avgResponseTime": "1103ms",
+    "endpointsTested": [
+      "POST /api/auth/login",
+      "POST /api/addresses",
+      "GET /api/addresses/ZIG-KBG-4271",
+      "GET /api/public/directory?q=Newman&quartier=KBG",
+      "POST /api/public/addresses/ZIG-KND-6422/reports",
+      "GET /api/public/route?fromLat=12.5835&fromLon=-16.2712&code=ZIG-KBG-4271&profile=driving-car"
+    ]
+  }
+}

@@ -16,6 +16,7 @@ export const SA_OFFLINE_USER_KEY = 'sa_offline_user';
 export interface OfflineUserData {
   userId: string;
   displayName: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -54,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fullName: parsed.displayName || 'Utilisateur',
             email: '',
             phoneNumber: '',
-            role: 'PROPRIETAIRE',
+            role: (parsed.role as any) || 'PROPRIETAIRE',
             enabled: true,
             createdAt: '',
           });
@@ -99,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           localStorage.setItem(
             SA_OFFLINE_USER_KEY,
-            JSON.stringify({ userId: data.user.id, displayName: data.user.fullName })
+            JSON.stringify({ userId: data.user.id, displayName: data.user.fullName, role: data.user.role })
           );
         } catch {
           // ignore storage error
@@ -163,7 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.setItem(
         SA_OFFLINE_USER_KEY,
-        JSON.stringify({ userId: data.user.id, displayName: data.user.fullName })
+        JSON.stringify({ userId: data.user.id, displayName: data.user.fullName, role: data.user.role })
       );
     } catch {
       // ignore

@@ -9,12 +9,19 @@ import {
 import type { AddressResponse, LocationType } from '../api/addressApi';
 import { ApiError } from '../api/apiClient';
 import { AddressPlate } from '../components/AddressPlate';
-import { SegmentedPicker } from '../components/SegmentedPicker';
+import { AddressStatusBadge } from '../components/shared/AddressStatusBadge';
 import { useToast } from '../components/Toast';
 import { compressImage, formatFileSize } from '../utils/imageCompressor';
 import { validateStep2Details, validateStep3Photo } from '../utils/formValidation';
+import { ConnectedLayout } from '../components/ConnectedLayout';
+import { ErrorState } from '../components/ui/ErrorState';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+import { AddressDetailsFields } from '../features/addresses/components/AddressDetailsFields';
+import { DirectoryVisibilitySection } from '../features/addresses/components/DirectoryVisibilitySection';
+import { getQuartierName, getZoneName } from '../utils/geoGrid';
+import { resolvePhotoSrc } from '../features/addresses/utils';
+import { useOnlineStatus } from '../context/OnlineStatusContext';
 import {
-  ArrowLeft,
   Loader2,
   AlertCircle,
   Lock,
@@ -22,14 +29,15 @@ import {
   Trash2,
   Check,
   Image as ImageIcon,
-  BookOpen,
-  ChevronDown,
+  ExternalLink,
+  WifiOff,
 } from 'lucide-react';
 
 export const EditAddressPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { isOnline } = useOnlineStatus();
 
   const [address, setAddress] = useState<AddressResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -42,10 +50,16 @@ export const EditAddressPage: React.FC = () => {
   const [showOwnerName, setShowOwnerName] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const savingRef = useRef(false);
+
+  // Protection contre la perte accidentelle de modifications
+  const [confirmLeaveOpen, setConfirmLeaveOpen] = useState(false);
 
   // Gestion photo
   const [photoUploading, setPhotoUploading] = useState<boolean>(false);
   const [photoDeleting, setPhotoDeleting] = useState<boolean>(false);
+  const [confirmDeletePhotoOpen, setConfirmDeletePhotoOpen] = useState<boolean>(false);
+  const [photoBrokenUrl, setPhotoBrokenUrl] = useState<string | null>(null);
   const [compressionStats, setCompressionStats] = useState<{
     originalSize: number;
     compressedSize: number;
@@ -54,17 +68,18 @@ export const EditAddressPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadAddress = async () => {
       if (!id) {
-        setErrorMsg('Identifiant d’adresse manquant.');
+        setErrorMsg("Identifiant d'adresse manquant.");
         setLoading(false);
         return;
       }
 
-      setLoading(true);
-      setErrorMsg(null);
       try {
         const list = await getMyAddresses();
+        if (cancelled) return;
         const found = list.find((a) => a.id === id);
         if (!found) {
           setErrorMsg('Adresse introuvable ou accès non autorisé.');
@@ -74,20 +89,55 @@ export const EditAddressPage: React.FC = () => {
           setDescription(found.description);
           setListed(found.listed ?? false);
           setShowOwnerName(found.showOwnerName ?? false);
+          setErrorMsg(null);
         }
-      } catch (err: any) {
-        setErrorMsg(err instanceof ApiError ? err.message : 'Impossible de charger cette adresse.');
+      } catch (err: unknown) {
+        if (cancelled) return;
+        setErrorMsg(
+          err instanceof ApiError ? err.message : 'Impossible de charger cette adresse.'
+        );
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    loadAddress();
+    void loadAddress();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  const isReadOnlyStatus = Boolean(address && address.status !== 'ACTIVE');
+
+  const isDirty = Boolean(
+    address &&
+      (locationType !== address.locationType ||
+        description.trim() !== address.description.trim() ||
+        listed !== (address.listed ?? false) ||
+        (listed ? showOwnerName : false) !== (address.showOwnerName ?? false))
+  );
+
+  // Avertissement navigateur si fermeture d'onglet avec saisie non enregistrée
+  useEffect(() => {
+    if (!isDirty) return;
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!address) return;
+    if (!address || savingRef.current || saving || isReadOnlyStatus) return;
+
+    if (!isOnline) {
+      setFormError('La modification d’une adresse nécessite une connexion Internet.');
+      return;
+    }
 
     const validation = validateStep2Details(locationType, description);
     if (!validation.isValid) {
@@ -95,6 +145,7 @@ export const EditAddressPage: React.FC = () => {
       return;
     }
 
+    savingRef.current = true;
     setSaving(true);
     setFormError(null);
     try {
@@ -107,22 +158,38 @@ export const EditAddressPage: React.FC = () => {
       setAddress(updated);
       showToast('Modifications enregistrées.', 'success');
       navigate('/addresses/mine');
-    } catch (err: any) {
+    } catch (err: unknown) {
       setFormError(
         err instanceof ApiError ? err.message : "Impossible d'enregistrer les modifications."
       );
     } finally {
+      savingRef.current = false;
       setSaving(false);
+    }
+  };
+
+  const handleCancelClick = () => {
+    if (isDirty) {
+      setConfirmLeaveOpen(true);
+    } else {
+      navigate('/addresses/mine');
     }
   };
 
   const handleSelectPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !address) return;
+    if (!file || !address || isReadOnlyStatus) return;
+
+    if (!isOnline) {
+      showToast('Une connexion Internet est requise pour envoyer une photo.', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
 
     const validation = validateStep3Photo(file);
     if (!validation.isValid) {
       showToast(validation.error || 'Image non valide.', 'error');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
@@ -136,8 +203,9 @@ export const EditAddressPage: React.FC = () => {
       });
       const updated = await uploadAddressPhoto(address.id, compressed.file);
       setAddress(updated);
+      setPhotoBrokenUrl(null);
       showToast('Photo mise à jour.', 'success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast(
         err instanceof ApiError ? err.message : "Erreur lors de l'envoi de la photo.",
         'error'
@@ -148,15 +216,17 @@ export const EditAddressPage: React.FC = () => {
     }
   };
 
-  const handleRemovePhoto = async () => {
-    if (!address) return;
+  const handleConfirmRemovePhoto = async () => {
+    if (!address || isReadOnlyStatus) return;
+    setConfirmDeletePhotoOpen(false);
     setPhotoDeleting(true);
     try {
       const updated = await deleteAddressPhoto(address.id);
       setAddress(updated);
       setCompressionStats(null);
+      setPhotoBrokenUrl(null);
       showToast('Photo supprimée.', 'info');
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast(
         err instanceof ApiError ? err.message : 'Impossible de supprimer la photo.',
         'error'
@@ -166,169 +236,140 @@ export const EditAddressPage: React.FC = () => {
     }
   };
 
-  const photoSrc = address?.photoUrl
-    ? address.photoUrl.startsWith('http')
-      ? address.photoUrl
-      : `${import.meta.env.VITE_API_BASE_URL || ''}${address.photoUrl}`
-    : null;
+  const photoSrc = resolvePhotoSrc(address?.photoUrl);
+  const hasVisiblePhoto = Boolean(photoSrc) && photoBrokenUrl !== photoSrc;
 
   return (
-    <div className="flex-1 max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 font-sans space-y-6">
-      <div>
-        <Link
-          to="/addresses/mine"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#5C4D44] hover:text-[#1D528F] transition py-1"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Retour à mes adresses</span>
-        </Link>
-      </div>
-
-      <div className="pb-4 border-b border-[#766B5B]">
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
-          Modifier l'adresse
-        </h1>
-        <p className="text-xs sm:text-sm text-[#5C4D44] mt-1">
-          Mettez à jour le type de lieu, le repère visuel ou la photo de façade.
-        </p>
-      </div>
-
+    <ConnectedLayout
+      title={`Modifier l'adresse ${address?.code || ''}`}
+      subtitle="Mettez à jour le type de lieu, le repère visuel, la visibilité ou la photo de façade."
+      backTo="/addresses/mine"
+      backLabel="Retour à mes adresses"
+    >
       {loading ? (
-        <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3">
-          <Loader2 className="w-7 h-7 animate-spin text-[#1D528F] mx-auto" />
-          <p className="text-xs text-[#5C4D44]">Chargement de l'adresse...</p>
+        <div
+          className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse"
+          aria-label="Chargement de l'adresse"
+        >
+          <div className="lg:col-span-7 space-y-5">
+            <div className="h-80 rounded-2xl bg-surface-elevated border border-border" />
+            <div className="h-56 rounded-2xl bg-surface-elevated border border-border" />
+          </div>
+          <div className="lg:col-span-5">
+            <div className="h-72 rounded-2xl bg-surface-elevated border border-border" />
+          </div>
         </div>
       ) : errorMsg || !address ? (
-        <div className="p-6 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs sm:text-sm flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{errorMsg || 'Adresse introuvable.'}</span>
-        </div>
+        <ErrorState
+          title="Modification impossible"
+          description={errorMsg || 'Adresse introuvable.'}
+          homeTo="/addresses/mine"
+          homeLabel="Retour à mes adresses"
+        />
       ) : (
-        <form onSubmit={handleSave} className="space-y-6">
-          {/* Encart Code et Position en lecture seule avec explication obligatoire */}
-          <div className="p-4 sm:p-5 rounded-xl bg-[#F2ECE1] border border-[#766B5B] space-y-4">
-            <div className="w-full flex justify-center">
-              <AddressPlate
-                code={address.code}
-                zone={address.zone}
-                type={locationType}
-                size="md"
-                showCopy={false}
-                className="w-full max-w-md"
-              />
-            </div>
-
-            <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] text-xs">
-              <span className="text-[#5C4D44] block text-[11px] font-semibold">Position enregistrée :</span>
-              <span className="font-mono font-bold text-[#231A15]">
-                {address.latitude.toFixed(6)}°N, {address.longitude.toFixed(6)}°O
-              </span>
-            </div>
-
-            <div className="flex items-start gap-2.5 text-xs text-[#231A15] bg-[#F2ECE1] p-3 rounded-lg border border-[#766B5B]">
-              <Lock className="w-4 h-4 text-[#8A3112] shrink-0 mt-0.5" />
-              <p className="leading-relaxed font-medium">
-                Le code et la position ne peuvent pas changer. Pour déplacer ce lieu, archivez cette adresse et créez-en une nouvelle.
-              </p>
-            </div>
-          </div>
-
-          {/* Section champs modifiables */}
-          <div className="p-5 sm:p-6 rounded-xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-5">
-            <div className="space-y-2">
-              <span className="block text-xs sm:text-sm font-bold text-[#231A15]">
-                Type de lieu
-              </span>
-              <SegmentedPicker
-                value={locationType}
-                onChange={setLocationType}
-                label="Type de lieu"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label
-                  htmlFor="edit-description"
-                  className="text-xs sm:text-sm font-bold text-[#231A15]"
-                >
-                  Description et repère visuel
-                </label>
-                <span className="text-xs font-mono text-[#5C4D44]">
-                  {description.length}/500
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Colonne principale : Formulaire modifiable & Gestion photo */}
+          <form onSubmit={handleSave} className="lg:col-span-7 space-y-6">
+            {!isOnline && (
+              <div
+                role="status"
+                className="p-3.5 rounded-2xl bg-warning-soft border border-warning-border text-warning text-xs sm:text-sm font-medium flex items-start gap-2.5"
+              >
+                <WifiOff className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                <span>
+                  Vous êtes hors ligne. Reconnectez-vous pour enregistrer les modifications ou modifier la photo.
                 </span>
               </div>
-              <textarea
-                id="edit-description"
-                rows={4}
-                maxLength={500}
-                required
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex. : Portail bleu face à la boulangerie..."
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-sm text-[#231A15] placeholder:text-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
-              />
-            </div>
+            )}
 
-            {/* Section repliable Visibilité dans l'annuaire */}
-            <details className="group border border-[#766B5B] rounded-xl p-3.5 bg-[#FBF7EF] text-xs">
-              <summary className="font-semibold text-[#1D528F] cursor-pointer hover:underline list-none flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-[#1D528F]" />
-                  <span>Visibilité dans l'annuaire</span>
-                </div>
-                <ChevronDown className="w-3.5 h-3.5 group-open:rotate-180 transition-transform text-[#5C4D44]" />
-              </summary>
+            {isReadOnlyStatus && (
+              <div
+                role="alert"
+                className="p-4 rounded-2xl bg-warning-soft border border-warning-border text-warning text-xs sm:text-sm font-medium flex items-start gap-2.5"
+              >
+                <Lock className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                <span>
+                  Cette adresse n'est pas active ({address.status === 'ARCHIVED' ? 'archivée' : 'suspendue'}). Elle ne peut pas être modifiée dans cet état.
+                </span>
+              </div>
+            )}
 
-              <div className="mt-3 pt-3 border-t border-[#766B5B] space-y-3">
-                <div className="flex items-start gap-2.5">
-                  <input
-                    id="edit-directory-listed"
-                    type="checkbox"
-                    checked={listed}
-                    onChange={(e) => {
-                      setListed(e.target.checked);
-                      if (!e.target.checked) setShowOwnerName(false);
-                    }}
-                    className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#766B5B] rounded focus:ring-[#1D528F]"
-                  />
-                  <div>
-                    <label htmlFor="edit-directory-listed" className="font-bold text-[#231A15] cursor-pointer">
-                      Figurer dans l'annuaire public
-                    </label>
-                    <p className="text-[11px] text-[#5C4D44] mt-0.5">
-                      Permet aux livreurs, visiteurs et services de trouver cette adresse par son nom ou son repère visuel.
-                    </p>
-                  </div>
-                </div>
-
-                {listed && (
-                  <div className="flex items-start gap-2.5 pl-6 pt-1">
-                    <input
-                      id="edit-directory-show-owner"
-                      type="checkbox"
-                      checked={showOwnerName}
-                      onChange={(e) => setShowOwnerName(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 text-[#1D528F] border-[#766B5B] rounded focus:ring-[#1D528F]"
-                    />
-                    <div>
-                      <label htmlFor="edit-directory-show-owner" className="font-bold text-[#231A15] cursor-pointer">
-                        Afficher mon nom sur la fiche
-                      </label>
-                      <p className="text-[11px] text-[#5C4D44] mt-0.5">
-                        Votre nom sera visible par toute personne consultant l'annuaire.
-                      </p>
-                    </div>
-                  </div>
+            {/* Carte des informations éditables */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface-elevated border border-border shadow-xs space-y-6">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-ink">Informations modifiables</h2>
+                {isDirty && (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-soft text-brand-hover border border-brand-border">
+                    Modifications non enregistrées
+                  </span>
                 )}
               </div>
-            </details>
 
-            {/* Photo de façade : remplacer ou supprimer */}
-            <div className="space-y-3 pt-2 border-t border-[#766B5B]">
-              <span className="block text-xs sm:text-sm font-bold text-[#231A15]">
-                Photo de façade
-              </span>
+              <AddressDetailsFields
+                locationType={locationType}
+                onLocationTypeChange={setLocationType}
+                description={description}
+                onDescriptionChange={setDescription}
+                descriptionId="edit-description"
+                descriptionLabel="Description et repère visuel"
+                descriptionPlaceholder="Ex. : Portail bleu face à la boulangerie…"
+                disabled={isReadOnlyStatus || saving}
+              />
+
+              <DirectoryVisibilitySection
+                listed={listed}
+                showOwnerName={showOwnerName}
+                onListedChange={setListed}
+                onShowOwnerNameChange={setShowOwnerName}
+                listedId="edit-directory-listed"
+                showOwnerId="edit-directory-show-owner"
+                defaultOpen={false}
+                disabled={isReadOnlyStatus || saving}
+                listedHelpText="Permet aux livreurs, visiteurs et services de trouver cette adresse par son code, son quartier ou son repère visuel."
+              />
+
+              {formError && (
+                <div
+                  role="alert"
+                  className="p-3.5 rounded-xl bg-danger-soft border border-danger-border text-danger text-xs sm:text-sm font-medium flex items-start gap-2"
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={handleCancelClick}
+                  disabled={saving}
+                  className="inline-flex items-center justify-center px-4 py-2.5 min-h-[44px] rounded-xl border border-border-strong bg-surface-elevated hover:bg-surface text-ink text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving || isReadOnlyStatus || !isOnline}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active text-ink-inverse text-xs sm:text-sm font-semibold transition-colors shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Check className="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
+                  )}
+                  <span>Enregistrer les modifications</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Carte dédiée : Photo de façade (indépendante, préservée si non modifiée) */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface-elevated border border-border shadow-xs space-y-4">
+              <div className="space-y-0.5">
+                <h2 className="text-base font-bold text-ink">Photo de façade</h2>
+                <p className="text-xs text-ink-muted">
+                  La photo actuelle est conservée automatiquement si vous ne la modifiez pas.
+                </p>
+              </div>
 
               <input
                 ref={fileInputRef}
@@ -338,12 +379,13 @@ export const EditAddressPage: React.FC = () => {
                 className="hidden"
               />
 
-              {photoSrc ? (
-                <div className="space-y-3">
-                  <div className="relative rounded-xl overflow-hidden border border-[#766B5B] h-48 sm:h-56 bg-[#F2ECE1]">
+              {hasVisiblePhoto && photoSrc ? (
+                <div className="space-y-3.5">
+                  <div className="relative rounded-2xl overflow-hidden border border-border aspect-[4/3] max-h-64 w-full bg-surface-secondary">
                     <img
                       src={photoSrc}
                       alt={`Façade ${address.code}`}
+                      onError={() => setPhotoBrokenUrl(photoSrc)}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -351,48 +393,48 @@ export const EditAddressPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      disabled={photoUploading || photoDeleting}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
+                      disabled={photoUploading || photoDeleting || isReadOnlyStatus || !isOnline}
+                      className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl border border-border-strong bg-surface-elevated hover:bg-surface text-institution text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
                     >
                       {photoUploading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                       ) : (
-                        <Camera className="w-3.5 h-3.5" />
+                        <Camera className="w-4 h-4" aria-hidden="true" />
                       )}
                       <span>Remplacer la photo</span>
                     </button>
 
                     <button
                       type="button"
-                      onClick={handleRemovePhoto}
-                      disabled={photoUploading || photoDeleting}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#991B1B]/40 bg-[#FBF7EF] hover:bg-[#FEF2F2] text-[#991B1B] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
+                      onClick={() => setConfirmDeletePhotoOpen(true)}
+                      disabled={photoUploading || photoDeleting || isReadOnlyStatus || !isOnline}
+                      className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl border border-danger-border bg-danger-soft hover:bg-danger/10 text-danger text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
                     >
                       {photoDeleting ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                       ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" aria-hidden="true" />
                       )}
                       <span>Supprimer la photo</span>
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-xl bg-[#F2ECE1] border border-[#766B5B] flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 text-xs text-[#5C4D44]">
-                    <ImageIcon className="w-4 h-4 text-[#5C4D44] shrink-0" />
+                <div className="p-4 rounded-2xl bg-surface border border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 text-xs sm:text-sm text-ink-muted">
+                    <ImageIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
                     <span>Aucune photo associée à cette adresse.</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    disabled={photoUploading}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target shrink-0"
+                    disabled={photoUploading || isReadOnlyStatus || !isOnline}
+                    className="inline-flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl border border-border-strong bg-surface-elevated hover:bg-surface text-institution text-xs sm:text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50 shrink-0"
                   >
                     {photoUploading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                     ) : (
-                      <Camera className="w-3.5 h-3.5" />
+                      <Camera className="w-4 h-4" aria-hidden="true" />
                     )}
                     <span>Ajouter une photo</span>
                   </button>
@@ -400,46 +442,99 @@ export const EditAddressPage: React.FC = () => {
               )}
 
               {compressionStats && (
-                <p className="text-[11px] text-[#2A6B44] font-medium">
+                <p className="text-xs text-success font-medium">
                   Image compressée avant envoi : {formatFileSize(compressionStats.originalSize)} →{' '}
-                  {formatFileSize(compressionStats.compressedSize)}
+                  {formatFileSize(compressionStats.compressedSize)} (-
+                  {compressionStats.reductionPercentage}%)
                 </p>
               )}
             </div>
+          </form>
 
-            {formError && (
-              <div
-                role="alert"
-                className="p-3 rounded-lg bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs font-medium flex items-center gap-2"
-              >
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{formError}</span>
+          {/* Colonne latérale : Identité immuable (plaque, statut, position GPS) */}
+          <aside className="lg:col-span-5 lg:sticky lg:top-20 space-y-4">
+            <div className="p-5 sm:p-6 rounded-2xl bg-surface-elevated border border-border shadow-xs space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+                  Identité permanente
+                </span>
+                <AddressStatusBadge status={address.status} size="sm" />
               </div>
-            )}
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#766B5B]">
-              <Link
-                to="/addresses/mine"
-                className="px-4 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition touch-target inline-flex items-center"
-              >
-                Annuler
-              </Link>
-              <button
-                type="submit"
-                disabled={saving}
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs sm:text-sm font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer disabled:opacity-50 touch-target"
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Check className="w-4 h-4" />
-                )}
-                <span>Enregistrer les modifications</span>
-              </button>
+              <div className="w-full flex justify-center">
+                <AddressPlate
+                  code={address.code}
+                  zone={address.zone}
+                  type={locationType}
+                  size="md"
+                  showCopy={false}
+                  className="w-full"
+                />
+              </div>
+
+              <dl className="p-3.5 rounded-xl bg-surface border border-border space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-ink-muted font-medium">Quartier</dt>
+                  <dd className="font-semibold text-ink">
+                    {getQuartierName(address.quartier, address.zone)} ({getZoneName(address.zone)})
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <dt className="text-ink-muted font-medium">Position enregistrée</dt>
+                  <dd className="font-mono font-bold text-ink">
+                    {address.latitude.toFixed(6)}°N, {address.longitude.toFixed(6)}°O
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="flex items-start gap-2.5 text-xs text-ink-secondary bg-surface p-3.5 rounded-xl border border-border">
+                <Lock className="w-4 h-4 text-brand shrink-0 mt-0.5" aria-hidden="true" />
+                <p className="leading-relaxed">
+                  Le code et la position ne peuvent pas changer. Pour déplacer ce lieu, archivez cette adresse et créez-en une nouvelle.
+                </p>
+              </div>
+
+              {address.status === 'ACTIVE' && (
+                <Link
+                  to={`/a/${address.code}`}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-[42px] rounded-xl border border-border-strong bg-surface-elevated hover:bg-surface text-xs font-semibold text-institution transition-colors"
+                >
+                  <span>Voir la fiche publique</span>
+                  <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+                </Link>
+              )}
             </div>
-          </div>
-        </form>
+          </aside>
+        </div>
       )}
-    </div>
+
+      {/* Modale de confirmation de perte de saisies non enregistrées */}
+      <ConfirmDialog
+        isOpen={confirmLeaveOpen}
+        onClose={() => setConfirmLeaveOpen(false)}
+        onConfirm={() => {
+          setConfirmLeaveOpen(false);
+          navigate('/addresses/mine');
+        }}
+        title="Quitter sans enregistrer ?"
+        description="Vous avez des modifications non enregistrées sur cette adresse. Si vous quittez maintenant, ces changements seront perdus."
+        confirmLabel="Quitter sans enregistrer"
+        cancelLabel="Continuer l'édition"
+        variant="warning"
+      />
+
+      {/* Modale de confirmation de suppression de photo */}
+      <ConfirmDialog
+        isOpen={confirmDeletePhotoOpen}
+        onClose={() => setConfirmDeletePhotoOpen(false)}
+        onConfirm={handleConfirmRemovePhoto}
+        title="Supprimer la photo de façade ?"
+        description="La photo sera retirée de la fiche publique et de votre espace personnel. Vous pourrez en ajouter une nouvelle ultérieurement."
+        confirmLabel="Supprimer la photo"
+        cancelLabel="Annuler"
+        variant="danger"
+        isLoading={photoDeleting}
+      />
+    </ConnectedLayout>
   );
 };

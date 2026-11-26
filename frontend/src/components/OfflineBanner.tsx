@@ -14,11 +14,13 @@ export const OfflineBanner: React.FC = () => {
 
   return (
     <aside
+      role="status"
+      aria-live="polite"
       aria-label="Avertissement de connexion"
-      className="bg-[#F2ECE1] border-b border-[#766B5B] text-[#5C4D44] text-xs font-medium py-2 px-4 shadow-sm"
+      className="bg-warning-soft border-b border-warning-border text-warning text-xs font-medium py-2.5 px-4 no-print"
     >
-      <div className="max-w-5xl mx-auto flex items-center justify-center gap-2 text-center">
-        <WifiOff className="w-4 h-4 text-[#8A3112] shrink-0" aria-hidden="true" />
+      <div className="max-w-[1280px] mx-auto flex items-center justify-center gap-2 text-center">
+        <WifiOff className="w-4 h-4 text-warning shrink-0" aria-hidden="true" />
         <span>
           {isAddressManagement
             ? 'Mode hors ligne · les nouvelles adresses seront transmises à votre retour en ligne'

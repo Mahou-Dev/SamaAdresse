@@ -138,8 +138,16 @@ class AuthAndSecurityTest {
 
         // Refresh absent ou expiré
         assertThrows(TokenRefreshException.class, () -> authService.refreshToken("", response));
-        tokenEntity.setRevoked(true);
-        assertThrows(TokenRefreshException.class, () -> authService.refreshToken(rawRefresh, response));
+
+        String revokedRefresh = "revoked-refresh-token-456";
+        RefreshToken revokedEntity = RefreshToken.builder()
+                .tokenHash(HashUtils.hashSha256(revokedRefresh))
+                .user(testUser)
+                .expiryDate(Instant.now().plus(1, ChronoUnit.DAYS))
+                .revoked(true)
+                .build();
+        when(refreshTokenRepository.findByTokenHash(HashUtils.hashSha256(revokedRefresh))).thenReturn(Optional.of(revokedEntity));
+        assertThrows(TokenRefreshException.class, () -> authService.refreshToken(revokedRefresh, response));
 
         // Logout et profil
         authService.logout(rawRefresh, response);
@@ -156,5 +164,25 @@ class AuthAndSecurityTest {
         seeder.setDemoPassword("UnitTestDemoPass123!");
         seeder.run(new DefaultApplicationArguments());
         verify(userRepository, atLeast(2)).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("5. Limiteur de débit login : 5 tentatives autorisées puis rejet HTTP 429 avec Retry-After à la 6e")
+    void authService_loginRateLimit() {
+        LoginRequest req = LoginRequest.builder()
+                .email("mamadou@samaadresse.sn")
+                .password("MauvaisMotDePasse")
+                .build();
+        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(testUser));
+        MockHttpServletResponse res = new MockHttpServletResponse();
+
+        String ip = "192.168.10.55";
+        for (int i = 0; i < 5; i++) {
+            assertThrows(InvalidCredentialsException.class, () -> authService.login(req, ip, res));
+        }
+
+        RateLimitExceededException ex = assertThrows(RateLimitExceededException.class,
+                () -> authService.login(req, ip, res));
+        assertTrue(ex.getRetryAfterSeconds() > 0, "Le délai Retry-After doit être strictement positif");
     }
 }

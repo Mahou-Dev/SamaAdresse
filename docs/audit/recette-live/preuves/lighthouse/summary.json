@@ -1,0 +1,57 @@
+[
+  {
+    "page": "accueil",
+    "path": "/",
+    "performance": 99,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": "1.9 s",
+    "cls": "0",
+    "tbt": "40 ms"
+  },
+  {
+    "page": "fiche_ZIG_KBG_4271",
+    "path": "/a/ZIG-KBG-4271",
+    "performance": 93,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": "2.7 s",
+    "cls": "0",
+    "tbt": "100 ms"
+  },
+  {
+    "page": "annuaire",
+    "path": "/annuaire",
+    "performance": 98,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": "2.0 s",
+    "cls": "0",
+    "tbt": "10 ms"
+  },
+  {
+    "page": "connexion",
+    "path": "/login",
+    "performance": 98,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": "2.0 s",
+    "cls": "0",
+    "tbt": "10 ms"
+  },
+  {
+    "page": "creation_adresse",
+    "path": "/addresses/new",
+    "performance": 97,
+    "accessibility": 100,
+    "bestPractices": 100,
+    "seo": 100,
+    "lcp": "1.9 s",
+    "cls": "0",
+    "tbt": "40 ms"
+  }
+]

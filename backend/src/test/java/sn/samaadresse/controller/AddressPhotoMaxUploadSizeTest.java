@@ -72,9 +72,9 @@ class AddressPhotoMaxUploadSizeTest {
 
         mockMvc.perform(multipart("/api/addresses/{id}/photo", addressId)
                 .file(oversizedFile))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(status().isPayloadTooLarge())
+                .andExpect(jsonPath("$.status").value(413))
+                .andExpect(jsonPath("$.error").value("Payload Too Large"))
                 .andExpect(jsonPath("$.message").value("Le fichier dépasse la taille maximale autorisée de 5 Mo."))
                 .andExpect(jsonPath("$.path").value("/api/addresses/" + addressId + "/photo"));
     }

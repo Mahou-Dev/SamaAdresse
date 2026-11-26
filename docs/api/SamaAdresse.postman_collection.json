@@ -539,6 +539,42 @@
               ]
             }
           }
+        },
+        {
+          "name": "POST /api/admin/system/reset-rate-limits — Réinitialiser les limiteurs de débit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/system/reset-rate-limits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "system",
+                "reset-rate-limits"
+              ],
+              "query": []
+            },
+            "description": "Vide le cache des limiteurs de débit en mémoire (profils dev et e2e uniquement).",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -1230,6 +1266,52 @@
     {
       "name": "Photos",
       "item": [
+        {
+          "name": "GET /uploads — Accès au répertoire des téléversements (interdit/introuvable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/uploads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads"
+              ],
+              "query": []
+            },
+            "description": "Empêche le listage du répertoire /uploads/ et renvoie 404 Not Found."
+          }
+        },
+        {
+          "name": "GET /uploads/ — Accès au répertoire des téléversements (interdit/introuvable)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/uploads/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads"
+              ],
+              "query": []
+            },
+            "description": "Empêche le listage du répertoire /uploads/ et renvoie 404 Not Found."
+          }
+        },
         {
           "name": "GET /uploads/{filename} — Récupérer une photo de façade",
           "request": {

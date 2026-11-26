@@ -1,0 +1,23 @@
+======================================================================
+      NETTOYAGE DES DONNÉES DE TEST SAMAADRESSE (scripts/purge-test-data.py)
+      Mode       : [DRY-RUN / SELECT SEUL]
+      Hôte cible : samaadresse-prod-test-db
+======================================================================
+
+1. COMPTES DE TEST IDENTIFIÉS : 3
+   - ID: 11111111-1111-1111-1111-111111111111 | Email: test+user1@example.com | Nom: Test User Un | Adresses: 1
+   - ID: 22222222-2222-2222-2222-222222222222 | Email: test+user2@example.com | Nom: Test User Deux | Adresses: 0
+   - ID: 33333333-3333-3333-3333-333333333333 | Email: test+user3@example.com | Nom: Test User Trois | Adresses: 0
+
+2. ADRESSES DE TEST IDENTIFIÉES : 1
+   - Code: ZIG-TEST-9999 (Zone: ZIG, Quartier: Boucotte, Statut: ACTIVE) | Propriétaire: test+user1@example.com
+
+3. CONTRÔLE D'INTÉGRITÉ DES DONNÉES PROTÉGÉES :
+   - Comptes officiels protégés conservés : 3 (admin@samaadresse.sn, demo@samaadresse.sn, fatou@samaadresse.sn)
+   - Adresses de démo d'origine protégées : 13 / 13
+
+======================================================================
+[DRY-RUN TERMINÉ] Mode simulation actif : aucune donnée n'a été modifiée.
+Pour exécuter la purge réelle, relancez avec :
+  python3 scripts/purge-test-data.py --container samaadresse-prod-test-db --confirm --expected-host samaadresse-prod-test-db --expected-count 3
+======================================================================

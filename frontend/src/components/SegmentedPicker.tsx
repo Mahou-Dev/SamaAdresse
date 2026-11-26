@@ -1,17 +1,19 @@
 import React, { useRef } from 'react';
 import type { LocationType } from '../api/addressApi';
-import { Home, ShoppingBag, Building2 } from 'lucide-react';
+import { Home, Store, Building2 } from 'lucide-react';
 import { LOCATION_TYPES } from '../utils/locationTypes';
+import { cn } from '../utils/cn';
 
-interface SegmentedPickerProps {
+export interface SegmentedPickerProps {
   value: LocationType;
   onChange: (value: LocationType) => void;
   label?: string;
+  disabled?: boolean;
 }
 
-const TYPE_ICONS: Record<LocationType, React.ElementType> = {
+const TYPE_ICONS: Record<LocationType, React.ComponentType<{ className?: string }>> = {
   MAISON: Home,
-  COMMERCE: ShoppingBag,
+  COMMERCE: Store,
   INSTITUTION: Building2,
 };
 
@@ -19,10 +21,12 @@ export const SegmentedPicker: React.FC<SegmentedPickerProps> = ({
   value,
   onChange,
   label = 'Type de lieu',
+  disabled = false,
 }) => {
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+    if (disabled) return;
     let nextIndex = index;
     if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
       e.preventDefault();
@@ -30,6 +34,12 @@ export const SegmentedPicker: React.FC<SegmentedPickerProps> = ({
     } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
       e.preventDefault();
       nextIndex = (index - 1 + LOCATION_TYPES.length) % LOCATION_TYPES.length;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      nextIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      nextIndex = LOCATION_TYPES.length - 1;
     } else {
       return;
     }
@@ -43,7 +53,10 @@ export const SegmentedPicker: React.FC<SegmentedPickerProps> = ({
     <div
       role="radiogroup"
       aria-label={label}
-      className="grid grid-cols-3 gap-2 p-1.5 bg-[#F2ECE1] rounded-xl border border-[#766B5B]"
+      className={cn(
+        'grid grid-cols-3 gap-1.5 p-1.5 bg-surface rounded-2xl border border-border',
+        disabled && 'opacity-65 pointer-events-none'
+      )}
     >
       {LOCATION_TYPES.map((type, idx) => {
         const isSelected = value === type.id;
@@ -58,17 +71,26 @@ export const SegmentedPicker: React.FC<SegmentedPickerProps> = ({
             type="button"
             role="radio"
             aria-checked={isSelected}
+            disabled={disabled}
             tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(type.id)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
-            className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-3 rounded-lg text-xs font-bold transition duration-150 cursor-pointer min-h-[44px] ${
+            className={cn(
+              'flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-2.5 sm:px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer min-h-[44px]',
+              'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution',
               isSelected
-                ? 'bg-[#231A15] text-[#FBF7EF] shadow-sm'
-                : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#FBF7EF]'
-            }`}
+                ? 'bg-ink text-ink-inverse shadow-xs'
+                : 'text-ink-secondary hover:text-ink hover:bg-surface-elevated'
+            )}
           >
-            <Icon className={`w-4 h-4 shrink-0 ${isSelected ? 'text-[#B84A24]' : 'text-[#766B5B]'}`} />
-            <span>{type.label}</span>
+            <Icon
+              className={cn(
+                'w-4 h-4 shrink-0',
+                isSelected ? 'text-brand-border' : 'text-ink-muted'
+              )}
+              aria-hidden="true"
+            />
+            <span className="truncate">{type.label}</span>
           </button>
         );
       })}

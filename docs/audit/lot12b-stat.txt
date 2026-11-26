@@ -1,0 +1,152 @@
+ .env.example                                       |    1 +
+ .gitignore                                         |    2 +
+ README.md                                          |    1 +
+ VERIFY.md                                          |  146 +-
+ .../controller/CustomErrorController.java          |   58 +
+ .../sn/samaadresse/controller/PhotoController.java |   12 +
+ .../exception/GlobalExceptionHandler.java          |   55 +-
+ .../samaadresse/security/RateLimiterService.java   |    6 +-
+ .../java/sn/samaadresse/service/AuthService.java   |   11 +-
+ backend/src/main/resources/application-prod.yml    |    4 +
+ backend/src/main/resources/application.yml         |    4 +
+ .../controller/AddressPhotoMaxUploadSizeTest.java  |    6 +-
+ .../controller/OpenApiCompletenessTest.java        |    5 +-
+ .../samaadresse/service/AuthAndSecurityTest.java   |   20 +
+ docker-compose.prod-test.yml                       |    1 +
+ docs/api/SamaAdresse.postman_collection.json       |   46 +
+ docs/api/openapi.json                              |    2 +-
+ docs/api/openapi.yaml                              |   20 +
+ docs/audit/VERIFY.md                               |  183 +-
+ docs/audit/chunks.txt                              |   34 +
+ docs/audit/console-errors.md                       |   12 +
+ docs/audit/contrastes.md                           |   13 +-
+ docs/audit/csp-violations.json                     |    2 +-
+ docs/audit/lighthouse/account.report.html          | 2908 ++++++
+ docs/audit/lighthouse/account.report.json          | 9489 ++++++++++++++++++++
+ docs/audit/lighthouse/addresses_mine.report.html   |    2 +-
+ docs/audit/lighthouse/addresses_mine.report.json   | 3328 +++----
+ .../lighthouse/addresses_mine_offline.report.html  |    2 +-
+ .../lighthouse/addresses_mine_offline.report.json  | 3305 +++----
+ docs/audit/lighthouse/addresses_new.report.html    |    2 +-
+ docs/audit/lighthouse/addresses_new.report.json    | 3818 +++-----
+ docs/audit/lighthouse/admin.report.html            | 2908 ++++++
+ docs/audit/lighthouse/admin.report.json            | 8950 ++++++++++++++++++
+ docs/audit/lighthouse/dashboard.report.html        | 2908 ++++++
+ docs/audit/lighthouse/dashboard.report.json        | 9224 +++++++++++++++++++
+ docs/audit/lighthouse/directory.report.html        |    2 +-
+ docs/audit/lighthouse/directory.report.json        | 2079 ++---
+ docs/audit/lighthouse/landing.report.html          |    2 +-
+ docs/audit/lighthouse/landing.report.json          | 1859 ++--
+ docs/audit/lighthouse/login.report.html            |    2 +-
+ docs/audit/lighthouse/login.report.json            | 1800 ++--
+ docs/audit/lighthouse/public_address.report.html   |    2 +-
+ docs/audit/lighthouse/public_address.report.json   | 2425 +++--
+ docs/audit/lighthouse/register.report.html         |    2 +-
+ docs/audit/lighthouse/register.report.json         | 1892 ++--
+ docs/audit/lighthouse/summary-table.md             |   19 +-
+ docs/audit/lot10.md                                |  223 +-
+ .../audit/lot10/annuaire_360x780_illustrations.png |  Bin 0 -> 52107 bytes
+ .../lot10/assistant_etape2_360x780_deplie.png      |  Bin 0 -> 49089 bytes
+ docs/audit/lot10/pied_de_page_360x780.png          |  Bin 0 -> 48818 bytes
+ docs/audit/lot10/toast_360x780_apres.png           |  Bin 0 -> 47057 bytes
+ docs/audit/lot10/toast_360x780_avant.png           |  Bin 0 -> 45585 bytes
+ docs/audit/lot11a-inventaire.md                    |  177 +
+ docs/audit/lot11a.md                               |  268 +
+ docs/audit/lot11a/account_app_1280.png             |  Bin 0 -> 84336 bytes
+ docs/audit/lot11a/account_app_360.png              |  Bin 0 -> 47733 bytes
+ docs/audit/lot11a/account_app_768.png              |  Bin 0 -> 66608 bytes
+ docs/audit/lot11a/account_help_1280.png            |  Bin 0 -> 103597 bytes
+ docs/audit/lot11a/account_help_360.png             |  Bin 0 -> 49788 bytes
+ docs/audit/lot11a/account_help_768.png             |  Bin 0 -> 93776 bytes
+ docs/audit/lot11a/account_offline_1280.png         |  Bin 0 -> 85912 bytes
+ docs/audit/lot11a/account_preferences_1280.png     |  Bin 0 -> 71747 bytes
+ docs/audit/lot11a/account_preferences_360.png      |  Bin 0 -> 48546 bytes
+ docs/audit/lot11a/account_preferences_768.png      |  Bin 0 -> 51032 bytes
+ docs/audit/lot11a/account_profile_1280.png         |  Bin 0 -> 74596 bytes
+ docs/audit/lot11a/account_profile_360.png          |  Bin 0 -> 47935 bytes
+ docs/audit/lot11a/account_profile_768.png          |  Bin 0 -> 55843 bytes
+ docs/audit/lot11a/addresses_mine_empty_1280.png    |  Bin 0 -> 70087 bytes
+ docs/audit/lot11a/addresses_mine_empty_360.png     |  Bin 0 -> 43069 bytes
+ docs/audit/lot11a/addresses_mine_empty_768.png     |  Bin 0 -> 49585 bytes
+ docs/audit/lot11a/addresses_mine_grid_1280.png     |  Bin 0 -> 96065 bytes
+ docs/audit/lot11a/addresses_mine_list_1280.png     |  Bin 0 -> 115664 bytes
+ docs/audit/lot11a/addresses_mine_list_360.png      |  Bin 0 -> 45806 bytes
+ docs/audit/lot11a/addresses_mine_list_768.png      |  Bin 0 -> 83570 bytes
+ docs/audit/lot11a/admin_audit_1280.png             |  Bin 0 -> 90061 bytes
+ docs/audit/lot11a/admin_audit_360.png              |  Bin 0 -> 46902 bytes
+ docs/audit/lot11a/admin_audit_768.png              |  Bin 0 -> 76826 bytes
+ docs/audit/lot11a/admin_offline_1280.png           |  Bin 0 -> 36113 bytes
+ docs/audit/lot11a/admin_queue_1280.png             |  Bin 0 -> 32667 bytes
+ docs/audit/lot11a/admin_queue_360.png              |  Bin 0 -> 47105 bytes
+ docs/audit/lot11a/admin_queue_768.png              |  Bin 0 -> 31457 bytes
+ docs/audit/lot11a/dashboard_1280.png               |  Bin 0 -> 91826 bytes
+ docs/audit/lot11a/dashboard_360.png                |  Bin 0 -> 50310 bytes
+ docs/audit/lot11a/dashboard_768.png                |  Bin 0 -> 78716 bytes
+ docs/audit/lot11a/dashboard_offline_1280.png       |  Bin 0 -> 94748 bytes
+ docs/audit/lot12.md                                |  126 +
+ docs/audit/lot6/fiche_1440x900_itineraire_pied.png |  Bin 329842 -> 330685 bytes
+ .../lot6/fiche_1440x900_itineraire_voiture.png     |  Bin 324960 -> 324975 bytes
+ docs/audit/lot6/fiche_360x780_itineraire_pied.png  |  Bin 165263 -> 169052 bytes
+ .../lot6/fiche_360x780_itineraire_voiture.png      |  Bin 164875 -> 164847 bytes
+ .../lot6/mes_adresses_1440x900_pill_annuaire.png   |  Bin 81953 -> 99274 bytes
+ .../lot6/mes_adresses_360x780_pill_annuaire.png    |  Bin 42353 -> 45522 bytes
+ .../lot6/wizard_1440x900_etape2_visibilite.png     |  Bin 68743 -> 69467 bytes
+ .../lot6/wizard_1440x900_offline_fullpage.png      |  Bin 290818 -> 72433 bytes
+ .../audit/lot6/wizard_360x780_offline_fullpage.png |  Bin 127234 -> 61826 bytes
+ .../adresse_apres_synchronisation_1440x900.png     |  Bin 90025 -> 100596 bytes
+ .../lot7/adresse_apres_synchronisation_360x780.png |  Bin 42280 -> 46164 bytes
+ .../lot7/file_attente_adresses_mine_1440x900.png   |  Bin 53723 -> 89106 bytes
+ .../lot7/file_attente_adresses_mine_360x780.png    |  Bin 40744 -> 47139 bytes
+ docs/audit/lot7/hors_zone_hors_ligne_1440x900.png  |  Bin 63276 -> 63992 bytes
+ .../modale_avertissement_deconnexion_1440x900.png  |  Bin 60291 -> 87340 bytes
+ .../modale_avertissement_deconnexion_360x780.png   |  Bin 40871 -> 44217 bytes
+ .../notification_reassignation_code_1440x900.png   |  Bin 88726 -> 108506 bytes
+ .../notification_reassignation_code_360x780.png    |  Bin 50166 -> 50248 bytes
+ ...laque_hors_ligne_avec_code_reserve_1440x900.png |  Bin 63008 -> 64726 bytes
+ ...plaque_hors_ligne_avec_code_reserve_360x780.png |  Bin 47101 -> 47649 bytes
+ ...laque_hors_ligne_sans_code_reserve_1440x900.png |  Bin 62056 -> 62776 bytes
+ .../lot7/wizard_hors_ligne_validation_1440x900.png |  Bin 66961 -> 67675 bytes
+ docs/audit/lot8b-9.md                              |  223 +-
+ docs/audit/lot8b.md                                |  223 +-
+ docs/audit/newman.json                             | 1717 +++-
+ docs/audit/offline-timing.json                     |   28 +-
+ docs/audit/ors-real-foot.json                      |    6 +-
+ docs/audit/rapport.md                              |  223 +-
+ docs/audit/recette-live/CAS-DE-TEST.csv            |  160 +-
+ docs/audit/recette-live/NETTOYAGE.md               |   26 +-
+ docs/audit/recette-live/RAPPORT.md                 |    8 +-
+ docs/audit/smoke-prod.md                           |   12 +-
+ frontend/e2e/lot11a.spec.ts                        |  276 +
+ frontend/e2e/lot4b.spec.ts                         |   10 +-
+ frontend/src/App.tsx                               |   12 +-
+ frontend/src/api/addressApi.ts                     |   20 +-
+ frontend/src/components/AppNavigation.tsx          |   41 +-
+ frontend/src/components/ConnectedLayout.tsx        |  240 +
+ frontend/src/components/ProtectedRoute.tsx         |    2 +-
+ frontend/src/components/ui/Card.tsx                |   34 +
+ frontend/src/components/ui/ConfirmDialog.tsx       |  147 +
+ frontend/src/components/ui/DataTable.tsx           |  167 +
+ frontend/src/components/ui/EmptyState.tsx          |   61 +
+ frontend/src/components/ui/PageHeader.tsx          |   84 +
+ frontend/src/components/ui/SidePanel.tsx           |  134 +
+ frontend/src/components/ui/Skeleton.tsx            |   20 +
+ frontend/src/components/ui/StatTile.tsx            |  105 +
+ frontend/src/components/ui/StatusBadge.tsx         |  102 +
+ frontend/src/components/ui/Tabs.tsx                |  124 +
+ .../components/ui/__tests__/components.test.tsx    |  244 +
+ frontend/src/components/ui/index.ts                |   10 +
+ frontend/src/context/AuthContext.tsx               |    7 +-
+ frontend/src/pages/AccountPage.tsx                 |  727 +-
+ frontend/src/pages/AdminPage.tsx                   | 1199 ++-
+ frontend/src/pages/DashboardPage.tsx               |  447 +
+ frontend/src/pages/EditAddressPage.tsx             |   29 +-
+ frontend/src/pages/MyAddressesPage.tsx             |  937 +-
+ frontend/src/pages/NewAddressPage.tsx              |   16 +-
+ rapport.md                                         |  223 +-
+ scripts/capture-lot11a.mjs                         |  231 +
+ scripts/check-contrast.py                          |   63 +
+ scripts/generate-test-cases-csv.py                 |  354 +
+ scripts/purge-test-data.py                         |  140 +
+ scripts/run-lighthouse.mjs                         |   38 +-
+ scripts/verify-all                                 |   12 +-
+ 151 files changed, 53446 insertions(+), 13802 deletions(-)

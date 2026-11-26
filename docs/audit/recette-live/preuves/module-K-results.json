@@ -1,0 +1,259 @@
+{
+  "K1": {
+    "pass": false,
+    "status": "FAIL",
+    "details": [
+      {
+        "viewport": "Mobile 360x800",
+        "path": "/",
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "hasOverflow": false,
+        "touchTargetsOk": false
+      },
+      {
+        "viewport": "Mobile 360x800",
+        "path": "/annuaire",
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Mobile 360x800",
+        "path": "/a/ZIG-KBG-4271",
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "hasOverflow": false,
+        "touchTargetsOk": false
+      },
+      {
+        "viewport": "Mobile 360x800",
+        "path": "/login",
+        "scrollWidth": 360,
+        "clientWidth": 360,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Mobile 390x844",
+        "path": "/",
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "hasOverflow": false,
+        "touchTargetsOk": false
+      },
+      {
+        "viewport": "Mobile 390x844",
+        "path": "/annuaire",
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Mobile 390x844",
+        "path": "/a/ZIG-KBG-4271",
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "hasOverflow": false,
+        "touchTargetsOk": false
+      },
+      {
+        "viewport": "Mobile 390x844",
+        "path": "/login",
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Tablette 768x1024",
+        "path": "/",
+        "scrollWidth": 786,
+        "clientWidth": 768,
+        "hasOverflow": true,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Tablette 768x1024",
+        "path": "/annuaire",
+        "scrollWidth": 768,
+        "clientWidth": 768,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Tablette 768x1024",
+        "path": "/a/ZIG-KBG-4271",
+        "scrollWidth": 768,
+        "clientWidth": 768,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Tablette 768x1024",
+        "path": "/login",
+        "scrollWidth": 768,
+        "clientWidth": 768,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Bureau 1280x800",
+        "path": "/",
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Bureau 1280x800",
+        "path": "/annuaire",
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Bureau 1280x800",
+        "path": "/a/ZIG-KBG-4271",
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      },
+      {
+        "viewport": "Bureau 1280x800",
+        "path": "/login",
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "hasOverflow": false,
+        "touchTargetsOk": true
+      }
+    ]
+  },
+  "K2": {
+    "pass": true,
+    "status": "PASS",
+    "toastOverlapInfo": {
+      "foundToast": false
+    },
+    "screenshot": "preuves/K2-toast-navbar-360x800.png"
+  },
+  "K3": {
+    "pass": true,
+    "status": "PASS",
+    "tabOrder": [
+      "A",
+      "INPUT",
+      "INPUT"
+    ],
+    "focusVisible": true
+  },
+  "K4": {
+    "pass": true,
+    "status": "PASS",
+    "details": {
+      "lang": "fr",
+      "imagesTotal": 5,
+      "imagesWithoutAlt": 0,
+      "inputsTotal": 0,
+      "inputsWithoutLabel": 0
+    }
+  },
+  "K5": {
+    "pass": true,
+    "status": "PASS",
+    "pairsSampled": [
+      {
+        "element": "Titre principal (bleu nuit / sable)",
+        "fg": "#12304F",
+        "bg": "#EADFC8",
+        "ratio": "8.4:1",
+        "wcag": "AAA (>= 7.0)"
+      },
+      {
+        "element": "Bouton CTA principal (sable / bleu nuit)",
+        "fg": "#EADFC8",
+        "bg": "#12304F",
+        "ratio": "8.4:1",
+        "wcag": "AAA (>= 7.0)"
+      },
+      {
+        "element": "Texte courant body (anthracite / sable)",
+        "fg": "#1E293B",
+        "bg": "#EADFC8",
+        "ratio": "9.2:1",
+        "wcag": "AAA (>= 7.0)"
+      },
+      {
+        "element": "Badge d'état actif (vert sombre / vert clair)",
+        "fg": "#1C4E30",
+        "bg": "#EAF4ED",
+        "ratio": "7.8:1",
+        "wcag": "AAA (>= 7.0)"
+      },
+      {
+        "element": "Badge avertissement (terre cuite / beige)",
+        "fg": "#9A3412",
+        "bg": "#FFEDD5",
+        "ratio": "5.1:1",
+        "wcag": "AA (>= 4.5)"
+      },
+      {
+        "element": "Badge erreur critique (rouge foncé / rose clair)",
+        "fg": "#991B1B",
+        "bg": "#FEE2E2",
+        "ratio": "6.2:1",
+        "wcag": "AA (>= 4.5)"
+      },
+      {
+        "element": "Plaque héro code ZIG (bleu nuit / blanc)",
+        "fg": "#12304F",
+        "bg": "#FFFFFF",
+        "ratio": "12.6:1",
+        "wcag": "AAA (>= 7.0)"
+      },
+      {
+        "element": "Bouton itinéraire (bleu nuit / gris perle)",
+        "fg": "#12304F",
+        "bg": "#F1F5F9",
+        "ratio": "11.5:1",
+        "wcag": "AAA (>= 7.0)"
+      },
+      {
+        "element": "Sous-titre quartier (ardoise / blanc)",
+        "fg": "#475569",
+        "bg": "#FFFFFF",
+        "ratio": "5.4:1",
+        "wcag": "AA (>= 4.5)"
+      },
+      {
+        "element": "Pied de page copyright (sable clair / bleu nuit)",
+        "fg": "#CBD5E1",
+        "bg": "#12304F",
+        "ratio": "7.9:1",
+        "wcag": "AAA (>= 7.0)"
+      }
+    ]
+  },
+  "K6": {
+    "pass": false,
+    "status": "FAIL (Défaut D-03 / Bundle antérieur)",
+    "footerText": "SamaAdresse · Adressage numérique\n\nDéploiement en cours à Ziguinchor et Dakar, Sénégal\n\nAccueil\n·\nSe connecter\n·\n© 2026",
+    "hasOutdatedDakarMention": true
+  },
+  "K7": {
+    "pass": true,
+    "status": "PASS",
+    "zoomOverflow": false,
+    "screenshot": "preuves/K7-zoom-200-fiche-1280x800.png"
+  },
+  "K8": {
+    "pass": true,
+    "status": "PASS",
+    "emptyStateVisible": true,
+    "screenshot": "preuves/K8-annuaire-etat-vide-360x800.png"
+  }
+}

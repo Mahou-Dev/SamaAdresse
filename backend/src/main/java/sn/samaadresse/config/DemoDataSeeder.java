@@ -50,6 +50,7 @@ public class DemoDataSeeder implements ApplicationRunner {
     public static final UUID DEMO_PHOTO_1_ID = UUID.fromString("00000000-0000-4000-8000-000000000001");
     public static final UUID DEMO_PHOTO_2_ID = UUID.fromString("00000000-0000-4000-8000-000000000002");
     public static final UUID DEMO_PHOTO_3_ID = UUID.fromString("00000000-0000-4000-8000-000000000003");
+    public static final UUID DEMO_PHOTO_4_ID = UUID.fromString("00000000-0000-4000-8000-000000000004");
 
     private static final java.util.regex.Pattern REGULATORY_CODE_PATTERN =
             java.util.regex.Pattern.compile("^[A-Z]{2,3}-[A-Z]{3}-[0-9]{4}$");
@@ -167,6 +168,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         String photoUrl1 = storeDemoPhoto(DEMO_PHOTO_1_ID, "demo-photos/demo-facade-1.jpg", new Color(27, 94, 32));
         String photoUrl2 = storeDemoPhoto(DEMO_PHOTO_2_ID, "demo-photos/demo-facade-2.jpg", new Color(29, 82, 143));
         String photoUrl3 = storeDemoPhoto(DEMO_PHOTO_3_ID, "demo-photos/demo-facade-3.jpg", new Color(180, 83, 9));
+        String photoUrl4 = storeDemoPhoto(DEMO_PHOTO_4_ID, "demo-photos/demo-facade-4.jpg", new Color(118, 107, 91));
 
         record DemoAddrDef(
                 String code, Double lat, Double lon, String zone, String quartier,
@@ -191,13 +193,13 @@ public class DemoDataSeeder implements ApplicationRunner {
                         null, false, false, mamadou),
                 new DemoAddrDef("ZIG-KBG-4272", 12.5715, -16.2680, "ZIG", "KBG",
                         LocationType.COMMERCE, "Atelier de menuiserie métallique et ferronnerie",
-                        null, false, false, fatou),
+                        photoUrl4, true, false, fatou),
                 new DemoAddrDef("ZIG-ESC-1088", 12.5880, -16.2645, "ZIG", "ESC",
                         LocationType.MAISON, "Résidence fleurie près du débarcadère",
                         null, false, false, mamadou),
                 new DemoAddrDef("ZIG-TIL-3040", 12.5620, -16.2980, "ZIG", "TIL",
                         LocationType.MAISON, "Maison familiale avec véranda bleue",
-                        null, false, false, fatou),
+                        photoUrl3, true, false, fatou),
                 new DemoAddrDef("ZIG-KND-5080", 12.5480, -16.2800, "ZIG", "KND",
                         LocationType.COMMERCE, "Quincaillerie générale et matériaux de construction",
                         null, false, false, mamadou),

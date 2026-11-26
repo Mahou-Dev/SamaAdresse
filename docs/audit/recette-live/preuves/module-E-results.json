@@ -1,0 +1,49 @@
+{
+  "E1": {
+    "mineStatus": 200,
+    "addressFound": true,
+    "addressStatus": "ACTIVE",
+    "screenshot": "preuves/E1-mes-adresses-360x800.png",
+    "status": "PASS"
+  },
+  "E2": {
+    "patchStatus": 200,
+    "updatedType": "COMMERCE",
+    "publicDescriptionMatches": true,
+    "publicTypeMatches": true,
+    "status": "PASS"
+  },
+  "E3_B8": {
+    "archiveStatus": 200,
+    "archivedModelStatus": "ARCHIVED",
+    "publicApiStatus": 410,
+    "qrApiStatus": 410,
+    "absentFromDirectory": true,
+    "shows410Ui": true,
+    "messageObserved": "Cette adresse n'est plus disponible. La fiche demandée a été retirée ou n'est plus active.",
+    "screenshot": "preuves/B8-fiche-410-360x800.png",
+    "status": "PASS"
+  },
+  "E4": {
+    "restoreStatus": 200,
+    "restoredModelStatus": "ACTIVE",
+    "publicApiStatusAfterRestore": 200,
+    "status": "PASS"
+  },
+  "E5": {
+    "uploadStatus": 200,
+    "photoUrlAfterUpload": "/uploads/ae847cd0-8b53-46b8-b019-ea8f068309b3.jpg",
+    "deleteStatus": 200,
+    "photoUrlAfterDelete": null,
+    "publicPhotoUrl": null,
+    "status": "PASS"
+  },
+  "E6": {
+    "idorPatchStatus": 403,
+    "idorArchiveStatus": 403,
+    "idorUploadStatus": 403,
+    "idorDeletePhotoStatus": 403,
+    "allBlockedWith403": true,
+    "status": "PASS"
+  }
+}

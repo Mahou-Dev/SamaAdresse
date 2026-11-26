@@ -22,7 +22,7 @@ async function main() {
   const qrUrl = `${BASE_URL.replace(/\/$/, '')}/api/addresses/ZIG-KBG-4271/qrcode`;
   const expectedPrefix = `${BASE_URL.replace(/\/$/, '')}/a/ZIG-KBG-4271`;
 
-  const res = await fetch(qrUrl);
+  const res = await fetch(qrUrl, { signal: AbortSignal.timeout(5000) });
   if (!res.ok) {
     console.error(`ECHEC : Erreur HTTP ${res.status} lors du téléchargement du QR code`);
     process.exit(1);

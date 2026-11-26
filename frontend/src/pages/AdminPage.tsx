@@ -1,461 +1,699 @@
-import React, { useEffect, useState } from 'react';
-import {
-  getAdminReports,
-  suspendAddressAdmin,
-  reinstateAddressAdmin,
-  updateReportStatusAdmin,
-} from '../api/addressApi';
-import type { AdminReportResponse, ReportStatus, ReportReason } from '../api/addressApi';
-import { ApiError } from '../api/apiClient';
-import { AddressPlate } from '../components/AddressPlate';
+import React, { useState, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import type { AdminReportResponse, ReportStatus } from '../api/addressApi';
 import { useToast } from '../components/Toast';
+import { useOnlineStatus } from '../context/OnlineStatusContext';
+import { useAuth } from '../context/AuthContext';
+import { ConnectedLayout } from '../components/ConnectedLayout';
+import {
+  Card,
+  StatTile,
+  StatusBadge,
+  Tabs,
+  TabPanel,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  Modal,
+  ConfirmDialog,
+  Button,
+} from '../components/ui';
+import { useAdminModeration } from '../features/admin/useAdminModeration';
+import { ReportDetailPanel } from '../features/admin/ReportDetailPanel';
+import { ModerationAuditTab } from '../features/admin/ModerationAuditTab';
+import { REASON_LABELS } from '../features/admin/types';
+import { cn } from '../utils/cn';
 import {
   ShieldAlert,
   Loader2,
-  AlertCircle,
   CheckCircle2,
   XCircle,
   RotateCcw,
-  Eye,
-  X,
   WifiOff,
+  Search,
+  FileText,
+  History,
+  ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
-import { useOnlineStatus } from '../context/OnlineStatusContext';
 
-const REASON_LABELS: Record<ReportReason, string> = {
-  POSITION_INCORRECTE: 'Position GPS incorrecte',
-  CONTENU_INAPPROPRIE: 'Description inappropriée ou trompeuse',
-  PHOTO_INAPPROPRIEE: 'Photo inappropriée ou sans rapport',
-  AUTRE: 'Autre motif',
-};
-
-const STATUS_LABELS: Record<ReportStatus, string> = {
-  OPEN: 'Ouvert',
-  RESOLVED: 'Traité',
-  DISMISSED: 'Classé sans suite',
-};
+export type { LocalAuditAction } from '../features/admin/types';
 
 export const AdminPage: React.FC = () => {
   const { isOnline } = useOnlineStatus();
-  const [statusFilter, setStatusFilter] = useState<ReportStatus | 'ALL'>('OPEN');
-  const [reports, setReports] = useState<AdminReportResponse[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [selectedReport, setSelectedReport] = useState<AdminReportResponse | null>(null);
-  const [suspendReason, setSuspendReason] = useState<string>('');
-  const [suspendError, setSuspendError] = useState<string | null>(null);
-  const [processing, setProcessing] = useState<boolean>(false);
-
+  const { user } = useAuth();
   const { showToast } = useToast();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const fetchReports = async (filter: ReportStatus | 'ALL') => {
-    setLoading(true);
-    setErrorMsg(null);
-    try {
-      const page = await getAdminReports(filter === 'ALL' ? undefined : filter, 0, 50);
-      setReports(page.content);
-      if (selectedReport) {
-        const refreshed = page.content.find((r) => r.id === selectedReport.id);
-        setSelectedReport(refreshed || null);
-      }
-    } catch (err: any) {
-      setErrorMsg(err instanceof ApiError ? err.message : 'Impossible de charger les signalements.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    statusFilter,
+    setStatusFilter,
+    pageNumber,
+    setPageNumber,
+    totalPages,
+    reports,
+    totalReportsCount,
+    openCount,
+    resolvedCount,
+    dismissedCount,
+    loading,
+    errorMsg,
+    errorStatus,
+    processing,
+    selectedReport,
+    setSelectedReport,
+    sessionAuditLogs,
+    reload,
+    suspendAddress,
+    reinstateAddress,
+    updateReportStatus,
+  } = useAdminModeration({
+    isOnline,
+    adminEmail: user?.email || '',
+    showToast,
+  });
 
-  useEffect(() => {
-    fetchReports(statusFilter);
-  }, [statusFilter]);
+  const [activeTab, setActiveTab] = useState<'moderation' | 'audit'>('moderation');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortKey, setSortKey] = useState<string>('createdAt');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  const handleSelectReport = (report: AdminReportResponse) => {
+  // Panneau latéral & dialogues de confirmation
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
+  const [inlineSuspendReason, setInlineSuspendReason] = useState<string>('');
+  const [inlineSuspendError, setInlineSuspendError] = useState<string | null>(null);
+
+  const [showSuspendModal, setShowSuspendModal] = useState<boolean>(false);
+  const [modalSuspendReason, setModalSuspendReason] = useState<string>('');
+  const [modalSuspendError, setModalSuspendError] = useState<string | null>(null);
+
+  const [showReinstateModal, setShowReinstateModal] = useState<boolean>(false);
+  const [reinstateReason, setReinstateReason] = useState<string>('');
+
+  const [reportActionConfirm, setReportActionConfirm] = useState<{
+    report: AdminReportResponse;
+    status: 'RESOLVED' | 'DISMISSED';
+  } | null>(null);
+
+  const handleOpenDetail = (report: AdminReportResponse) => {
     setSelectedReport(report);
-    setSuspendReason('');
-    setSuspendError(null);
+    setIsSidePanelOpen(true);
+    setInlineSuspendReason('');
+    setInlineSuspendError(null);
   };
 
-  const handleSuspendAddress = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleInlineSuspendSubmit = async () => {
     if (!selectedReport) return;
-    if (!suspendReason.trim()) {
-      setSuspendError('Le motif est obligatoire');
-      return;
-    }
-
-    setProcessing(true);
-    setSuspendError(null);
-    try {
-      await suspendAddressAdmin(selectedReport.addressId, suspendReason.trim());
-      showToast(`Adresse ${selectedReport.addressCode} suspendue.`, 'success');
-      setSuspendReason('');
-      await fetchReports(statusFilter);
-    } catch (err: any) {
-      setSuspendError(
-        err instanceof ApiError ? err.message : "Impossible de suspendre l'adresse."
-      );
-    } finally {
-      setProcessing(false);
+    const result = await suspendAddress(selectedReport, inlineSuspendReason);
+    if (result.ok) {
+      setInlineSuspendReason('');
+      setInlineSuspendError(null);
+    } else if (result.error) {
+      setInlineSuspendError(result.error);
     }
   };
 
-  const handleDismissReport = async (report: AdminReportResponse) => {
-    setProcessing(true);
-    setSuspendError(null);
-    try {
-      await updateReportStatusAdmin(report.id, 'DISMISSED');
-      showToast('Signalement classé sans suite.', 'info');
-      await fetchReports(statusFilter);
-    } catch (err: any) {
-      showToast(
-        err instanceof ApiError ? err.message : 'Impossible de mettre à jour ce signalement.',
-        'error'
-      );
-    } finally {
-      setProcessing(false);
+  const handleModalSuspendSubmit = async () => {
+    if (!selectedReport) return;
+    const result = await suspendAddress(selectedReport, modalSuspendReason);
+    if (result.ok) {
+      setShowSuspendModal(false);
+      setModalSuspendReason('');
+      setModalSuspendError(null);
+    } else if (result.error) {
+      setModalSuspendError(result.error);
     }
   };
 
-  const handleReinstateAddress = async (report: AdminReportResponse) => {
-    setProcessing(true);
-    setSuspendError(null);
-    try {
-      await reinstateAddressAdmin(report.addressId);
-      showToast(`Adresse ${report.addressCode} rétablie.`, 'success');
-      await fetchReports(statusFilter);
-    } catch (err: any) {
-      showToast(
-        err instanceof ApiError ? err.message : "Impossible de rétablir l'adresse.",
-        'error'
+  const handleConfirmReinstate = async () => {
+    if (!selectedReport) return;
+    const result = await reinstateAddress(selectedReport, reinstateReason);
+    if (result.ok) {
+      setShowReinstateModal(false);
+      setReinstateReason('');
+    }
+  };
+
+  const handleConfirmReportStatus = async () => {
+    if (!reportActionConfirm) return;
+    const ok = await updateReportStatus(reportActionConfirm.report, reportActionConfirm.status);
+    if (ok) {
+      setReportActionConfirm(null);
+    }
+  };
+
+  const filteredReports = useMemo(() => {
+    let result = [...reports];
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.addressCode.toLowerCase().includes(q) ||
+          r.comment?.toLowerCase().includes(q) ||
+          r.reason.toLowerCase().includes(q) ||
+          (REASON_LABELS[r.reason] || '').toLowerCase().includes(q)
       );
-    } finally {
-      setProcessing(false);
+    }
+
+    result.sort((a, b) => {
+      if (sortKey === 'createdAt') {
+        const tA = new Date(a.createdAt).getTime();
+        const tB = new Date(b.createdAt).getTime();
+        return sortDirection === 'asc' ? tA - tB : tB - tA;
+      }
+      if (sortKey === 'addressCode') {
+        return sortDirection === 'asc'
+          ? a.addressCode.localeCompare(b.addressCode)
+          : b.addressCode.localeCompare(a.addressCode);
+      }
+      return 0;
+    });
+
+    return result;
+  }, [reports, searchQuery, sortKey, sortDirection]);
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
     }
   };
 
   if (!isOnline) {
     return (
-      <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-12 flex flex-col items-center justify-center text-center font-sans">
-        <div className="max-w-md w-full p-8 rounded-2xl bg-[#FBF7EF] border border-[#766B5B] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-3">
-          <WifiOff className="w-8 h-8 text-[#8A3112] mx-auto" />
-          <h1 className="text-lg font-bold text-[#231A15]">Connexion requise pour afficher cette page</h1>
-          <p className="text-xs text-[#5C4D44] leading-relaxed">
-            Le panneau de modération des signalements nécessite une connexion réseau.
+      <ConnectedLayout
+        title="Administration & Modération des signalements"
+        subtitle="Connexion Internet requise pour accéder aux signalements."
+        maxWidth="wide"
+      >
+        <div className="p-8 text-center rounded-2xl bg-surface-elevated border border-border shadow-xs space-y-3 max-w-md mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-warning-soft border border-warning-border text-warning flex items-center justify-center mx-auto">
+            <WifiOff className="w-6 h-6" aria-hidden="true" />
+          </div>
+          <h2 className="text-base font-bold text-ink">Mode hors ligne actif</h2>
+          <p className="text-xs sm:text-sm text-ink-muted leading-relaxed">
+            La modération et la consultation des signalements nécessitent une connexion réseau active.
           </p>
         </div>
-      </div>
+      </ConnectedLayout>
     );
   }
 
   return (
-    <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 font-sans space-y-6">
-      {/* En-tête */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-[#766B5B]">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#231A15] tracking-tight">
-            Modération des signalements
-          </h1>
-          <p className="text-xs sm:text-sm text-[#5C4D44] mt-1">
-            Examen des signalements publics et gestion des adresses signalées.
-          </p>
+    <ConnectedLayout
+      title="Administration & Modération des signalements"
+      subtitle="Examen des signalements publics, modération des adresses et journal des actions."
+      maxWidth="wide"
+    >
+      {/* 1. Indicateurs réels issus de l'API */}
+      <section aria-label="Indicateurs de modération">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <StatTile
+            label="Signalements ouverts"
+            value={openCount}
+            sublabel={openCount === 0 ? 'Aucun en attente' : 'Action requise'}
+            icon={ShieldAlert}
+            onClick={() => setStatusFilter('OPEN')}
+            variant={openCount > 0 ? 'alert' : 'neutral'}
+            dataTestId="admin-stat-open"
+          />
+          <StatTile
+            label="Traités"
+            value={resolvedCount}
+            sublabel="Signalements résolus"
+            icon={CheckCircle2}
+            onClick={() => setStatusFilter('RESOLVED')}
+            variant="success"
+            dataTestId="admin-stat-resolved"
+          />
+          <StatTile
+            label="Classés sans suite"
+            value={dismissedCount}
+            sublabel="Signalements rejetés"
+            icon={XCircle}
+            onClick={() => setStatusFilter('DISMISSED')}
+            variant="neutral"
+            dataTestId="admin-stat-dismissed"
+          />
+          <StatTile
+            label="Total des signalements"
+            value={openCount + resolvedCount + dismissedCount}
+            sublabel="Tous statuts confondus"
+            icon={FileText}
+            onClick={() => setStatusFilter('ALL')}
+            variant="default"
+            dataTestId="admin-stat-total"
+          />
         </div>
+      </section>
 
-        {/* Filtres par état */}
-        <div
-          role="tablist"
-          aria-label="Filtrer les signalements par état"
-          className="inline-flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[#F2ECE1] border border-[#766B5B]"
-        >
-          {(
-            [
-              { id: 'OPEN', label: 'Ouverts' },
-              { id: 'RESOLVED', label: 'Traités' },
-              { id: 'DISMISSED', label: 'Classés sans suite' },
-              { id: 'ALL', label: 'Tous' },
-            ] as const
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={statusFilter === tab.id}
-              onClick={() => {
-                setSelectedReport(null);
-                setStatusFilter(tab.id);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
-                statusFilter === tab.id
-                  ? 'bg-[#231A15] text-[#FBF7EF]'
-                  : 'text-[#5C4D44] hover:text-[#231A15]'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* 2. Onglets File de modération & Journal d'audit */}
+      <Tabs
+        variant="underline"
+        tabs={[
+          { id: 'moderation', label: 'File de modération', icon: ShieldAlert, count: openCount },
+          {
+            id: 'audit',
+            label: "Journal d'audit de session",
+            icon: History,
+            count: sessionAuditLogs.length,
+          },
+        ]}
+        activeTab={activeTab}
+        onChange={(t) => setActiveTab(t as 'moderation' | 'audit')}
+        ariaLabel="Sections d'administration"
+      />
 
-      {loading ? (
-        <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] space-y-3">
-          <Loader2 className="w-7 h-7 animate-spin text-[#1D528F] mx-auto" />
-          <p className="text-xs text-[#5C4D44]">Chargement des signalements...</p>
-        </div>
-      ) : errorMsg ? (
-        <div className="p-6 rounded-xl bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs sm:text-sm flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      ) : reports.length === 0 ? (
-        <div className="p-10 text-center rounded-xl bg-[#FBF7EF] border border-[#766B5B] text-xs sm:text-sm text-[#5C4D44]">
-          Aucun signalement correspondant à ce filtre.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Liste des signalements : Table dense sur desktop, Cartes propres sur mobile */}
-          <div className={selectedReport ? 'lg:col-span-7' : 'lg:col-span-12'}>
-            {/* Vue Table Desktop */}
-            <div className="hidden md:block rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-[0_2px_0_rgba(35,26,21,0.06)] overflow-hidden">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#F2ECE1] border-b border-[#766B5B] text-[#231A15] font-bold">
-                    <th className="py-3 px-4">Code</th>
-                    <th className="py-3 px-4">Motif</th>
-                    <th className="py-3 px-4">État adresse</th>
-                    <th className="py-3 px-4">Statut</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#766B5B]">
-                  {reports.map((report) => {
-                    const isSelected = selectedReport?.id === report.id;
-                    return (
-                      <tr
-                        key={report.id}
-                        className={`transition ${
-                          isSelected ? 'bg-[#F2ECE1]/70' : 'hover:bg-[#F2ECE1]'
-                        }`}
-                      >
-                        <td className="py-3 px-4 font-mono font-bold text-[#231A15]">
-                          {report.addressCode}
-                        </td>
-                        <td className="py-3 px-4 text-[#231A15]">
-                          <span className="font-semibold block">
-                            {REASON_LABELS[report.reason] || report.reason}
-                          </span>
-                          {report.comment && (
-                            <span className="text-[#5C4D44] line-clamp-1">{report.comment}</span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold ${
-                              report.addressStatus === 'SUSPENDED'
-                                ? 'bg-[#FEF2F2] text-[#991B1B] border border-[#DC2626]/30'
-                                : report.addressStatus === 'ARCHIVED'
-                                ? 'bg-[#F2ECE1] text-[#5C4D44]'
-                                : 'bg-[#2A6B44]/10 text-[#2A6B44]'
-                            }`}
-                          >
-                            {report.addressStatus}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 font-semibold text-[#5C4D44]">
-                          {STATUS_LABELS[report.status] || report.status}
-                        </td>
-                        <td className="py-3 px-4 font-mono text-[11px] text-[#5C4D44]">
-                          {new Date(report.createdAt).toLocaleDateString('fr-FR')}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleSelectReport(report)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] font-bold text-xs cursor-pointer"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            <span>Examiner</span>
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Vue Cartes Mobile */}
-            <div className="md:hidden space-y-3">
-              {reports.map((report) => (
-                <div
-                  key={report.id}
-                  className="p-3.5 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-2.5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-bold text-sm text-[#231A15]">
-                      {report.addressCode}
-                    </span>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#F2ECE1] text-[#231A15]">
-                      {STATUS_LABELS[report.status] || report.status}
-                    </span>
-                  </div>
-                  <p className="text-xs font-semibold text-[#231A15]">
-                    {REASON_LABELS[report.reason] || report.reason}
-                  </p>
-                  {report.comment && (
-                    <p className="text-xs text-[#5C4D44] line-clamp-2">{report.comment}</p>
-                  )}
-                  <div className="pt-2 border-t border-[#766B5B] flex items-center justify-between text-xs">
-                    <span className="font-mono text-[11px] text-[#5C4D44]">
-                      {new Date(report.createdAt).toLocaleDateString('fr-FR')}
-                    </span>
+      {/* TAB 1 : File de modération */}
+      <TabPanel id="moderation" activeTab={activeTab}>
+        <div className="space-y-4">
+          <Card padding="sm">
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+              <div
+                role="tablist"
+                aria-label="Filtrer les signalements par état"
+                className="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-surface border border-border"
+              >
+                {(
+                  [
+                    { id: 'OPEN', label: 'Ouverts', count: openCount },
+                    { id: 'RESOLVED', label: 'Traités', count: resolvedCount },
+                    { id: 'DISMISSED', label: 'Classés sans suite', count: dismissedCount },
+                    {
+                      id: 'ALL',
+                      label: 'Tous',
+                      count: openCount + resolvedCount + dismissedCount || totalReportsCount,
+                    },
+                  ] as { id: ReportStatus | 'ALL'; label: string; count: number }[]
+                ).map((tab) => {
+                  const active = statusFilter === tab.id;
+                  return (
                     <button
+                      key={tab.id}
                       type="button"
-                      onClick={() => handleSelectReport(report)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] font-bold text-xs cursor-pointer"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Examiner</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Panneau de détail d'un signalement */}
-          {selectedReport && (
-            <div className="lg:col-span-5 p-5 rounded-xl border border-[#766B5B] bg-[#FBF7EF] shadow-[0_2px_0_rgba(35,26,21,0.06)] space-y-4">
-              <div className="flex items-center justify-between gap-2 border-b border-[#766B5B] pb-3">
-                <h2 className="text-base font-bold text-[#231A15]">
-                  Détail du signalement
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => setSelectedReport(null)}
-                  className="p-1.5 rounded-lg text-[#5C4D44] hover:bg-[#F2ECE1] cursor-pointer"
-                  aria-label="Fermer le détail"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <AddressPlate
-                code={selectedReport.addressCode}
-                zone={selectedReport.addressCode.split('-')[0] || 'ZIG'}
-                type="MAISON"
-                size="sm"
-                showCopy={false}
-              />
-
-              <div className="space-y-2 text-xs">
-                <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] space-y-1">
-                  <span className="text-[#5C4D44] font-semibold block">
-                    Description de l'adresse :
-                  </span>
-                  <p className="text-[#231A15] font-medium">
-                    {selectedReport.addressDescription}
-                  </p>
-                </div>
-
-                <div className="p-3 rounded-lg bg-[#F2ECE1] border border-[#766B5B] space-y-1">
-                  <span className="text-[#5C4D44] font-semibold block">
-                    Motif du signalement :
-                  </span>
-                  <p className="text-[#231A15] font-bold">
-                    {REASON_LABELS[selectedReport.reason] || selectedReport.reason}
-                  </p>
-                  {selectedReport.comment && (
-                    <p className="text-[#231A15] pt-1 border-t border-[#766B5B]">
-                      « {selectedReport.comment} »
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {selectedReport.addressStatus === 'SUSPENDED' ? (
-                <div className="space-y-3 pt-2 border-t border-[#766B5B]">
-                  <div className="p-3 rounded-lg bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs font-semibold flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 shrink-0" />
-                    <span>Cette adresse est actuellement suspendue.</span>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={processing}
-                    onClick={() => handleReinstateAddress(selectedReport)}
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-[#1D528F] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#1D528F] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Rétablir l'adresse</span>
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleSuspendAddress} className="space-y-3 pt-2 border-t border-[#766B5B]">
-                  <div className="space-y-1">
-                    <label
-                      htmlFor="suspend-reason-input"
-                      className="block text-xs font-bold text-[#231A15]"
-                    >
-                      Motif de suspension (obligatoire pour suspendre)
-                    </label>
-                    <textarea
-                      id="suspend-reason-input"
-                      rows={2}
-                      maxLength={300}
-                      value={suspendReason}
-                      onChange={(e) => setSuspendReason(e.target.value)}
-                      placeholder="Indiquez la raison de la suspension..."
-                      className="w-full px-3 py-2 rounded-lg border border-[#766B5B] bg-[#FBF7EF] text-xs text-[#231A15] placeholder:text-[#5C4D44] focus:outline-none focus:ring-2 focus:ring-[#1D528F]"
-                    />
-                  </div>
-
-                  {suspendError && (
-                    <div
-                      role="alert"
-                      className="p-2.5 rounded-lg bg-[#FEF2F2] border border-[#DC2626]/30 text-[#991B1B] text-xs font-medium"
-                    >
-                      {suspendError}
-                    </div>
-                  )}
-
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    <button
-                      type="submit"
-                      disabled={processing}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-[#B84A24] hover:bg-[#9A3816] text-white text-xs font-bold transition shadow-[0_2px_0_rgba(35,26,21,0.12)] cursor-pointer disabled:opacity-50 touch-target"
-                    >
-                      {processing ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <ShieldAlert className="w-3.5 h-3.5" />
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setStatusFilter(tab.id)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer min-h-[36px]',
+                        active
+                          ? 'bg-ink text-ink-inverse shadow-xs'
+                          : 'text-ink-muted hover:text-ink hover:bg-surface-hover'
                       )}
-                      <span>Suspendre l'adresse</span>
+                    >
+                      <span>{tab.label}</span>
+                      <span
+                        className={cn(
+                          'font-mono text-[11px]',
+                          active ? 'text-ink-inverse/80' : 'text-ink-subtle'
+                        )}
+                      >
+                        ({tab.count})
+                      </span>
                     </button>
+                  );
+                })}
+              </div>
 
-                    {selectedReport.status === 'OPEN' && (
+              <div className="relative min-w-[240px]">
+                <Search
+                  className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
+                  aria-hidden="true"
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Filtrer par code (ex: ZIG-KBG)…"
+                  className="w-full pl-9 pr-3 py-2 min-h-[38px] text-xs rounded-xl border border-border-strong bg-canvas text-ink placeholder:text-ink-subtle focus:outline-none focus:border-institution focus:ring-2 focus:ring-institution-soft"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {loading ? (
+            <div
+              className="p-10 text-center rounded-2xl bg-surface-elevated border border-border space-y-3 min-h-[420px] flex flex-col items-center justify-center"
+              aria-busy="true"
+            >
+              <Loader2 className="w-7 h-7 animate-spin text-institution" aria-hidden="true" />
+              <p className="text-xs sm:text-sm text-ink-muted">
+                Chargement de la file de modération…
+              </p>
+            </div>
+          ) : errorMsg ? (
+            <ErrorState
+              errorCode={errorStatus ?? undefined}
+              title={
+                errorStatus === 401
+                  ? 'Session expirée'
+                  : errorStatus === 403
+                  ? 'Autorisation refusée'
+                  : 'Impossible de charger les signalements'
+              }
+              description={errorMsg}
+              onRetry={
+                errorStatus === 401
+                  ? () => navigate('/login', { state: { from: location, sessionExpired: true } })
+                  : errorStatus === 403
+                  ? undefined
+                  : reload
+              }
+              retryLabel={errorStatus === 401 ? 'Se reconnecter' : 'Réessayer'}
+              homeTo="/tableau-de-bord"
+              homeLabel="Tableau de bord"
+            />
+          ) : filteredReports.length === 0 ? (
+            <EmptyState
+              icon={CheckCircle2}
+              title="Aucun signalement correspondant"
+              description="La file de modération ne contient aucun élément pour ce filtre."
+            />
+          ) : (
+            <>
+              <DataTable<AdminReportResponse>
+                data={filteredReports}
+                keyExtractor={(r) => r.id}
+                sortKey={sortKey}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                onRowClick={handleOpenDetail}
+                selectedId={selectedReport?.id}
+                ariaLabel="Tableau de données"
+                columns={[
+                  {
+                    key: 'addressCode',
+                    header: 'Code adresse',
+                    sortable: true,
+                    render: (r) => (
+                      <span className="font-mono font-bold text-institution hover:underline whitespace-nowrap">
+                        {r.addressCode}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'reason',
+                    header: 'Motif du signalement',
+                    render: (r) => (
+                      <div className="min-w-0">
+                        <span className="font-semibold text-ink block">
+                          {REASON_LABELS[r.reason] || r.reason}
+                        </span>
+                        {r.comment && (
+                          <span className="text-xs text-ink-muted line-clamp-1">
+                            « {r.comment} »
+                          </span>
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
+                    key: 'addressStatus',
+                    header: 'Statut adresse',
+                    render: (r) => <StatusBadge status={r.addressStatus} size="sm" />,
+                  },
+                  {
+                    key: 'status',
+                    header: 'Statut signalement',
+                    render: (r) => <StatusBadge status={r.status} size="sm" />,
+                  },
+                  {
+                    key: 'createdAt',
+                    header: 'Date',
+                    sortable: true,
+                    render: (r) => (
+                      <span className="font-mono text-xs text-ink-muted whitespace-nowrap">
+                        {new Date(r.createdAt).toLocaleDateString('fr-FR')}
+                      </span>
+                    ),
+                  },
+                  {
+                    key: 'actions',
+                    header: 'Action',
+                    className: 'text-right',
+                    render: (r) => (
                       <button
                         type="button"
-                        disabled={processing}
-                        onClick={() => handleDismissReport(selectedReport)}
-                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg border border-[#766B5B] bg-[#FBF7EF] hover:bg-[#F2ECE1] text-[#231A15] text-xs font-bold transition cursor-pointer disabled:opacity-50 touch-target"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenDetail(r);
+                        }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border-strong bg-surface-elevated hover:bg-surface text-institution font-semibold text-xs cursor-pointer transition-colors"
                       >
-                        <XCircle className="w-3.5 h-3.5 text-[#5C4D44]" />
-                        <span>Classer sans suite</span>
+                        <span>Examiner</span>
+                        <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
                       </button>
-                    )}
-                  </div>
-                </form>
-              )}
+                    ),
+                  },
+                ]}
+                renderMobileCard={(r) => (
+                  <div className="p-4 rounded-2xl border border-border bg-surface-elevated shadow-xs space-y-2.5 cursor-pointer active:bg-surface">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono font-bold text-sm text-institution">
+                        {r.addressCode}
+                      </span>
+                      <StatusBadge status={r.status} size="sm" />
+                    </div>
 
-              {selectedReport.status !== 'OPEN' && (
-                <div className="p-2.5 rounded-lg bg-[#F2ECE1] text-xs text-[#231A15] flex items-center gap-2 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-[#2A6B44] shrink-0" />
-                  <span>Statut du signalement : {STATUS_LABELS[selectedReport.status]}</span>
-                </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-ink-muted font-medium">Motif :</span>
+                        <span className="font-semibold text-ink text-right">
+                          {REASON_LABELS[r.reason] || r.reason}
+                        </span>
+                      </div>
+                      {r.comment && (
+                        <p className="text-ink-secondary italic bg-surface p-2.5 rounded-xl border border-border text-xs">
+                          « {r.comment} »
+                        </p>
+                      )}
+                      <div className="flex items-center justify-between pt-0.5">
+                        <span className="text-ink-muted">Statut adresse :</span>
+                        <StatusBadge status={r.addressStatus} size="sm" />
+                      </div>
+                    </div>
+
+                    <div className="pt-2.5 border-t border-border flex items-center justify-between text-xs text-ink-muted">
+                      <span className="font-mono">
+                        {new Date(r.createdAt).toLocaleDateString('fr-FR')}
+                      </span>
+                      <span className="text-institution font-semibold inline-flex items-center gap-0.5">
+                        Examiner <ChevronRight className="w-3.5 h-3.5" aria-hidden="true" />
+                      </span>
+                    </div>
+                  </div>
+                )}
+              />
+
+              {/* Pagination réelle serveur (si > 1 page) */}
+              {totalPages > 1 && (
+                <nav
+                  aria-label="Pagination des signalements"
+                  className="flex items-center justify-between gap-3 pt-2"
+                >
+                  <span className="text-xs text-ink-muted">
+                    Page <strong className="text-ink">{pageNumber + 1}</strong> sur{' '}
+                    <strong className="text-ink">{totalPages}</strong> ({totalReportsCount}{' '}
+                    signalements)
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pageNumber === 0}
+                      onClick={() => setPageNumber((p) => Math.max(0, p - 1))}
+                      leftIcon={ChevronLeft}
+                    >
+                      Précédent
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pageNumber + 1 >= totalPages}
+                      onClick={() => setPageNumber((p) => p + 1)}
+                      rightIcon={ChevronRight}
+                    >
+                      Suivant
+                    </Button>
+                  </div>
+                </nav>
               )}
-            </div>
+            </>
           )}
         </div>
-      )}
-    </div>
+      </TabPanel>
+
+      {/* TAB 2 : Journal d'audit de session */}
+      <TabPanel id="audit" activeTab={activeTab}>
+        <ModerationAuditTab logs={sessionAuditLogs} />
+      </TabPanel>
+
+      {/* Tiroir latéral de détail d'un signalement */}
+      <ReportDetailPanel
+        report={selectedReport}
+        isOpen={isSidePanelOpen}
+        processing={processing}
+        inlineSuspendReason={inlineSuspendReason}
+        inlineSuspendError={inlineSuspendError}
+        onInlineSuspendReasonChange={(val) => {
+          setInlineSuspendReason(val);
+          setInlineSuspendError(null);
+        }}
+        onInlineSuspendSubmit={handleInlineSuspendSubmit}
+        onClose={() => setIsSidePanelOpen(false)}
+        onRequestDismiss={(r) => setReportActionConfirm({ report: r, status: 'DISMISSED' })}
+        onRequestResolve={(r) => setReportActionConfirm({ report: r, status: 'RESOLVED' })}
+        onRequestOpenSuspendModal={() => {
+          setModalSuspendReason(inlineSuspendReason);
+          setModalSuspendError(null);
+          setShowSuspendModal(true);
+        }}
+        onRequestOpenReinstateModal={() => {
+          setReinstateReason('');
+          setShowReinstateModal(true);
+        }}
+      />
+
+      {/* Modale P01 accessible : confirmation de suspension avec motif obligatoire */}
+      <Modal
+        isOpen={showSuspendModal && Boolean(selectedReport)}
+        onClose={() => !processing && setShowSuspendModal(false)}
+        title={`Suspendre l'adresse ${selectedReport?.addressCode || ''} ?`}
+        description="L'adresse passera en statut suspendu. Sa fiche publique et son QR code renverront immédiatement HTTP 410 Gone."
+        size="md"
+        closeOnBackdrop={!processing}
+        closeOnEscape={!processing}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="md"
+              disabled={processing}
+              onClick={() => setShowSuspendModal(false)}
+              className="w-full sm:w-auto"
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
+              isLoading={processing}
+              onClick={handleModalSuspendSubmit}
+              leftIcon={ShieldAlert}
+              className="w-full sm:w-auto"
+            >
+              Confirmer la suspension
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <label
+            htmlFor="modal-suspend-reason-input"
+            className="text-xs font-semibold text-ink block"
+          >
+            Motif de la suspension (obligatoire)
+          </label>
+          <textarea
+            id="modal-suspend-reason-input"
+            rows={3}
+            maxLength={300}
+            value={modalSuspendReason}
+            onChange={(e) => {
+              setModalSuspendReason(e.target.value);
+              setModalSuspendError(null);
+            }}
+            placeholder="Précisez la raison (ex : position GPS erronée, photo non conforme…)"
+            className="w-full p-3 text-xs sm:text-sm rounded-xl border border-border-strong bg-canvas text-ink placeholder:text-ink-subtle focus:outline-none focus:border-institution focus:ring-2 focus:ring-institution-soft"
+          />
+          {modalSuspendError && (
+            <p role="alert" className="text-xs font-semibold text-danger">
+              {modalSuspendError}
+            </p>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modale P01 accessible : confirmation de rétablissement */}
+      <Modal
+        isOpen={showReinstateModal && Boolean(selectedReport)}
+        onClose={() => !processing && setShowReinstateModal(false)}
+        title={`Rétablir l'adresse ${selectedReport?.addressCode || ''} ?`}
+        description="L'adresse repassera en statut actif et sa fiche publique sera de nouveau consultable."
+        size="md"
+        closeOnBackdrop={!processing}
+        closeOnEscape={!processing}
+        footer={
+          <>
+            <Button
+              variant="outline"
+              size="md"
+              disabled={processing}
+              onClick={() => setShowReinstateModal(false)}
+              className="w-full sm:w-auto"
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              isLoading={processing}
+              onClick={handleConfirmReinstate}
+              leftIcon={RotateCcw}
+              className="w-full sm:w-auto !bg-success hover:!bg-success-hover"
+            >
+              Confirmer le rétablissement
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-2">
+          <label
+            htmlFor="reinstate-reason-input"
+            className="text-xs font-semibold text-ink block"
+          >
+            Motif du rétablissement (optionnel)
+          </label>
+          <input
+            id="reinstate-reason-input"
+            type="text"
+            maxLength={300}
+            value={reinstateReason}
+            onChange={(e) => setReinstateReason(e.target.value)}
+            placeholder="Ex : Vérification effectuée, adresse conforme"
+            className="w-full p-3 text-xs sm:text-sm rounded-xl border border-border-strong bg-canvas text-ink placeholder:text-ink-subtle focus:outline-none focus:border-institution focus:ring-2 focus:ring-institution-soft"
+          />
+        </div>
+      </Modal>
+
+      {/* Modale de confirmation : traiter / classer sans suite un signalement */}
+      <ConfirmDialog
+        isOpen={Boolean(reportActionConfirm)}
+        onClose={() => !processing && setReportActionConfirm(null)}
+        onConfirm={handleConfirmReportStatus}
+        isLoading={processing}
+        title={
+          reportActionConfirm?.status === 'RESOLVED'
+            ? `Marquer le signalement ${reportActionConfirm.report.addressCode} comme traité ?`
+            : `Classer sans suite le signalement ${reportActionConfirm?.report.addressCode || ''} ?`
+        }
+        description={
+          reportActionConfirm?.status === 'RESOLVED'
+            ? "Le signalement passera au statut « Traité » et cette décision sera journalisée dans l'audit serveur."
+            : "Le signalement sera classé sans suite sans modifier le statut de l'adresse et cette décision sera journalisée côté serveur."
+        }
+        confirmLabel={
+          reportActionConfirm?.status === 'RESOLVED'
+            ? 'Confirmer comme traité'
+            : 'Confirmer le classement'
+        }
+        cancelLabel="Annuler"
+        variant={reportActionConfirm?.status === 'RESOLVED' ? 'info' : 'warning'}
+      />
+    </ConnectedLayout>
   );
 };

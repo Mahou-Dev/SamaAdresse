@@ -103,7 +103,7 @@ class SeederProfileTest {
         seeder.run(new DefaultApplicationArguments());
 
         verify(userRepository, times(3)).save(any(User.class));
-        verify(photoStorage, times(3)).storeSeedPhoto(any(UUID.class), any(byte[].class), eq("image/jpeg"));
+        verify(photoStorage, times(4)).storeSeedPhoto(any(UUID.class), any(byte[].class), eq("image/jpeg"));
 
         ArgumentCaptor<Address> addrCaptor = ArgumentCaptor.forClass(Address.class);
         verify(addressRepository, times(13)).save(addrCaptor.capture());
@@ -111,7 +111,7 @@ class SeederProfileTest {
         assertThat(addrCaptor.getAllValues())
                 .filteredOn(Address::isListed)
                 .extracting(Address::getCode)
-                .containsExactlyInAnyOrder("ZIG-KBG-4271", "ZIG-ESC-1042");
+                .containsExactlyInAnyOrder("ZIG-KBG-4271", "ZIG-ESC-1042", "ZIG-KBG-4272", "ZIG-TIL-3040");
 
         assertThat(addrCaptor.getAllValues())
                 .extracting(Address::getCode)

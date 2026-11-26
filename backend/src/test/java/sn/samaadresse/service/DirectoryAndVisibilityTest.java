@@ -127,11 +127,12 @@ class DirectoryAndVisibilityTest {
     }
 
     @Test
-    @DisplayName("4. searchDirectory rejette un terme de recherche < 2 caractères si aucun filtre n'est actif")
-    void searchDirectory_rejectsShortQueryWithoutFilter() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-                addressService.searchDirectory("a", null, null, 0, 10));
-        assertTrue(ex.getMessage().contains("au moins 2 caractères"));
+    @DisplayName("4. searchDirectory retourne une page vide pour un terme < 2 caractères sans filtre")
+    void searchDirectory_returnsEmptyPageOnShortQueryWithoutFilter() {
+        Page<DirectoryItemResponse> page = addressService.searchDirectory("a", null, null, 0, 10);
+        assertNotNull(page);
+        assertTrue(page.isEmpty());
+        assertEquals(0, page.getTotalElements());
     }
 
     @Test

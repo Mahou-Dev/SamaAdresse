@@ -10,7 +10,7 @@ import {
   topUpReservedCodes,
   getActiveReservedCodes,
 } from '../api/addressApi';
-import { hasSessionIndicator, getMemoryAccessToken } from '../api/apiClient';
+import { hasSessionIndicator, getMemoryAccessToken, refreshAccessToken } from '../api/apiClient';
 import { getQuartierName } from './geoGrid';
 import type {
   AddressResponse,
@@ -136,6 +136,17 @@ class ForegroundSyncManager {
   public async syncNow(): Promise<void> {
     if (typeof navigator === 'undefined' || !navigator.onLine) return;
     if (this.isSyncing) return;
+
+    if (hasSessionIndicator()) {
+      if (!getMemoryAccessToken()) {
+        try {
+          await refreshAccessToken();
+        } catch {
+          // ignorer
+        }
+      }
+      if (!getMemoryAccessToken()) return;
+    }
 
     const drafts = await getDrafts();
     if (drafts.length === 0) return;

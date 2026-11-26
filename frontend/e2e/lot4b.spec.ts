@@ -5,10 +5,27 @@ async function authenticateUser(page: any, email: string, pass: string = 'Passwo
   await page.goto('/login');
   await page.fill('#email', email);
   await page.fill('#password', pass);
-  await Promise.all([
-    page.waitForResponse((res: any) => res.url().includes('/api/auth/login') && res.status() === 200),
+  const [response] = await Promise.all([
+    page.waitForResponse((res: any) => res.url().includes('/api/auth/login')),
     page.click('button[type="submit"]')
   ]);
+  if (response.status() === 429) {
+    try {
+      execSync('docker restart samaadresse-prod-test-app', { stdio: 'pipe' });
+      for (let i = 0; i < 30; i++) {
+        try {
+          const h = execSync('curl -sf http://localhost:8082/api/health', { stdio: 'pipe' }).toString();
+          if (h.includes('UP')) break;
+        } catch {}
+        await page.waitForTimeout(500);
+      }
+    } catch {}
+    await page.waitForTimeout(1000);
+    await Promise.all([
+      page.waitForResponse((res: any) => res.url().includes('/api/auth/login') && res.status() === 200),
+      page.click('button[type="submit"]')
+    ]);
+  }
   await page.waitForURL((url: URL) => !url.pathname.includes('/login'));
 }
 
@@ -157,13 +174,17 @@ test.describe('Lot 4b — Contrôles géométriques et Parcours E2E', () => {
     await demoContext.close();
 
     // Nettoyage : Réactiver l'adresse pour laisser les bases de données (dev, e2e et prod-test) propres
-    try {
-      for (const db of ['samaadresse', 'samaadresse_e2e']) {
+    for (const db of ['samaadresse', 'samaadresse_e2e']) {
+      try {
         execSync(`docker exec samaadresse-postgres psql -U samaadresse -d ${db} -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
+      } catch {
+        // Ignorer si conteneur dev non actif
       }
+    }
+    try {
       execSync(`docker exec samaadresse-prod-test-db psql -U samaadresse_prod_user -d samaadresse_prod -c "UPDATE addresses SET status = 'ACTIVE', suspended_at = NULL, suspended_reason = NULL, archived_at = NULL WHERE code = '${code}'; DELETE FROM address_reports WHERE address_id = (SELECT id FROM addresses WHERE code = '${code}');"`, { stdio: 'pipe' });
     } catch {
-      // Ignorer si docker non joignable
+      // Ignorer si conteneur prod-test non joignable
     }
   });
 

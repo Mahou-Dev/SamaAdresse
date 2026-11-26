@@ -1,0 +1,195 @@
+{
+  "A1": {
+    "status": "PASS",
+    "httpStatus": 200,
+    "scrollInfo": {
+      "scrollWidth": 360,
+      "clientWidth": 360,
+      "hasHorizontalOverflow": false,
+      "bodyScrollWidth": 360,
+      "bodyClientWidth": 360
+    },
+    "colors": {
+      "bodyBg": "rgb(234, 223, 200)",
+      "headerBg": "rgb(18, 48, 79)"
+    },
+    "textCheck": {
+      "lorem": false,
+      "englishPatterns": false,
+      "sampleLength": 4561
+    },
+    "consoleErrors": [],
+    "bundleScript": "https://samaadresse.onrender.com/assets/index-DH93glLd.js",
+    "screenshot": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/A1-landing-360x800.png"
+  },
+  "A2": {
+    "status": "PASS",
+    "manifestJson": {
+      "name": "SamaAdresse",
+      "short_name": "SamaAdresse",
+      "description": "Une adresse pour votre maison, même sans nom de rue, au Sénégal.",
+      "start_url": "/",
+      "display": "standalone",
+      "background_color": "#EADFC8",
+      "theme_color": "#12304F",
+      "lang": "fr",
+      "scope": "/",
+      "icons": [
+        {
+          "src": "pwa-192x192.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        },
+        {
+          "src": "pwa-512x512.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "any"
+        },
+        {
+          "src": "pwa-512x512-maskable.png",
+          "sizes": "512x512",
+          "type": "image/png",
+          "purpose": "maskable"
+        }
+      ],
+      "shortcuts": [
+        {
+          "name": "Nouvelle adresse",
+          "short_name": "Nouvelle adresse",
+          "description": "Enregistrer une nouvelle adresse géolocalisée",
+          "url": "/addresses/new",
+          "icons": [
+            {
+              "src": "pwa-192x192.png",
+              "sizes": "192x192"
+            }
+          ]
+        },
+        {
+          "name": "Mes adresses",
+          "short_name": "Mes adresses",
+          "description": "Consulter mes adresses enregistrées",
+          "url": "/addresses/mine",
+          "icons": [
+            {
+              "src": "pwa-192x192.png",
+              "sizes": "192x192"
+            }
+          ]
+        }
+      ]
+    },
+    "icon192": {
+      "status": 200,
+      "contentType": "image/png"
+    },
+    "icon512": {
+      "status": 200,
+      "contentType": "image/png"
+    },
+    "nativeInstallableNote": "Invite native d'installation sur terminal physique = NON TESTABLE PAR L'AGENT (À faire par l'humain)."
+  },
+  "A3": {
+    "status": "PASS",
+    "swDetails": {
+      "supported": true,
+      "hasController": true,
+      "scope": "https://samaadresse.onrender.com/",
+      "activeState": "activated",
+      "cacheNames": [
+        "workbox-precache-v2-https://samaadresse.onrender.com/"
+      ],
+      "cacheContents": {
+        "workbox-precache-v2-https://samaadresse.onrender.com/": [
+          "https://samaadresse.onrender.com/pwa-icon.svg?__WB_REVISION__=61b533f8486d8def8754ae6df74b5a1e",
+          "https://samaadresse.onrender.com/pwa-512x512.png?__WB_REVISION__=93a55535fc4a65e04358de0ba6eebc6a",
+          "https://samaadresse.onrender.com/pwa-512x512-maskable.png?__WB_REVISION__=a64144568082b2b7c465aef4fd3172cd",
+          "https://samaadresse.onrender.com/pwa-192x192.png?__WB_REVISION__=0277fb8a792df2174280b46ecff6b75a",
+          "https://samaadresse.onrender.com/manifest.webmanifest?__WB_REVISION__=36ba5e52f7263fbe5bf1de197006d673",
+          "https://samaadresse.onrender.com/index.html?__WB_REVISION__=8fe1d885e1ffbff673ac08362a17bf3b",
+          "https://samaadresse.onrender.com/icons.svg?__WB_REVISION__=3b4fcfcf393eca4d264dca4a4663bc37",
+          "https://samaadresse.onrender.com/favicon.svg?__WB_REVISION__=61b533f8486d8def8754ae6df74b5a1e",
+          "https://samaadresse.onrender.com/favicon.ico?__WB_REVISION__=bdc610d625780b11e97dc0eebb368b7e",
+          "https://samaadresse.onrender.com/apple-touch-icon.png?__WB_REVISION__=6a898da6d579f46687157a2b34914484",
+          "https://samaadresse.onrender.com/icons/icon-512.png?__WB_REVISION__=93a55535fc4a65e04358de0ba6eebc6a",
+          "https://samaadresse.onrender.com/icons/icon-192.png?__WB_REVISION__=0277fb8a792df2174280b46ecff6b75a",
+          "https://samaadresse.onrender.com/fonts/outfit-latin.woff2?__WB_REVISION__=fdf9c509a8095ffa556117f486a94a8d",
+          "https://samaadresse.onrender.com/fonts/jetbrains-mono-latin.woff2?__WB_REVISION__=b636a65da4f00129f08c7df6e5dd75ac",
+          "https://samaadresse.onrender.com/assets/x--UhefRsv.js",
+          "https://samaadresse.onrender.com/assets/workbox-window.prod.es5-Bd17z0YL.js",
+          "https://samaadresse.onrender.com/assets/rotate-ccw-Cj3P-hR9.js",
+          "https://samaadresse.onrender.com/assets/jsx-runtime-Dk72oS4N.js",
+          "https://samaadresse.onrender.com/assets/index-DH93glLd.js",
+          "https://samaadresse.onrender.com/assets/index-D5MObLTC.css",
+          "https://samaadresse.onrender.com/assets/formValidation-BLCIxKs3.js",
+          "https://samaadresse.onrender.com/assets/download-3fWtNpuy.js",
+          "https://samaadresse.onrender.com/assets/camera-DCVw_uJR.js",
+          "https://samaadresse.onrender.com/assets/Toast-Dv5CPMqz.js",
+          "https://samaadresse.onrender.com/assets/NewAddressPage-B2JOv1q_.js",
+          "https://samaadresse.onrender.com/assets/MyAddressesPage-DuANGHM3.js",
+          "https://samaadresse.onrender.com/assets/LeafletMapInner-vh-t_kPv.css",
+          "https://samaadresse.onrender.com/assets/LeafletMapInner-BzJ9-rQX.js",
+          "https://samaadresse.onrender.com/assets/EditAddressPage-DJc7TxY3.js",
+          "https://samaadresse.onrender.com/assets/DirectoryPage-DbBbnjC6.js",
+          "https://samaadresse.onrender.com/assets/AdminPage-Ui11U0fI.js",
+          "https://samaadresse.onrender.com/assets/AccountPage-Dc84hCew.js"
+        ]
+      }
+    }
+  },
+  "A4": {
+    "status": "PASS",
+    "tDomMs": 884,
+    "tFullMs": 1526,
+    "screenshotLoading": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/A4-cold-start-loading.png"
+  },
+  "A6": {
+    "spa": {
+      "url": "https://samaadresse.onrender.com/zzz",
+      "httpStatus": 200,
+      "content": {
+        "title": "SamaAdresse · Une adresse pour votre maison, même sans nom de rue",
+        "bodyText": "SamaAdresse\nZiguinchor & Sénégal\nConnexion\nAccueil\nAnnuaire\nCréer\nExemple\nConnexion\n404\nPage ou repère introuvable\n\nL'adresse ou la page demandée n'existe pas, a été modifiée ou n'est plus accessible.\n\nRetour à l'accueil\n\nSamaAdresse · Adressage numérique\n\nDéploiement en cours à Ziguinchor et Dakar, Sénégal\n\nAccueil\n·\nSe connecter\n·\n© 2026",
+        "hasRoot": true
+      },
+      "screenshot": "/home/mahou-dev/Documents/SamaAdresse/docs/audit/recette-live/preuves/A6-spa-404-360x800.png"
+    },
+    "api": {
+      "url": "https://samaadresse.onrender.com/api/zzz",
+      "httpStatus": 401,
+      "headers": {
+        "date": "Sun, 18 Oct 2026 22:46:44 GMT",
+        "content-type": "application/json;charset=UTF-8",
+        "content-length": "80",
+        "connection": "keep-alive",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "content-encoding": "br",
+        "content-security-policy-report-only": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'",
+        "expires": "0",
+        "permissions-policy": "geolocation=(self), camera=(self)",
+        "pragma": "no-cache",
+        "referrer-policy": "strict-origin-when-cross-origin",
+        "rndr-id": "fd927bd5-1e03-4482",
+        "server": "cloudflare",
+        "strict-transport-security": "max-age=31536000; includeSubDomains",
+        "vary": "Accept-Encoding",
+        "x-content-type-options": "nosniff",
+        "x-frame-options": "DENY",
+        "x-render-origin-server": "Render",
+        "x-xss-protection": "0",
+        "cf-cache-status": "DYNAMIC",
+        "cf-ray": "a4cb14b0799463d6-LHR",
+        "alt-svc": "h3=\":443\"; ma=86400"
+      },
+      "body": {
+        "status": 401,
+        "error": "Unauthorized",
+        "message": "Authentification requise",
+        "path": "/api/zzz"
+      }
+    },
+    "status": "FAIL"
+  }
+}

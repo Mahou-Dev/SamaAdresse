@@ -31,8 +31,8 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 | **Modération & Signalements publics** (signalement anonyme par IP hachée SHA-256, suspension admin, journal d'audit) | **Fait** | Testé dans `PublicReportControllerTest`, `AdminModerationControllerTest` et E2E. |
 | **Sécurité IP cliente derrière Render** (`CF-Connecting-IP`, `X-Forwarded-For` sécurisé, `TRUSTED_PROXY_HOPS`) | **Fait** | Validé par `ClientIpResolverTest` (tests a, b, c, d). |
 | **Comportement réel de la résolution d'IP derrière l'infrastructure Render** | **NON PROUVÉ** | Requiert un déploiement cloud actif sur Render (procédure de contrôle documentée ci-dessous). |
-| **Déploiement effectif sur les infrastructures distantes (Render, Neon, GitHub Actions)** | **NON PROUVÉ** | Aucun compte cloud connecté ; image Docker de production validée localement via `docker-compose.prod-test.yml`. |
-| **Design System & Palette visuelle** (Sable doré #EADFC8, Crème #FBF7EF, Bleu nuit #12304F, 0 blanc pur sauf QR/boutons) | **Fait** | Ratios de contraste WCAG AA/AAA calculés dans `docs/audit/contrastes.md` ; 38 captures MD5 uniques. |
+| **Déploiement effectif sur les infrastructures distantes (Render, Neon, GitHub Actions)** | **Fait** | Déployé et validé sur [https://samaadresse.onrender.com](https://samaadresse.onrender.com) (19/19 vérifications réussies le 2026-10-18 dans [`docs/audit/smoke-prod-render.md`](docs/audit/smoke-prod-render.md)). |
+| **Design System & Palette visuelle** (Sable doré #EADFC8, Crème #FBF7EF, Bleu nuit #12304F, 0 blanc pur sauf QR/boutons) | **Fait** | Ratios de contraste WCAG AA/AAA calculés dans [`docs/audit/contrastes.md`](docs/audit/contrastes.md) ; 59 captures validées (189 au total dans `docs/audit`, 183 empreintes MD5 uniques). |
 
 ---
 
@@ -58,14 +58,15 @@ Dans de nombreux quartiers résidentiels et périurbains du Sénégal, les voies
 └───────────┬───────────────────────────────┬──────────────────────────────┘
             │ JDBC SSL                      │ HTTPS (proxy serveur)
             ▼                               ▼
-┌───────────────────────────────┐ ┌────────────────────────────────────────┐
-│ PostgreSQL 16 (Neon / Docker) │ │ Services externes                      │
-│  ├─ users, refresh_tokens     │ │  ├─ OpenRouteService (itinéraires)     │
-│  ├─ addresses, reserved_codes │ │  └─ Fournisseur SMS (Mock/Twilio/...)  │
-│  ├─ address_reports           │ └────────────────────────────────────────┘
-│  ├─ admin_actions             │
-│  └─ photo_blobs (bytea)       │
-└───────────────────────────────┘
+┌────────────────────────────────────────────────────────┐ ┌────────────────────────────────────────┐
+│ PostgreSQL 18 sur Neon (production)                    │ │ Services externes                      │
+│ PostgreSQL 16 dans l'image Docker de test local        │ │  ├─ OpenRouteService (itinéraires)     │
+│  ├─ users, refresh_tokens                              │ │  └─ Fournisseur SMS (Mock/Twilio/...)  │
+│  ├─ addresses, reserved_codes                          │ └────────────────────────────────────────┘
+│  ├─ address_reports                                    │
+│  ├─ admin_actions                                      │
+│  └─ photo_blobs (bytea)                                │
+└────────────────────────────────────────────────────────┘
 ```
 
 Les diagrammes PlantUML détaillés et leur rapport de vérification sont disponibles dans :
@@ -120,7 +121,7 @@ L'API REST est intégralement spécifiée au format OpenAPI 3.0 (`springdoc.api-
    - L'en-tête `True-Client-IP` est **strictement ignoré** car falsifiable par le client.
    - Le premier élément de `X-Forwarded-For` n'est **jamais utilisé** (vulnérable à l'injection d'adresses factices en tête d'en-tête).
    - En environnement de production avec proxy inverse (`TRUSTED_PROXY_HOPS >= 1`) :
-     - Si `CF-Connecting-IP` est présent (injecté par Cloudflare Edge sur Render), il est prioritaire.
+     - Si `CF-Connecting-IP` est présent (présent d'après la documentation Render, comportement à confirmer par la procédure de contrôle), il est prioritaire.
      - Sinon, l'adresse ajoutée par le dernier proxy de confiance dans `X-Forwarded-For` est extraite à l'index `(taille - TRUSTED_PROXY_HOPS)`.
    - En développement local sans proxy (`TRUSTED_PROXY_HOPS=0`), seule la socket distante directe (`request.getRemoteAddr()`) est utilisée.
    - *Référence consultée :* [Documentation Render sur les Load Balancers et en-têtes HTTP](https://render.com/docs/load-balancers).
@@ -145,6 +146,7 @@ L'API REST est intégralement spécifiée au format OpenAPI 3.0 (`springdoc.api-
 - **Typographie d'interface** : Police *Outfit* conçue par Rodrigo Fuenzalida (licence [SIL Open Font License 1.1](https://openfontlicense.org)).
 - **Typographie des codes d'adresses** : Police *JetBrains Mono* conçue par JetBrains (licence [SIL Open Font License 1.1](https://openfontlicense.org)).
 - **Icônes d'interface** : Collection *Lucide Icons* (licence ISC).
+- **Illustrations d'ambiance** : Illustrations générées avec un outil d'IA (ChatGPT / OpenAI) à partir de prompts de l'auteur ; ce ne sont pas des photographies de lieux réels (détails et rôles consignés dans [docs/assets-prompts.md](docs/assets-prompts.md)).
 
 ---
 
@@ -223,6 +225,7 @@ Aucun secret n'est présent dans les fichiers suivis par Git. Le modèle [`.env.
 | `JWT_REFRESH_EXP` | Durée de validité du jeton de rafraîchissement en millisecondes | Non (défaut `604800000` = 7 jours) | `604800000` |
 | `COOKIE_SECURE` | Active l'attribut `Secure` sur le cookie de rafraîchissement (`true` en HTTPS) | Non (défaut `true` en `prod`, `false` en dev) | `true` |
 | `TRUSTED_PROXY_HOPS` | Nombre de sauts de proxy inverse de confiance pour l'extraction de l'IP cliente (`1` derrière Render/Cloudflare, `0` en local) | Non (défaut `1` en `prod`, `0` en dev) | `1` |
+| `LOGIN_RATE_LIMIT` | Limite de débit des tentatives de connexion par minute et par adresse IP (HTTP 429 avec en-tête Retry-After si dépassé). Note : les connexions réussies comptent également dans la limite (consommation globale du seau par appel à l'endpoint). | Non (défaut `5`) | `5` |
 | `FRONTEND_BASE_URL` | URL publique de l'application (utilisée dans les QR codes et les liens partagés, doit débuter par `https://` en production) | Oui | `https://samaadresse.onrender.com` |
 | `PHOTO_STORAGE` | Mode de stockage des photos de façade : `disk` (système de fichiers local) ou `db` (table PostgreSQL `photo_blobs`) | Non (défaut `db` en `prod`, `disk` en dev) | `db` |
 | `UPLOAD_DIR` | Répertoire local de stockage des photos lorsque `PHOTO_STORAGE=disk` | Non (défaut `./uploads`) | `./uploads` |
@@ -260,7 +263,7 @@ Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et g�
 - Tests unitaires et d'intégration Backend (`./mvnw test`) + couverture JaCoCo (≥ 60 %) + test de complétude OpenAPI (`OpenApiCompletenessTest`).
 - Vérification TypeScript (`tsc --noEmit`), linter (`oxlint`), tests unitaires Vitest, build de production Vite et budget de taille gzip (`check-size.mjs`).
 - Contrôle des ratios de contraste WCAG AA/AAA sur tous les jetons de thème (`scripts/check-contrast.py` dans `docs/audit/contrastes.md`).
-- Tests E2E Playwright (parcours en ligne, hors ligne, synchronisation, annuaire, itinéraire, modération) et vérification des 38 captures d'écran (dimensions et unicité MD5).
+- Tests E2E Playwright (parcours en ligne, hors ligne, synchronisation, annuaire, itinéraire, modération) et vérification des 59 captures d'écran des lots 6, 7, 9 et 10 (dimensions 360×780 et 1440×900, empreintes MD5 uniques, 189 fichiers au total dans `docs/audit`).
 - Audits Lighthouse sur les 8 pages (accessibilité = 100, bonnes pratiques = 100, performance ≥ 90, CLS < 0,1).
 - Exécution de la collection Postman via Newman (`docs/audit/newman.json`).
 
@@ -276,13 +279,13 @@ Le script unique `./scripts/verify-all` exécute l'ensemble des contrôles et g�
 
 ## 11. Déploiement sur Neon + Render
 
-Le dépôt inclut le fichier Blueprint [`render.yaml`](render.yaml) prêt pour Render :
+Le dépôt inclut le fichier Blueprint [`render.yaml`](render.yaml) configuré pour déployer automatiquement depuis la branche `main` :
 
-1. **Base de données Neon (PostgreSQL 16)** :
-   - Créer un projet PostgreSQL 16 sur [Neon](https://neon.tech) dans la région `eu-central-1` (Francfort).
+1. **Base de données Neon (PostgreSQL 18 sur Neon en production, PostgreSQL 16 dans l'image Docker de test local)** :
+   - Créer un projet PostgreSQL 18 sur [Neon](https://neon.tech) dans la région `eu-central-1` (Francfort). L'environnement de test local conteneurisé utilise quant à lui PostgreSQL 16 (`postgres:16-alpine`).
    - Copier l'URL de connexion directe (non poolée, format `postgresql://user:pass@ep-...neon.tech/neondb?sslmode=require`) : Flyway nécessite une connexion directe pour ses verrous de migration, et HikariCP est plafonné à 5 connexions (`max-lifetime: 540000`).
-2. **Service Web Render (Docker)** :
-   - Connecter votre dépôt GitHub à [Render](https://render.com) et créer un **Web Service** (ou importer le Blueprint `render.yaml`).
+2. **Service Web Render (Docker, déploiement continu depuis `main`)** :
+   - Connecter votre dépôt GitHub à [Render](https://render.com) en sélectionnant la branche **`main`** et créer un **Web Service** (ou importer directement le Blueprint [`render.yaml`](render.yaml)).
    - Dans l'onglet **Environment**, renseigner les variables `sync: false` :
      - `DATABASE_URL` : l'URL Neon copiée à l'étape 1.
      - `FRONTEND_BASE_URL` : l'URL HTTPS de votre service Render (ex. `https://samaadresse.onrender.com`).

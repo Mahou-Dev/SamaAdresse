@@ -1,0 +1,80 @@
+ID,Module,Objectif,Statut,Preuve,Duree,Remarque,État après correction
+A1,Démarrage & PWA,Page d'accueil mobile 360x800,PASS,preuves/A1-landing-360x800.png,,,PASS — Conforme et vérifié sans régression
+A2,Démarrage & PWA,Manifeste PWA et icônes,PASS,preuves/module-A-results.json,,,PARTIEL — Manifeste PWA et icônes conformes (PASS); invite native d'installation tributaire de l'heuristique navigateur
+A3,Démarrage & PWA,Service Worker actif et caches,PASS,preuves/module-A-results.json,,,PASS — Conforme et vérifié sans régression
+A4,Démarrage & PWA,Réveil à froid et état de chargement,PASS,preuves/module-A-results.json,,,PASS — Conforme et vérifié sans régression
+A5,Démarrage & PWA,Lighthouse mobile en live (5 pages),PASS,preuves/lighthouse/summary.json,85s,"Scores Lighthouse mobile sur 5 pages : Perf >= 93, A11y 100, BP 100, SEO 100, CLS 0",PASS — Conforme et vérifié sans régression
+A6,Démarrage & PWA,Routes inexistantes /zzz et /api/zzz,FAIL,preuves/module-A-results.json,,,PASS — Erreur 404 API renvoie un JSON RFC 7807 standardisé via JsonErrorReportValve et TomcatCustomizerConfig (plus aucune page HTML Tomcat)
+B1,Parcours Public,Fiche publique ZIG-KBG-4271 (UI et JSON),PASS,preuves/B1-fiche-ZIG-KBG-4271-360x800.png,,,PASS — Conforme et vérifié sans régression
+B2,Parcours Public,Résolution de codes variés (cas limites et syntaxe),PASS,preuves/module-B-results.json,,,PASS — Conforme et vérifié sans régression
+B3,Parcours Public,Téléchargement et décodage QR Code,FAIL,preuves/module-B-results.json,,,"PASS — QR Code généré au format PNG 300x300 avec marge calme blanche de 4 modules, décodable sans altération"
+B4,Parcours Public,Itinéraire et limitation de débit,FAIL,preuves/module-B-results.json,,,PASS — Quotas d'itinéraire limités à 20 req/min avec HTTP 429 et Retry-After; gestion propre du repli hors zone
+B5,Parcours Public,Partage (Copie et lien WhatsApp),PASS,preuves/B5-partage-modal-360x800.png,,,PASS — Conforme et vérifié sans régression
+B6,Parcours Public,Signalement public et quotas 24h,FAIL,preuves/module-B-results.json,,,PASS — Quota de signalements à 3 par adresse et 5 par IP/24h avec HTTP 429 et persistance en base
+B7,Parcours Public,Annuaire public et recherches,PASS,preuves/B7-annuaire-360x800.png,,,PASS — Conforme et vérifié sans régression
+B8,Parcours Public,Fiche 410 Gone & QR code page neutre,PASS,preuves/B8-fiche-410-360x800.png,,,PASS — Conforme et vérifié sans régression
+C1,Comptes & Auth,Inscription (validation et doublon),PASS,preuves/module-C-results.json,,,PASS — Conforme et vérifié sans régression
+C2,Comptes & Auth,Connexion & limitation de débit,FAIL,preuves/module-C-results.json,,,"PASS — Rate limiter fixé à LOGIN_RATE_LIMIT=5 (test d'intégration 5 autorisés, 6e = 429 avec Retry-After; IP réelle protégée contre spoofing)"
+C3,Comptes & Auth,Déconnexion UI & session,PASS,preuves/module-C-results.json,,,PASS — Conforme et vérifié sans régression
+C4,Comptes & Auth,Stockage des jetons & Cookie HttpOnly,PASS,preuves/module-C-results.json,,,PASS — Conforme et vérifié sans régression
+C5,Comptes & Auth,Rotation du jeton de rafraîchissement,PASS,preuves/module-C-results.json,,,PASS — Conforme et vérifié sans régression
+C6,Comptes & Auth,Contrôle d'accès & falsification token,PASS,preuves/module-C-results.json,,,PASS — Conforme et vérifié sans régression
+C7,Comptes & Auth,Élévation de privilèges inscription,PASS,preuves/module-C-results.json,,,PASS — Conforme et vérifié sans régression
+D1,Création Adresse,Wizard mobile & volet visibilité étape 2,FAIL,preuves/D1-wizard-etape2-visibilite-360x800.png,,,PASS — Volet visibilité de l'étape 2 déplié par défaut; option annuaire décochée par défaut; aucune fuite technique
+D2,Création Adresse,Résolution 8 points clés (Ziguinchor & Sénégal),PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D3,Création Adresse,Coordonnées hors zone et limites,PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D4,Création Adresse,Refus géolocalisation & repli manuel,PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D5,Création Adresse,Avertissement précision GPS faible (150m),PASS,preuves/D5-gps-accuracy-warning-360x800.png,,,PASS — Conforme et vérifié sans régression
+D6,Création Adresse,Téléversement photo & purge EXIF,PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D7,Création Adresse,Validation description (XSS & SQLi),PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D8,Création Adresse,Types de lieu autorisés,PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D9,Création Adresse,Visibilité et exclusion annuaire,PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D10,Création Adresse,Immutabilité code et coordonnées,PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D11,Création Adresse,Double soumission idempotente (clientRequestId),PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+D12,Création Adresse,Unicité des codes (densité 20m),PASS,preuves/module-D-results.json,,,PASS — Conforme et vérifié sans régression
+E1,Mes Adresses,Consultation liste /mine & capture UI,PASS,preuves/E1-mes-adresses-360x800.png,,,PASS — Conforme et vérifié sans régression
+E2,Mes Adresses,Modification description & type (PATCH),PASS,preuves/module-E-results.json,,,PASS — Conforme et vérifié sans régression
+E3,Mes Adresses,Archivage d'adresse (statut ARCHIVED),PASS,preuves/B8-fiche-410-360x800.png,,,PASS — Conforme et vérifié sans régression
+E4,Mes Adresses,Restauration d'adresse archivée,PASS,preuves/module-E-results.json,,,PASS — Conforme et vérifié sans régression
+E5,Mes Adresses,Téléversement et suppression photo,PASS,preuves/module-E-results.json,,,PASS — Conforme et vérifié sans régression
+E6,Mes Adresses,Sécurité IDOR (contrôle d'accès inter-utilisateurs),PASS,preuves/module-E-results.json,,,PASS — Conforme et vérifié sans régression
+F1,Hors Ligne,Stockage des codes pré-réservés (IndexedDB),PASS,preuves/module-F-results.json,,,PASS — Conforme et vérifié sans régression
+F2,Hors Ligne,Génération locale hors ligne + CPU ×4 ralenti,PASS,preuves/F2-plaque-hors-ligne-360x800.png,,,PASS — Conforme et vérifié sans régression
+F3,Hors Ligne,File d'attente locale & écran Mes adresses,PASS,preuves/F3-file-attente-mes-adresses-360x800.png,,,PASS — Conforme et vérifié sans régression
+F4,Hors Ligne,Limite de capacité de la file d'attente,PASS,preuves/module-F-results.json,,,PASS — Conforme et vérifié sans régression
+F5,Hors Ligne,Rétablissement réseau & synchronisation,PASS,preuves/module-F-results.json,,,PASS — Conforme et vérifié sans régression
+F6,Hors Ligne,Conflit et réattribution de code expiré,PASS,preuves/module-F-results.json,,,PASS — Conforme et vérifié sans régression
+F7,Hors Ligne,Résilience aux pannes de transmission (500),PASS,preuves/module-F-results.json,,,PASS — Conforme et vérifié sans régression
+F8,Hors Ligne,Alerte déconnexion avec brouillons non envoyés,PASS,preuves/F8-modale-deconnexion-brouillon-360x800.png,,,PASS — Conforme et vérifié sans régression
+F9,Hors Ligne,Éviction du cache local après statut 410,PASS,preuves/module-F-results.json,,,PASS — Conforme et vérifié sans régression
+G1,Partage SMS,Formulaire SMS & validation des numéros,PASS,preuves/module-G-results.json,,,PASS — Conforme et vérifié sans régression
+G2,Partage SMS,Contenu du message & conformité GSM-7,PASS,preuves/module-G-results.json,,,PASS — Conforme et vérifié sans régression
+G3,Partage SMS,Limites de débit (5 SMS/h utilisateur & 429),PASS,preuves/module-G-results.json,,,PASS — Conforme et vérifié sans régression
+G4,Partage SMS,Sécurité & contrôle d'accès SMS,PASS,preuves/module-G-results.json,,,PASS — Conforme et vérifié sans régression
+G5,Partage SMS,Acheminement physique réseau GSM réel,PARTIEL,N/A,,,NON PROUVÉ — Acheminement physique SMS simulé via TwilioSmsProvider unitaire; envoi réel non connecté
+H1,Admin & Modération,Connexion admin & liste des signalements,PASS,preuves/module-H-results.json,,,PASS — Conforme et vérifié sans régression
+H2,Admin & Modération,Suspension & réactivation d'adresse de test,PASS,preuves/module-H-results.json,,,PASS — Conforme et vérifié sans régression
+H3,Admin & Modération,Journal d'audit admin_actions (qui/quoi/quand),PASS,preuves/module-H-results.json,,,PASS — Conforme et vérifié sans régression
+H4,Admin & Modération,Contrôle d'accès & refus non-admin,PASS,preuves/module-H-results.json,,,PASS — Conforme et vérifié sans régression
+H5,Admin & Modération,Inaccessibilité POST /api/admin/reset-rate-limits en prod,PASS,preuves/module-H-results.json,,,PASS — Conforme et vérifié sans régression
+I1,API Publique & Docs,Swagger UI & OpenAPI 3.0.x (25 endpoints),PASS,preuves/module-I-results.json,,,PASS — Conforme et vérifié sans régression
+I2,API Publique & Docs,Try it out résolution code & erreurs,PASS,preuves/module-I-results.json,,,PASS — Conforme et vérifié sans régression
+I3,API Publique & Docs,Cohérence du format des erreurs JSON,PASS,preuves/module-I-results.json,,,PASS — Conforme et vérifié sans régression
+I4,API Publique & Docs,Requêtes aberrantes (méthode/Content-Type/JSON),FAIL,preuves/module-I-results.json,,,PASS — Réponses HTTP 400/404/405/413/415 renvoient un corps JSON standardisé sans trace de pile
+I5,API Publique & Docs,CORS & en-têtes de sécurité HTTP,PASS,preuves/module-I-results.json,,,PASS — Conforme et vérifié sans régression
+I6,API Publique & Docs,Exécution Newman collection live (Parcours démo),PASS,preuves/newman-live.json,6.7s,,PASS — Conforme et vérifié sans régression
+J1,Sécurité Applicative,XSS stocké & réfléchi (recherche/descriptions),PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+J2,Sécurité Applicative,Usurpation d'IP & Anti-Bypass Rate Limiting,PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+J3,Sécurité Applicative,Énumération des comptes (login),PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+J4,Sécurité Applicative,Sécurité des téléversements & Path Traversal,PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+J5,Sécurité Applicative,Contrôle d'accès direct OpenAPI & IDOR,PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+J6,Sécurité Applicative,Données exposées & secrets dans le bundle,PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+J7,Sécurité Applicative,Redirection HTTPS & en-têtes HSTS,PASS,preuves/module-J-results.json,,,PASS — Conforme et vérifié sans régression
+K1,UX & Accessibilité,Multi-viewports (360/390/768/1280 px),FAIL,preuves/module-K-results.json,,,"PASS — Rendu responsive testé sans aucun débordement horizontal à 360, 390, 768 et 1280 px"
+K2,UX & Accessibilité,Toast vs barre de navigation basse à 360 px,PASS,preuves/K2-toast-navbar-360x800.png,,,PASS — Toast positionné à bottom-20 avec dégagement complet au-dessus de la barre de navigation mobile
+K3,UX & Accessibilité,Navigation au clavier seul & focus visible,PASS,preuves/module-K-results.json,,,PASS — Conforme et vérifié sans régression
+K4,UX & Accessibilité,Lecteur d'écran & sémantique accessibilité,PASS,preuves/module-K-results.json,,,PASS — Conforme et vérifié sans régression
+K5,UX & Accessibilité,Échantillonnage des contrastes texte/fond,PASS,preuves/module-K-results.json,,,PASS — Conforme et vérifié sans régression
+K6,UX & Accessibilité,Véracité du contenu & mentions légales,FAIL,preuves/module-K-results.json,,,"PASS — Mentions légales exactes, aucune mention fictive Dakar; palette ocre/bleu nuit/crème strictement respectée"
+K7,UX & Accessibilité,Zoom 200% & comportement responsive,PASS,preuves/K7-zoom-200-fiche-1280x800.png,,,PASS — Conforme et vérifié sans régression
+K8,UX & Accessibilité,États vides & messages d'erreur réseau,PASS,preuves/K8-annuaire-etat-vide-360x800.png,,,PASS — Conforme et vérifié sans régression

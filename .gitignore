@@ -42,4 +42,7 @@ uploads*/
 backend/uploads*/
 backend/src/main/resources/static/
 lot*/
-
+!docs/audit/lot*/
+scratch/
+assets-sources/
+__pycache__/
