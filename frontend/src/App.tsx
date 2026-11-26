@@ -7,7 +7,6 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
-import { PublicAddressPage } from './pages/PublicAddressPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AppNavigation } from './components/AppNavigation';
 import { AppFooter } from './components/AppFooter';
@@ -15,13 +14,15 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { ReloadPrompt } from './components/ReloadPrompt';
 import { ErrorBoundary } from './app/boundaries/ErrorBoundary';
 
-// Lazy loading des routes secondaires et volumineuses (Partie 0.7)
+// Lazy loading des routes secondaires et volumineuses (Partie 0.7 & P03)
 const initialPathname = typeof window !== 'undefined' ? window.location.pathname : '';
+const publicAddressPreload = initialPathname.startsWith('/a/') ? import('./pages/PublicAddressPage') : null;
 const myAddressesPreload = initialPathname.startsWith('/addresses/mine') ? import('./pages/MyAddressesPage') : null;
 const newAddressPreload = initialPathname.startsWith('/addresses/new') ? import('./pages/NewAddressPage') : null;
 const directoryPreload = initialPathname.startsWith('/annuaire') ? import('./pages/DirectoryPage') : null;
 const dashboardPreload = initialPathname.startsWith('/tableau-de-bord') ? import('./pages/DashboardPage') : null;
 
+const PublicAddressPage = lazy(() => (publicAddressPreload ?? import('./pages/PublicAddressPage')).then(m => ({ default: m.PublicAddressPage })));
 const DashboardPage = lazy(() => (dashboardPreload ?? import('./pages/DashboardPage')).then(m => ({ default: m.DashboardPage })));
 const MyAddressesPage = lazy(() => (myAddressesPreload ?? import('./pages/MyAddressesPage')).then(m => ({ default: m.MyAddressesPage })));
 const NewAddressPage = lazy(() => (newAddressPreload ?? import('./pages/NewAddressPage')).then(m => ({ default: m.NewAddressPage })));

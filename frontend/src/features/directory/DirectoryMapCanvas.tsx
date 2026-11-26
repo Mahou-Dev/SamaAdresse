@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -71,6 +71,7 @@ const DirectoryMapController: React.FC<DirectoryMapControllerProps> = ({
   onBackgroundClick,
 }) => {
   const map = useMap();
+  const selectedCodeRef = useRef<string | null>(selectedCode);
   const boundsKey = useMemo(
     () => items.map((m) => `${m.item.code}:${m.latitude.toFixed(4)},${m.longitude.toFixed(4)}`).join('|'),
     [items]
@@ -80,6 +81,7 @@ const DirectoryMapController: React.FC<DirectoryMapControllerProps> = ({
   useEffect(() => {
     const syncBounds = () => {
       map.invalidateSize({ animate: false });
+      if (selectedCodeRef.current) return;
       if (items.length === 1) {
         map.setView([items[0].latitude, items[0].longitude], 15, { animate: false });
       } else if (items.length > 1) {
@@ -110,6 +112,7 @@ const DirectoryMapController: React.FC<DirectoryMapControllerProps> = ({
 
   // Centrer et zoomer modérément sur le repère sélectionné (sépare aussi les repères proches)
   useEffect(() => {
+    selectedCodeRef.current = selectedCode;
     if (!selectedCode) return;
     const selected = items.find((m) => m.item.code === selectedCode);
     if (!selected) return;
