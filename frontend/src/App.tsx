@@ -5,8 +5,6 @@ import { OnlineStatusProvider } from './context/OnlineStatusContext';
 import { ToastProvider } from './components/Toast';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { HomePage } from './pages/HomePage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AppNavigation } from './components/AppNavigation';
 import { AppFooter } from './components/AppFooter';
@@ -14,14 +12,18 @@ import { OfflineBanner } from './components/OfflineBanner';
 import { ReloadPrompt } from './components/ReloadPrompt';
 import { ErrorBoundary } from './app/boundaries/ErrorBoundary';
 
-// Lazy loading des routes secondaires et volumineuses (Partie 0.7 & P03)
+// Lazy loading des routes secondaires et volumineuses (Partie 0.7, P03 & P04)
 const initialPathname = typeof window !== 'undefined' ? window.location.pathname : '';
+const loginPreload = initialPathname === '/login' ? import('./pages/LoginPage') : null;
+const registerPreload = initialPathname === '/register' ? import('./pages/RegisterPage') : null;
 const publicAddressPreload = initialPathname.startsWith('/a/') ? import('./pages/PublicAddressPage') : null;
 const myAddressesPreload = initialPathname.startsWith('/addresses/mine') ? import('./pages/MyAddressesPage') : null;
 const newAddressPreload = initialPathname.startsWith('/addresses/new') ? import('./pages/NewAddressPage') : null;
 const directoryPreload = initialPathname.startsWith('/annuaire') ? import('./pages/DirectoryPage') : null;
 const dashboardPreload = initialPathname.startsWith('/tableau-de-bord') ? import('./pages/DashboardPage') : null;
 
+const LoginPage = lazy(() => (loginPreload ?? import('./pages/LoginPage')).then(m => ({ default: m.LoginPage })));
+const RegisterPage = lazy(() => (registerPreload ?? import('./pages/RegisterPage')).then(m => ({ default: m.RegisterPage })));
 const PublicAddressPage = lazy(() => (publicAddressPreload ?? import('./pages/PublicAddressPage')).then(m => ({ default: m.PublicAddressPage })));
 const DashboardPage = lazy(() => (dashboardPreload ?? import('./pages/DashboardPage')).then(m => ({ default: m.DashboardPage })));
 const MyAddressesPage = lazy(() => (myAddressesPreload ?? import('./pages/MyAddressesPage')).then(m => ({ default: m.MyAddressesPage })));

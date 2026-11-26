@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useOnlineStatus } from '../context/OnlineStatusContext';
 import { useToast } from './Toast';
 import { getDraftsCount } from '../utils/offlineDb';
+import { syncManager } from '../utils/syncManager';
 import { PageHeader } from './ui/PageHeader';
 import type { PageHeaderProps } from './ui/PageHeader';
 import { ConfirmDialog } from './ui/ConfirmDialog';
+import { Avatar } from './ui/Avatar';
+import { cn } from '../utils/cn';
 import {
   LayoutDashboard,
   MapPin,
@@ -17,6 +20,7 @@ import {
   LogOut,
   Wifi,
   WifiOff,
+  Compass,
 } from 'lucide-react';
 
 export interface ConnectedLayoutProps {
@@ -24,8 +28,11 @@ export interface ConnectedLayoutProps {
   title?: string;
   subtitle?: string;
   action?: PageHeaderProps['action'];
+  secondaryAction?: PageHeaderProps['secondaryAction'];
+  breadcrumbs?: PageHeaderProps['breadcrumbs'];
   backTo?: string;
   backLabel?: string;
+  maxWidth?: 'default' | 'wide';
 }
 
 export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
@@ -33,8 +40,11 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
   title,
   subtitle,
   action,
+  secondaryAction,
+  breadcrumbs,
   backTo,
   backLabel,
+  maxWidth = 'default',
 }) => {
   const { user, logout, isOfflineAuth } = useAuth();
   const { isOnline } = useOnlineStatus();
@@ -45,11 +55,34 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
   const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false);
   const [pendingDrafts, setPendingDrafts] = useState<number>(0);
 
-  useEffect(() => {
+  const refreshDrafts = useCallback(() => {
     getDraftsCount()
       .then((c) => setPendingDrafts(c))
-      .catch(() => {});
+      .catch(() => {
+        // IndexedDB indisponible
+      });
   }, []);
+
+  useEffect(() => {
+    refreshDrafts();
+    const unsubscribe = syncManager.subscribe((event) => {
+      if (
+        event.type === 'SYNC_COMPLETE' ||
+        event.type === 'SYNC_SUCCESS' ||
+        event.type === 'SYNC_ERROR'
+      ) {
+        refreshDrafts();
+      }
+    });
+    return () => unsubscribe();
+  }, [refreshDrafts]);
+
+  const confirmLogout = async () => {
+    setShowLogoutModal(false);
+    await logout();
+    showToast('Déconnexion effectuée avec succès.', 'info');
+    navigate('/');
+  };
 
   const handleLogoutClick = async () => {
     try {
@@ -60,19 +93,18 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
         return;
       }
     } catch {
-      // ignore
+      // ignorer si IndexedDB inaccessible
     }
     await confirmLogout();
   };
 
-  const confirmLogout = async () => {
-    setShowLogoutModal(false);
-    await logout();
-    showToast('Déconnexion effectuée avec succès.', 'info');
-    navigate('/');
-  };
-
-  const navItems = [
+  const navItems: {
+    to: string;
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    isActive: boolean;
+    badge?: number;
+  }[] = [
     {
       to: '/tableau-de-bord',
       label: 'Tableau de bord',
@@ -84,6 +116,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
       label: 'Mes adresses',
       icon: MapPin,
       isActive: pathname.startsWith('/addresses') && pathname !== '/addresses/new',
+      badge: pendingDrafts > 0 ? pendingDrafts : undefined,
     },
     {
       to: '/account',
@@ -109,42 +142,45 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
   }
 
   return (
-    <div className="flex-1 flex flex-col lg:flex-row w-full bg-[#EADFC8] min-h-[calc(100vh-4rem)]">
-      {/* =========================================================================
-       * Barre latérale Desktop (>= 1024 px) : 248 px fixe
-       * ========================================================================= */}
+    <div className="flex-1 flex flex-col lg:flex-row w-full bg-surface text-ink min-h-[calc(100vh-4rem)]">
+      {/* Barre latérale Desktop (>= 1024 px) — SamaAdresse Clarté */}
       <aside
-        className="hidden lg:flex w-[248px] shrink-0 border-r border-[#766B5B] bg-[#FBF7EF] flex-col justify-between sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto p-4 z-30"
+        className="hidden lg:flex w-[256px] shrink-0 border-r border-border bg-surface-elevated flex-col justify-between sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto p-4 z-20 no-print"
         aria-label="Navigation de l'espace personnel"
       >
         <div className="space-y-4">
-          {/* Identité utilisateur */}
-          <div className="p-3 rounded-xl bg-[#F2ECE1] border border-[#766B5B] space-y-2">
+          {/* Identité utilisateur & état réseau */}
+          <div className="p-3.5 rounded-2xl bg-surface border border-border space-y-2.5">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-[#12304F] text-[#FBF7EF] flex items-center justify-center font-bold text-sm shrink-0">
-                {user?.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
-              </div>
+              <Avatar
+                name={user?.fullName || 'Utilisateur'}
+                size="sm"
+                tone={user?.role === 'ADMIN' ? 'brand' : 'institution'}
+                status={isOnline ? 'online' : 'offline'}
+              />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold text-[#231A15] truncate" title={user?.fullName}>
+                <p
+                  className="text-sm font-bold text-ink truncate leading-tight"
+                  title={user?.fullName}
+                >
                   {user?.fullName || 'Utilisateur'}
                 </p>
-                <span className="inline-block text-xs font-semibold text-[#5C4D44] truncate">
+                <span className="inline-block text-xs font-medium text-ink-muted truncate">
                   {user?.role === 'ADMIN' ? 'Administrateur' : 'Propriétaire'}
                 </span>
               </div>
             </div>
 
-            {/* Statut réseau */}
-            <div className="pt-2 border-t border-[#766B5B]/30 flex items-center justify-between text-[11px]">
-              <span className="text-[#5C4D44] font-medium">Réseau :</span>
+            <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+              <span className="text-ink-muted font-medium">Réseau</span>
               {isOnline ? (
-                <span className="inline-flex items-center gap-1 text-[#2A6B44] font-semibold">
-                  <Wifi className="w-3 h-3" />
+                <span className="inline-flex items-center gap-1 text-success font-semibold">
+                  <Wifi className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>En ligne</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[#8A3112] font-semibold">
-                  <WifiOff className="w-3 h-3" />
+                <span className="inline-flex items-center gap-1 text-warning font-semibold">
+                  <WifiOff className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Hors ligne</span>
                 </span>
               )}
@@ -152,18 +188,16 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
           </div>
 
           {/* Action principale rapide */}
-          <div>
-            <Link
-              to="/addresses/new"
-              className="w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-[#B84A24] hover:bg-[#8A3112] text-[#FBF7EF] text-xs font-bold transition shadow-sm touch-target"
-            >
-              <Plus className="w-4 h-4 stroke-[2.5]" />
-              <span>Nouvelle adresse</span>
-            </Link>
-          </div>
+          <Link
+            to="/addresses/new"
+            className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover active:bg-brand-active text-ink-inverse text-xs sm:text-sm font-semibold transition-colors shadow-xs min-h-[42px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" aria-hidden="true" />
+            <span>Nouvelle adresse</span>
+          </Link>
 
-          {/* Liens de navigation */}
-          <nav className="space-y-1" aria-label="Menu principal">
+          {/* Liens de l'espace connecté */}
+          <nav className="space-y-1" aria-label="Menu de l'espace personnel">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -171,24 +205,47 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
                   key={item.to}
                   to={item.to}
                   aria-current={item.isActive ? 'page' : undefined}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold transition touch-target focus-visible:outline-2 focus-visible:outline-[#F2B233] ${
+                  className={cn(
+                    'w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors min-h-[42px]',
+                    'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution',
                     item.isActive
-                      ? 'bg-[#12304F] text-[#FBF7EF] shadow-sm'
-                      : 'text-[#5C4D44] hover:text-[#231A15] hover:bg-[#F2ECE1]'
-                  }`}
+                      ? 'bg-institution-soft text-institution border border-institution-border'
+                      : 'text-ink-secondary hover:text-ink hover:bg-surface border border-transparent'
+                  )}
                 >
-                  <Icon className="w-4 h-4 shrink-0" />
-                  <span>{item.label}</span>
+                  <span className="flex items-center gap-2.5 min-w-0">
+                    <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <span className="truncate">{item.label}</span>
+                  </span>
+                  {item.badge !== undefined && (
+                    <span
+                      className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-warning-soft border border-warning-border text-warning text-[11px] font-bold font-mono"
+                      title={`${item.badge} en attente de synchronisation`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
           </nav>
+
+          {/* Pont vers l'annuaire public */}
+          <div className="pt-3 border-t border-border">
+            <Link
+              to="/annuaire"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-ink-muted hover:text-ink hover:bg-surface transition-colors min-h-[38px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution"
+            >
+              <Compass className="w-4 h-4 shrink-0" aria-hidden="true" />
+              <span>Explorer l'annuaire public</span>
+            </Link>
+          </div>
         </div>
 
         {/* Pied de barre latérale */}
-        <div className="pt-4 border-t border-[#766B5B]/30 space-y-2">
+        <div className="pt-4 border-t border-border space-y-2.5">
           {isOfflineAuth && (
-            <div className="p-2 rounded-lg bg-[#FFF7ED] border border-[#8A3112]/30 text-[11px] text-[#8A3112]">
+            <div className="p-2.5 rounded-xl bg-warning-soft border border-warning-border text-xs text-warning font-medium leading-snug">
               Session locale hors ligne active.
             </div>
           )}
@@ -196,23 +253,28 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
           <button
             type="button"
             onClick={handleLogoutClick}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-bold text-[#8A3112] hover:bg-[#F2ECE1] border border-transparent hover:border-[#8A3112]/30 transition touch-target cursor-pointer focus-visible:outline-2 focus-visible:outline-[#F2B233]"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-danger hover:bg-danger-soft border border-transparent hover:border-danger-border transition-colors min-h-[42px] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-institution"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
+            <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" />
             <span>Se déconnecter</span>
           </button>
         </div>
       </aside>
 
-      {/* =========================================================================
-       * Zone de contenu principale (max 1120 px)
-       * ========================================================================= */}
-      <div className="flex-1 w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-24 sm:pb-8 space-y-6 min-h-[1100px]">
+      {/* Zone de contenu principale */}
+      <div
+        className={cn(
+          'flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 pb-24 lg:pb-12 space-y-6 min-w-0',
+          maxWidth === 'wide' ? 'max-w-[1280px]' : 'max-w-[1120px]'
+        )}
+      >
         {title && (
           <PageHeader
             title={title}
             subtitle={subtitle}
             action={action}
+            secondaryAction={secondaryAction}
+            breadcrumbs={breadcrumbs}
             backTo={backTo}
             backLabel={backLabel}
           />
@@ -220,7 +282,7 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
         {children}
       </div>
 
-      {/* Modale de confirmation de déconnexion si brouillons hors ligne */}
+      {/* Modale de confirmation de déconnexion si brouillons hors ligne en attente */}
       <ConfirmDialog
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}
@@ -228,8 +290,8 @@ export const ConnectedLayout: React.FC<ConnectedLayoutProps> = ({
         title="Adresses en attente d'envoi"
         description={
           pendingDrafts === 1
-            ? "1 adresse enregistrée sur cet appareil n'est pas encore envoyée au serveur. Elle sera conservée localement mais rattachée à ce compte lors de votre prochaine reconnexion."
-            : `${pendingDrafts} adresses enregistrées sur cet appareil ne sont pas encore envoyées au serveur. Elles seront conservées localement mais rattachées à ce compte lors de votre prochaine reconnexion.`
+            ? "1 adresse enregistrée sur cet appareil n'est pas encore envoyée au serveur. Elle sera conservée localement et rattachée à ce compte lors de votre prochaine reconnexion."
+            : `${pendingDrafts} adresses enregistrées sur cet appareil ne sont pas encore envoyées au serveur. Elles seront conservées localement et rattachées à ce compte lors de votre prochaine reconnexion.`
         }
         confirmLabel="Confirmer la déconnexion"
         cancelLabel="Annuler"
