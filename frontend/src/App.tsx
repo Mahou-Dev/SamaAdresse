@@ -13,6 +13,7 @@ import { AppNavigation } from './components/AppNavigation';
 import { AppFooter } from './components/AppFooter';
 import { OfflineBanner } from './components/OfflineBanner';
 import { ReloadPrompt } from './components/ReloadPrompt';
+import { ErrorBoundary } from './app/boundaries/ErrorBoundary';
 
 // Lazy loading des routes secondaires et volumineuses (Partie 0.7)
 const initialPathname = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -53,8 +54,9 @@ export function App() {
               <AppNavigation />
               <OfflineBanner />
               <main className="flex-1 flex flex-col">
-                <Suspense fallback={<RouteLoadingFallback />}>
-                  <Routes>
+                <ErrorBoundary>
+                  <Suspense fallback={<RouteLoadingFallback />}>
+                    <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/register" element={<RegisterPage />} />
@@ -108,9 +110,10 @@ export function App() {
                         </ProtectedRoute>
                       }
                     />
-                    <Route path="*" element={<NotFoundPage />} />
-                  </Routes>
-                </Suspense>
+                      <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                  </Suspense>
+                </ErrorBoundary>
               </main>
               <AppFooter />
               <ReloadPrompt />
