@@ -423,4 +423,175 @@ class AuditRemediationBackendTest {
         assertThat(geh.handleDataIntegrityViolation(new DataIntegrityViolationException("dup"), fakeReq).getStatusCode().value()).isEqualTo(409);
         assertThat(geh.handleGenericException(new RuntimeException("boom"), fakeReq).getStatusCode().value()).isEqualTo(500);
     }
+
+    @Test
+    @DisplayName("Couverture branches : ImageMagicBytesValidator, FileStorageService (redimensionnement + rejet) et DbPhotoStorage")
+    void magicBytesFileStorageAndDbPhotoStorageBranches(@TempDir Path tempDir) throws Exception {
+        ImageMagicBytesValidator validator = new ImageMagicBytesValidator();
+        // Null & short arrays
+        assertThat(validator.detectExtensionFromMagicBytes(null)).isNull();
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[5])).isNull();
+        // JPEG valid vs partial
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isEqualTo(".jpg");
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0xFF, (byte) 0xD8, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0})).isNull();
+        // PNG valid 8 bytes vs broken at bytes 1..7
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0})).isEqualTo(".png");
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x00, 0, 0, 0, 0})).isNull();
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x00, 0x0A, 0, 0, 0, 0})).isNull();
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x00, 0x1A, 0x0A, 0, 0, 0, 0})).isNull();
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{(byte) 0x89, 'P', 'N', 'X', 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0})).isNull();
+        // WebP valid vs fake RIFF
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'})).isEqualTo(".webp");
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{'R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E'})).isNull();
+        assertThat(validator.detectExtensionFromMagicBytes(new byte[]{'G', 'I', 'F', '8', '9', 'a', 0, 0, 0, 0, 0, 0})).isNull();
+
+        DiskPhotoStorage diskStorage = new DiskPhotoStorage(tempDir.toString(), validator);
+        // Null / empty / > 5MB / unsupported
+        assertThatThrownBy(() -> diskStorage.validateAndProcessImage(null)).isInstanceOf(InvalidImageException.class);
+        assertThatThrownBy(() -> diskStorage.validateAndProcessImage(new MockMultipartFile("file", new byte[0]))).isInstanceOf(InvalidImageException.class);
+        assertThatThrownBy(() -> diskStorage.validateAndProcessImage(new MockMultipartFile("file", new byte[5 * 1024 * 1024 + 1]))).isInstanceOf(InvalidImageException.class);
+        assertThatThrownBy(() -> diskStorage.validateAndProcessImage(new MockMultipartFile("file", "bad.txt", "text/plain", "not an image at all!!".getBytes()))).isInstanceOf(InvalidImageException.class);
+        // WebP fallback + contentTypeForExtension
+        FileStorageService.ProcessedImage webpProcessed = diskStorage.validateAndProcessImage(
+                new MockMultipartFile("file", "photo.webp", "image/webp", new byte[]{'R', 'I', 'F', 'F', 1, 2, 3, 4, 'W', 'E', 'B', 'P', 0, 0}));
+        assertThat(webpProcessed.extension()).isEqualTo(".webp");
+        assertThat(webpProcessed.contentType()).isEqualTo("image/webp");
+        assertThat(FileStorageService.contentTypeForExtension(null)).isEqualTo("image/jpeg");
+        assertThat(FileStorageService.contentTypeForExtension(".png")).isEqualTo("image/png");
+        assertThat(FileStorageService.contentTypeForExtension(".webp")).isEqualTo("image/webp");
+        assertThat(FileStorageService.contentTypeForExtension(".jpg")).isEqualTo("image/jpeg");
+
+        // Large JPEG > 800 px -> resized & re-encoded
+        BufferedImage bigJpg = new BufferedImage(1000, 500, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream jpgOut = new ByteArrayOutputStream();
+        ImageIO.write(bigJpg, "jpg", jpgOut);
+        FileStorageService.ProcessedImage jpgResized = diskStorage.validateAndProcessImage(
+                new MockMultipartFile("file", "big.jpg", "image/jpeg", jpgOut.toByteArray()));
+        assertThat(jpgResized.extension()).isEqualTo(".jpg");
+        assertThat(jpgResized.contentType()).isEqualTo("image/jpeg");
+
+        // Large PNG > 800 px -> resized & re-encoded
+        BufferedImage bigPng = new BufferedImage(1000, 600, BufferedImage.TYPE_INT_ARGB);
+        ByteArrayOutputStream pngOut = new ByteArrayOutputStream();
+        ImageIO.write(bigPng, "png", pngOut);
+        FileStorageService.ProcessedImage pngResized = diskStorage.validateAndProcessImage(
+                new MockMultipartFile("file", "big.png", "image/png", pngOut.toByteArray()));
+        assertThat(pngResized.extension()).isEqualTo(".png");
+
+        // Small JPEG <= 800 px -> still re-encoded (EXIF strip)
+        BufferedImage smallJpg = new BufferedImage(100, 80, BufferedImage.TYPE_INT_RGB);
+        ByteArrayOutputStream smallJpgOut = new ByteArrayOutputStream();
+        ImageIO.write(smallJpg, "jpg", smallJpgOut);
+        assertThat(diskStorage.validateAndProcessImage(new MockMultipartFile("file", "small.jpg", "image/jpeg", smallJpgOut.toByteArray())).extension()).isEqualTo(".jpg");
+
+        // DbPhotoStorage all branches
+        PhotoBlobRepository blobRepo = mock(PhotoBlobRepository.class);
+        DbPhotoStorage dbStorage = new DbPhotoStorage(blobRepo, validator);
+        UUID seedId = UUID.randomUUID();
+        when(blobRepo.existsById(seedId)).thenReturn(false, true);
+        assertThat(dbStorage.storeSeedPhoto(seedId, jpgOut.toByteArray(), null)).isEqualTo("/uploads/" + seedId + ".jpg");
+        assertThat(dbStorage.storeSeedPhoto(seedId, jpgOut.toByteArray(), "image/jpeg")).isEqualTo("/uploads/" + seedId + ".jpg");
+        verify(blobRepo, times(1)).save(any());
+
+        when(blobRepo.findById(seedId)).thenReturn(Optional.of(sn.samaadresse.domain.entity.PhotoBlob.builder()
+                .id(seedId).data(new byte[]{1, 2, 3}).contentType("image/jpeg").sizeBytes(3).createdAt(Instant.now()).build()));
+        assertThat(dbStorage.loadPhoto(seedId + ".jpg")).isPresent();
+        assertThat(dbStorage.loadPhoto("not-a-uuid.jpg")).isEmpty();
+        assertThat(dbStorage.loadPhoto("../etc/passwd")).isEmpty();
+        assertThat(DbPhotoStorage.extractUuid(null)).isNull();
+        assertThat(DbPhotoStorage.extractUuid(seedId.toString())).isEqualTo(seedId);
+
+        when(blobRepo.existsById(seedId)).thenReturn(true, false);
+        dbStorage.deleteFile("/uploads/" + seedId + ".jpg");
+        dbStorage.deleteFile("/uploads/" + seedId + ".jpg");
+        dbStorage.deleteFile("/uploads/invalid.jpg");
+        verify(blobRepo, times(1)).deleteById(seedId);
+    }
+
+    @Test
+    @DisplayName("Couverture branches : CustomErrorController gère tous les attributs Servlet (404, invalide, inconnu, nul)")
+    void customErrorControllerAllBranches() {
+        sn.samaadresse.controller.CustomErrorController controller = new sn.samaadresse.controller.CustomErrorController();
+
+        org.springframework.mock.web.MockHttpServletRequest r1 = new org.springframework.mock.web.MockHttpServletRequest("GET", "/error");
+        r1.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 404);
+        r1.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_REQUEST_URI, "/api/unknown");
+        r1.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_MESSAGE, "Ressource absente");
+        var resp1 = controller.handleError(r1);
+        assertThat(resp1.getStatusCode().value()).isEqualTo(404);
+        assertThat(resp1.getBody().getPath()).isEqualTo("/api/unknown");
+        assertThat(resp1.getBody().getMessage()).isEqualTo("Ressource absente");
+
+        org.springframework.mock.web.MockHttpServletRequest r2 = new org.springframework.mock.web.MockHttpServletRequest("GET", "/error");
+        r2.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, "not-a-number");
+        r2.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_MESSAGE, "   ");
+        var resp2 = controller.handleError(r2);
+        assertThat(resp2.getStatusCode().value()).isEqualTo(500);
+        assertThat(resp2.getBody().getPath()).isEqualTo("/error");
+
+        org.springframework.mock.web.MockHttpServletRequest r3 = new org.springframework.mock.web.MockHttpServletRequest("GET", "/error");
+        r3.setAttribute(jakarta.servlet.RequestDispatcher.ERROR_STATUS_CODE, 999);
+        assertThat(controller.handleError(r3).getStatusCode().value()).isEqualTo(500);
+
+        org.springframework.mock.web.MockHttpServletRequest r4 = new org.springframework.mock.web.MockHttpServletRequest("GET", "/error");
+        assertThat(controller.handleError(r4).getStatusCode().value()).isEqualTo(500);
+    }
+
+    @Test
+    @DisplayName("Couverture branches : RouteService validation coordonnées/profils/code et fallback piéton")
+    void routeServiceValidationAndFallbackBranches() {
+        AddressRepository addrRepo = mock(AddressRepository.class);
+        Address dest = Address.builder().code("ZIG-KBG-4271").latitude(12.5738).longitude(-16.2650).status(AddressStatus.ACTIVE).build();
+        when(addrRepo.findByCodeAndStatus("ZIG-KBG-4271", AddressStatus.ACTIVE)).thenReturn(Optional.of(dest));
+        when(addrRepo.findByCodeAndStatus("ZIG-KBG-9999", AddressStatus.ACTIVE)).thenReturn(Optional.empty());
+
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        RouteService routeService = new RouteService(addrRepo, builder, new ObjectMapper(), "fake-key", "https://api.openrouteservice.org");
+
+        assertThatThrownBy(() -> routeService.calculateRoute(null, -16.27, "ZIG-KBG-4271", "driving-car")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, null, "ZIG-KBG-4271", "driving-car")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(11.0, -16.27, "ZIG-KBG-4271", "driving-car")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(18.0, -16.27, "ZIG-KBG-4271", "driving-car")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, -18.0, "ZIG-KBG-4271", "driving-car")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, -10.0, "ZIG-KBG-4271", "driving-car")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, -16.27, "ZIG-KBG-4271", "cycling-regular")).isInstanceOf(InvalidCoordinatesException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, -16.27, "  ", "driving-car")).isInstanceOf(AddressNotFoundException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, -16.27, null, null)).isInstanceOf(AddressNotFoundException.class);
+        assertThatThrownBy(() -> routeService.calculateRoute(12.56, -16.27, "ZIG-KBG-9999", "")).isInstanceOf(AddressNotFoundException.class);
+
+        server.expect(requestTo("https://api.openrouteservice.org/v2/directions/foot-walking/geojson"))
+                .andRespond(withStatus(HttpStatus.FORBIDDEN));
+        RouteResponse footFallback = routeService.calculateRoute(12.5605, -16.2735, "ZIG-KBG-4271", "foot-walking");
+        assertThat(footFallback.isApproximateFallback()).isTrue();
+        assertThat(footFallback.getDuration()).isGreaterThan(0);
+
+        server.reset();
+        server.expect(requestTo("https://api.openrouteservice.org/v2/directions/driving-car/geojson"))
+                .andRespond(withStatus(HttpStatus.UNAUTHORIZED));
+        assertThatThrownBy(() -> routeService.calculateRoute(12.5655, -16.2705, "ZIG-KBG-4271", "driving-car"))
+                .isInstanceOf(RoutingServiceUnavailableException.class);
+    }
+
+    @Test
+    @DisplayName("Couverture branches : ModerationService filtres admin addresses, clamping pagination et actions")
+    void moderationServiceAllFilterBranches() {
+        AdminActionRepository actionRepo = mock(AdminActionRepository.class);
+        AddressRepository addrRepo = mock(AddressRepository.class);
+        AddressReportRepository reportRepo = mock(AddressReportRepository.class);
+        UserRepository userRepo = mock(UserRepository.class);
+        sn.samaadresse.security.ReportRateLimiter reportLimiter = mock(sn.samaadresse.security.ReportRateLimiter.class);
+        AddressService addrService = mock(AddressService.class);
+        ModerationService modService = new ModerationService(addrRepo, reportRepo, actionRepo, userRepo, reportLimiter, addrService);
+
+        when(addrRepo.searchAdminAddresses(any(), any(), any(Pageable.class))).thenReturn(Page.empty());
+        modService.getAdminAddresses(null, null, -1, 0);
+        modService.getAdminAddresses(AddressStatus.ACTIVE, "   ", 0, 200);
+        modService.getAdminAddresses(AddressStatus.SUSPENDED, " ZIG ", 1, 25);
+        verify(addrRepo).searchAdminAddresses(eq(AddressStatus.SUSPENDED), eq("ZIG"), any(Pageable.class));
+
+        when(actionRepo.findAllByOrderByCreatedAtDesc(any(Pageable.class))).thenReturn(Page.empty());
+        modService.getAdminActions(-2, 500);
+        verify(actionRepo).findAllByOrderByCreatedAtDesc(any(Pageable.class));
+    }
 }
