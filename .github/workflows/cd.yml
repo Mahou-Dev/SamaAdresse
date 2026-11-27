@@ -92,7 +92,7 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
-      - name: Vérification Backend (./mvnw -B verify avec ressources SPA du build frontend)
+      - name: Vérification Backend (mvn -B verify avec ressources SPA du build frontend)
         env:
           DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
           DB_USERNAME: samaadresse_user
@@ -102,7 +102,7 @@ jobs:
         run: |
           mkdir -p backend/src/main/resources/static
           cp -r frontend/dist/. backend/src/main/resources/static/
-          (cd backend && ./mvnw -B verify)
+          (cd backend && mvn -B verify)
           rm -rf backend/src/main/resources/static
 
       - name: Validation reproductibilité du Dockerfile de production

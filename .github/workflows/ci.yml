@@ -95,7 +95,7 @@ jobs:
           </html>
           EOF
 
-      - name: Vérification Maven et couverture JaCoCo (./mvnw -B verify)
+      - name: Vérification Maven et couverture JaCoCo (mvn -B verify)
         working-directory: backend
         env:
           DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
@@ -103,7 +103,7 @@ jobs:
           DB_PASSWORD: ci_test_db_password_non_secret
           JWT_SECRET: ci-test-ephemeral-jwt-secret-key-at-least-32-bytes-long
           DEMO_PASSWORD: CiTestDemoPassword2026!
-        run: ./mvnw -B verify
+        run: mvn -B verify
 
       - name: Publication de l'artefact jacoco.xml
         uses: actions/upload-artifact@v4.6.0
