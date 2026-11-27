@@ -3,6 +3,8 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    include: ['src/**/*.test.{ts,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', 'e2e/**'],
     setupFiles: ['./src/test/setup.ts'],
     restoreMocks: true,
     // Les pages chargées à la demande (lazy) sont transformées au premier test qui les ouvre : sous charge,

@@ -1,7 +1,7 @@
 {
-  "name": "SamaAdresse — Une adresse, un monde de possibilités",
+  "name": "SamaAdresse",
   "short_name": "SamaAdresse",
-  "description": "Créez, retrouvez et partagez des adresses géolocalisées au Sénégal, même sans connexion.",
+  "description": "Une adresse, un monde de possibilités — créez, retrouvez et partagez des adresses géolocalisées au Sénégal, même sans connexion.",
   "lang": "fr",
   "start_url": "/",
   "scope": "/",

@@ -25,6 +25,8 @@ jobs:
             grep -nE '^[A-Z0-9_]+=.+$' .env.example
             exit 1
           fi
+          python3 scripts/check-env-vars.py
+          cmp -s backend/src/main/resources/geo-grid.json frontend/src/data/geo-grid.json
           python3 -c "
           import subprocess, re, os
           files = subprocess.check_output(['git', 'ls-files'], text=True).splitlines()
@@ -93,7 +95,7 @@ jobs:
           path: backend/target/site/jacoco/jacoco.xml
 
   frontend:
-    name: Frontend (TypeScript / Oxlint / Vitest / Build / check:size)
+    name: Frontend (TypeScript / ESLint / Vitest / Build / check:size)
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -110,11 +112,11 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Vérification TypeScript (tsc --noEmit)
+      - name: Vérification TypeScript (tsc -b --noEmit)
         working-directory: frontend
-        run: npx tsc --noEmit
+        run: npx tsc -b --noEmit
 
-      - name: Linter (oxlint)
+      - name: Linter (ESLint)
         working-directory: frontend
         run: npm run lint
 
@@ -145,11 +147,18 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      - name: Installation des dépendances Frontend & Navigateur Playwright
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
       - name: Build et démarrage de l'image Docker de production avec PostgreSQL 16
         env:
           PROD_TEST_DB_PASSWORD: ci_prod_test_db_password
           JWT_SECRET: ci_test_ephemeral_jwt_secret_at_least_32_bytes_long_ok
           DEMO_PASSWORD: CiTestDemoPassword2026!
+          ADMIN_EMAIL: admin@samaadresse.sn
           ADMIN_PASSWORD: CiTestDemoPassword2026!
           ORS_API_KEY: ""
         run: |
@@ -161,9 +170,6 @@ jobs:
             sleep 2
           done
 
-      - name: Exécution de smoke-prod.sh
-        run: ./scripts/smoke-prod.sh http://localhost:8082
-
       - name: Exécution de la collection Postman via Newman
         run: |
           npx --yes newman run docs/api/SamaAdresse.postman_collection.json \
@@ -171,18 +177,29 @@ jobs:
             --env-var "baseUrl=http://localhost:8082" \
             --env-var "demoPassword=CiTestDemoPassword2026!"
 
-      - name: Installation des dépendances Frontend & Navigateurs Playwright
-        working-directory: frontend
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
-
       - name: Exécution des tests E2E Playwright contre le conteneur Docker
         working-directory: frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:8082
           DEMO_PASSWORD: CiTestDemoPassword2026!
         run: npx playwright test
+
+      - name: Redémarrage léger du conteneur app (réinitialise le quota login mémoire avant smoke-prod)
+        run: |
+          docker compose -f docker-compose.prod-test.yml restart app
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:8082/api/health > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Exécution de smoke-prod.sh
+        env:
+          DEMO_PASSWORD: CiTestDemoPassword2026!
+          ADMIN_EMAIL: admin@samaadresse.sn
+          ADMIN_PASSWORD: CiTestDemoPassword2026!
+        run: ./scripts/smoke-prod.sh http://localhost:8082 /tmp/smoke-prod-ci.md
 
       - name: Affichage des journaux Docker en cas d'échec
         if: failure()
