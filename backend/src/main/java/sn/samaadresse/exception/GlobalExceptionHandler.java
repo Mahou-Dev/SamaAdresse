@@ -388,10 +388,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(
+        org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest request
+    ) {
+        log.warn("[CONFLICT] Contrainte d'intégrité violée sur {} : {}", request.getRequestURI(), ex.getMostSpecificCause().getMessage());
+        ErrorResponse response = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.CONFLICT.value())
+            .error("Conflict")
+            .message("Conflit de données : cette ressource existe déjà ou viole une contrainte d'unicité.")
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
         Exception ex, HttpServletRequest request
     ) {
+        log.error("[INTERNAL-ERROR] Erreur non gérée sur {} {}", request.getMethod(), request.getRequestURI(), ex);
         ErrorResponse response = ErrorResponse.builder()
             .timestamp(Instant.now())
             .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

@@ -200,3 +200,5 @@
 .report-card__head p { margin: 0; font-size: 13px; }
 .report-card__head .status-badge { margin-left: auto; }
 .report-card__comment { margin: 12px 0 0; padding: 10px 14px; border-left: 3px solid var(--amber-500); border-radius: 6px; color: var(--dark-text); background: #ffffff08; font-size: 14px; }
+.admin-note { max-width: 52ch; }
+.audit-action-badge { display: inline-flex; align-items: center; padding: 3px 9px; border-radius: 999px; color: var(--blue-100); background: #1a7cff2e; font-size: 12px; font-weight: 700; }

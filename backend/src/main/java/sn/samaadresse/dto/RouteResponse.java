@@ -26,4 +26,7 @@ public class RouteResponse {
 
     @Schema(description = "Étapes textuelles de l'itinéraire (max 15)")
     private List<RouteStep> steps;
+
+    @Schema(description = "Indique s'il s'agit d'une estimation à vol d'oiseau en secours (fournisseur ORS indisponible)", example = "false")
+    private boolean approximateFallback;
 }

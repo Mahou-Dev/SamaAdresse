@@ -115,6 +115,38 @@ public class AdminModerationController {
         return ResponseEntity.ok(updated);
     }
 
+    @GetMapping("/actions")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Consulter le journal d'audit des actions administratives (paginé)", description = "Retourne l'historique immuable des décisions de modération (admin_actions).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page d'actions administratives retournée"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès réservé aux administrateurs", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Page<sn.samaadresse.dto.AdminActionResponse>> getAdminActions(
+            @Parameter(description = "Index de page (base 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de page (max 100)") @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(moderationService.getAdminActions(page, size));
+    }
+
+    @GetMapping("/addresses")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Lister toutes les adresses du registre (y compris non listées, archivées et suspendues)", description = "Filtrable par statut et recherche texte (code, description, quartier).")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Page d'adresses retournée"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "Accès réservé aux administrateurs", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public ResponseEntity<Page<AddressResponse>> getAdminAddresses(
+            @Parameter(description = "Statut de l'adresse (ACTIVE, ARCHIVED, SUSPENDED, SIGNALED)") @RequestParam(required = false) sn.samaadresse.domain.enums.AddressStatus status,
+            @Parameter(description = "Filtre texte libre (code, description, quartier)") @RequestParam(required = false) String q,
+            @Parameter(description = "Index de page (base 0)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Taille de page (max 100)") @RequestParam(defaultValue = "20") int size
+    ) {
+        return ResponseEntity.ok(moderationService.getAdminAddresses(status, q, page, size));
+    }
+
     private String currentEmail(Principal principal) {
         if (principal != null) {
             return principal.getName();

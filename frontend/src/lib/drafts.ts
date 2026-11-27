@@ -1,4 +1,40 @@
-import { ApiError, createMyAddress, uploadMyAddressPhoto, type NewAddressInput, type OwnerAddress } from './api'
+import { ApiError, createMyAddress, uploadMyAddressPhoto, type NewAddressInput, type OwnerAddress, type ReservedCodeItem } from './api'
+
+const RESERVED_POOL_PREFIX = 'samaadresse.reserved.'
+
+/** Enregistre localement les codes réservés attribués par le serveur pour usage hors ligne. */
+export function storeReservedCodes(userId: string, items: ReservedCodeItem[]) {
+  try {
+    const valid = items.filter((item) => item.status === 'RESERVED' && new Date(item.expiresAt).getTime() > Date.now())
+    localStorage.setItem(RESERVED_POOL_PREFIX + userId, JSON.stringify(valid))
+  } catch {
+    // Stockage local indisponible
+  }
+}
+
+export function getReservedCodes(userId: string): ReservedCodeItem[] {
+  try {
+    const raw = localStorage.getItem(RESERVED_POOL_PREFIX + userId)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as ReservedCodeItem[]
+    const now = Date.now()
+    return parsed.filter((item) => item.status === 'RESERVED' && new Date(item.expiresAt).getTime() > now)
+  } catch {
+    return []
+  }
+}
+
+/** Consomme un code réservé serveur correspondant à (zone, quartier) pour garantir sa stabilité après synchronisation. */
+export function takeReservedCode(userId: string, zone: string, quartier: string): string | null {
+  const pool = getReservedCodes(userId)
+  const idx = pool.findIndex(
+    (c) => c.zone.toUpperCase() === zone.toUpperCase() && c.quartier.toUpperCase() === quartier.toUpperCase(),
+  )
+  if (idx < 0) return null
+  const [chosen] = pool.splice(idx, 1)
+  storeReservedCodes(userId, pool)
+  return chosen.code
+}
 
 /**
  * Brouillons hors ligne : une adresse saisie sans connexion est gardée sur l'appareil

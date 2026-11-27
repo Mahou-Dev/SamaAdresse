@@ -1,5 +1,5 @@
 import 'leaflet/dist/leaflet.css'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { MapContainer, TileLayer } from 'react-leaflet'
 import { SENEGAL_CENTER } from '../../lib/geo'
 
@@ -19,9 +19,11 @@ interface BaseMapProps {
 
 /**
  * Carte Leaflet avec tuiles configurables via VITE_TILE_URL / VITE_TILE_ATTRIBUTION
- * (OpenStreetMap par défaut).
+ * (OpenStreetMap par défaut) et détection explicite des erreurs de chargement de tuiles.
  */
 export function BaseMap({ center = SENEGAL_CENTER, zoom = 6, interactive = true, label, children }: BaseMapProps) {
+  const [tileError, setTileError] = useState(false)
+
   return (
     <div className="map-canvas" role="region" aria-label={label}>
       <MapContainer
@@ -33,15 +35,24 @@ export function BaseMap({ center = SENEGAL_CENTER, zoom = 6, interactive = true,
         touchZoom={interactive}
         zoomControl={interactive}
         keyboard={interactive}
-        style={{ width: '100%', height: '100%' }}
+        className="map-canvas__leaflet"
       >
         <TileLayer
           url={TILE_URL}
           attribution={TILE_ATTRIBUTION}
           maxZoom={19}
+          eventHandlers={{
+            tileerror: () => setTileError(true),
+            tileload: () => setTileError(false),
+          }}
         />
         {children}
       </MapContainer>
+      {tileError && (
+        <p className="map-tile-notice" role="status">
+          Fond de carte partiellement indisponible (connexion lente ou hors ligne) ; les marqueurs restent exacts.
+        </p>
+      )}
     </div>
   )
 }

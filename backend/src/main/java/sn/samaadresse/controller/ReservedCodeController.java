@@ -36,7 +36,7 @@ public class ReservedCodeController {
     @PreAuthorize("hasAnyRole('PROPRIETAIRE', 'ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Compléter le stock de codes réservés pour une zone",
-            description = "Complète à 3 codes actifs par quartier pour la zone demandée (ZIG ou DKR), dans la limite de 40 réservations actives par utilisateur. Limité à 5 appels par heure.")
+            description = "Complète à 3 codes actifs par quartier pour la zone demandée (ZIG, DKR ou SL), dans la limite de 40 réservations actives par utilisateur. Limité à 5 appels par heure.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Stock de réservations actives mis à jour",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservedCodeResponse.class)))),
@@ -46,7 +46,7 @@ public class ReservedCodeController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     public ResponseEntity<List<ReservedCodeResponse>> topUpReservations(
-            @Parameter(description = "Code de zone (ZIG ou DKR)", required = true, example = "ZIG")
+            @Parameter(description = "Code de zone (ZIG, DKR ou SL)", required = true, example = "ZIG")
             @RequestParam("zone") String zone,
             Principal principal
     ) {

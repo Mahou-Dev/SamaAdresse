@@ -30,6 +30,8 @@ export interface DirectoryItem {
   city: string
   description: string | null
   photoUrl: string | null
+  latitude?: number | null
+  longitude?: number | null
   ownerName: string | null
   createdAt: string
 }
@@ -158,6 +160,7 @@ interface BackendPublicAddress {
   description: string | null
   locationType: PlaceType
   photoUrl: string | null
+  ownerName?: string | null
   createdAt?: string | null
 }
 
@@ -169,6 +172,8 @@ interface BackendDirectoryItem {
   description: string | null
   photoUrl: string | null
   createdAt: string
+  latitude?: number | null
+  longitude?: number | null
   ownerName: string | null
 }
 
@@ -202,6 +207,7 @@ interface SpringPage<T> {
 interface BackendRouteResponse {
   distance: number
   duration: number
+  approximateFallback?: boolean
   geometry?: {
     type?: string
     coordinates?: Array<[number, number]>
@@ -300,7 +306,7 @@ function mapPublicAddress(raw: BackendPublicAddress): PublicAddress {
     latitude: raw.latitude,
     longitude: raw.longitude,
     photoUrl: raw.photoUrl ?? null,
-    ownerName: null,
+    ownerName: raw.ownerName ?? null,
     createdAt: raw.createdAt ?? null,
   }
 }
@@ -317,6 +323,8 @@ function mapDirectoryItem(raw: BackendDirectoryItem): DirectoryItem {
     city: getZoneName(raw.zone),
     description: details,
     photoUrl: raw.photoUrl ?? null,
+    latitude: raw.latitude ?? null,
+    longitude: raw.longitude ?? null,
     ownerName: raw.ownerName ?? null,
     createdAt: raw.createdAt,
   }
@@ -506,15 +514,50 @@ export function refreshSession(): Promise<AuthResponse> {
   return pendingRefresh
 }
 
-export async function logoutSession(): Promise<void> {
+export async function logoutSession(token?: string | null): Promise<void> {
   try {
     await request<{ message?: string }>('/api/auth/logout', {
       method: 'POST',
+      token: token ?? undefined,
       credentials: 'include',
     })
   } catch {
     // La session locale est nettoyée même si le réseau est coupé.
   }
+}
+
+export async function changePassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ message: string }> {
+  return request<{ message: string }>('/api/auth/change-password', {
+    method: 'POST',
+    token,
+    credentials: 'include',
+    body: { currentPassword, newPassword },
+  })
+}
+
+export interface ReservedCodeItem {
+  id: string
+  code: string
+  zone: string
+  quartier: string
+  status: 'RESERVED' | 'USED' | 'EXPIRED'
+  expiresAt: string
+}
+
+export async function listReservedCodes(token: string): Promise<ReservedCodeItem[]> {
+  return request<ReservedCodeItem[]>('/api/address-codes/reservations', { token })
+}
+
+export async function topUpReservedCodes(token: string, zone: string): Promise<ReservedCodeItem[]> {
+  const qs = queryString({ zone: zone.trim().toUpperCase() })
+  return request<ReservedCodeItem[]>(`/api/address-codes/reservations?${qs}`, {
+    method: 'POST',
+    token,
+  })
 }
 
 export async function getCurrentUser(token: string): Promise<User> {
@@ -730,6 +773,7 @@ export interface RouteResult {
   /** Points [latitude, longitude] pour Leaflet. */
   coordinates: Array<[number, number]>
   steps: RouteStep[]
+  approximateFallback?: boolean
 }
 
 /** Itinéraire OpenRouteService calculé par le serveur (clé ORS jamais exposée côté navigateur). */
@@ -755,6 +799,7 @@ export async function getRoute(
     durationSeconds: raw.duration,
     coordinates,
     steps: raw.steps ?? [],
+    approximateFallback: Boolean(raw.approximateFallback),
   }
 }
 
@@ -836,4 +881,34 @@ export async function reinstateAdminAddress(
     },
   )
   return mapOwnerAddress(raw)
+}
+
+export interface AdminActionItem {
+  id: string
+  adminId: string | null
+  adminEmail: string
+  action: string
+  addressId: string
+  addressCode: string
+  reportId: string | null
+  reason: string | null
+  createdAt: string
+}
+
+export async function listAdminActions(token: string, page = 0, size = 20): Promise<Page<AdminActionItem>> {
+  const qs = queryString({ page, size })
+  const raw = await request<SpringPage<AdminActionItem>>(`/api/admin/actions?${qs}`, { token })
+  return mapSpringPage(raw, (item) => item)
+}
+
+export async function listAdminAddresses(
+  token: string,
+  status?: AddressStatus,
+  q?: string,
+  page = 0,
+  size = 50,
+): Promise<Page<OwnerAddress>> {
+  const qs = queryString({ status, q: q?.trim() || undefined, page, size })
+  const raw = await request<SpringPage<BackendAddressResponse>>(`/api/admin/addresses?${qs}`, { token })
+  return mapSpringPage(raw, mapOwnerAddress)
 }

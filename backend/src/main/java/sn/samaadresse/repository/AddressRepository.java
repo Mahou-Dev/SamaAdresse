@@ -61,4 +61,29 @@ public interface AddressRepository extends JpaRepository<Address, UUID> {
             @Param("type") LocationType type,
             Pageable pageable
     );
+
+    @Query(
+        value = "SELECT a FROM Address a " +
+                "WHERE (:status IS NULL OR a.status = :status) " +
+                "AND (" +
+                "   :q IS NULL OR :q = '' " +
+                "   OR LOWER(a.code) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                "   OR LOWER(COALESCE(a.description, '')) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                "   OR LOWER(a.quartier) LIKE LOWER(CONCAT('%', :q, '%'))" +
+                ") " +
+                "ORDER BY a.createdAt DESC",
+        countQuery = "SELECT COUNT(a) FROM Address a " +
+                "WHERE (:status IS NULL OR a.status = :status) " +
+                "AND (" +
+                "   :q IS NULL OR :q = '' " +
+                "   OR LOWER(a.code) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                "   OR LOWER(COALESCE(a.description, '')) LIKE LOWER(CONCAT('%', :q, '%')) " +
+                "   OR LOWER(a.quartier) LIKE LOWER(CONCAT('%', :q, '%'))" +
+                ")"
+    )
+    Page<Address> searchAdminAddresses(
+            @Param("status") AddressStatus status,
+            @Param("q") String q,
+            Pageable pageable
+    );
 }

@@ -22,8 +22,10 @@ public class ImageMagicBytesValidator {
             return ".jpg";
         }
 
-        // 2. Vérification PNG : 89 50 4E 47 0D 0A 1A 0A
-        if ((bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G') {
+        // 2. Vérification PNG complète sur 8 octets : 89 50 4E 47 0D 0A 1A 0A
+        if ((bytes[0] & 0xFF) == 0x89 && bytes[1] == 'P' && bytes[2] == 'N' && bytes[3] == 'G'
+                && (bytes[4] & 0xFF) == 0x0D && (bytes[5] & 0xFF) == 0x0A
+                && (bytes[6] & 0xFF) == 0x1A && (bytes[7] & 0xFF) == 0x0A) {
             return ".png";
         }
 

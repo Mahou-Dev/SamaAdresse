@@ -5,8 +5,8 @@ import { useAuth } from '../../auth/authContext'
 import { StatusBadge } from '../../components/StatusBadge'
 import { useApiResource } from '../../hooks/useApiResource'
 import {
-  ApiError, listReports, reinstateAdminAddress, searchDirectory, suspendAdminAddress,
-  type AddressStatus, type PlaceType,
+  ApiError, listAdminAddresses, reinstateAdminAddress, suspendAdminAddress,
+  type AddressStatus, type OwnerAddress,
 } from '../../lib/api'
 import { collectPages } from '../../lib/collect'
 import { errorMessage } from '../../lib/errors'
@@ -14,60 +14,13 @@ import { formatShortDate, PLACE_TYPE_LABELS } from '../../lib/labels'
 import { AdminOnly } from './AdminOnly'
 import type { AdminOutletContext } from './adminData'
 
-interface AdminAddressRow {
-  key: string
-  addressId: string | null
-  publicCode: string
-  title: string
-  placeType: PlaceType
-  district: string
-  city: string
-  createdAt: string
-  status: AddressStatus
-  source: 'directory' | 'report'
-}
-
 export function AdminAddressesPage() {
   return <AdminOnly><Addresses /></AdminOnly>
 }
 
-async function loadRegistry(token: string): Promise<AdminAddressRow[]> {
-  const [dir, reports] = await Promise.all([
-    collectPages((p) => searchDirectory({}, p, 50)),
-    collectPages((p) => listReports(token, undefined, p, 50)),
-  ])
-  const byCode = new Map<string, AdminAddressRow>()
-  for (const d of dir.items) {
-    byCode.set(d.publicCode, {
-      key: d.publicCode,
-      addressId: null,
-      publicCode: d.publicCode,
-      title: d.title,
-      placeType: d.placeType,
-      district: d.district,
-      city: d.city,
-      createdAt: d.createdAt,
-      status: 'ACTIVE',
-      source: 'directory',
-    })
-  }
-  // Enrichit ou ajoute les adresses présentes dans les signalements (avec leur UUID réel pour suspend/reinstate).
-  for (const r of reports.items) {
-    const existing = byCode.get(r.publicCode)
-    byCode.set(r.publicCode, {
-      key: r.addressId,
-      addressId: r.addressId,
-      publicCode: r.publicCode,
-      title: existing?.title || r.addressTitle,
-      placeType: r.locationType,
-      district: r.district,
-      city: r.city,
-      createdAt: existing?.createdAt || r.createdAt,
-      status: r.addressStatus,
-      source: 'report',
-    })
-  }
-  return Array.from(byCode.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+async function loadRegistry(token: string): Promise<OwnerAddress[]> {
+  const all = await collectPages((p) => listAdminAddresses(token, undefined, undefined, p, 50))
+  return all.items
 }
 
 function Addresses() {
@@ -87,16 +40,16 @@ function Addresses() {
       && (!q || [a.publicCode, a.title, a.district, a.city].some((v) => v.toLowerCase().includes(q))))
   }, [state, statusFilter, filter])
 
-  async function toggleSuspension(row: AdminAddressRow) {
-    if (!token || !row.addressId) return
-    setBusyId(row.addressId)
+  async function toggleSuspension(row: OwnerAddress) {
+    if (!token) return
+    setBusyId(row.id)
     setMessage(null)
     try {
       if (row.status === 'SUSPENDED') {
-        await reinstateAdminAddress(token, row.addressId, 'Réactivation depuis le registre administrateur')
+        await reinstateAdminAddress(token, row.id, 'Réactivation depuis le registre administrateur')
         setMessage({ tone: 'success', text: `${row.publicCode} réactivée.` })
       } else {
-        await suspendAdminAddress(token, row.addressId, 'Suspension par la modération administrateur')
+        await suspendAdminAddress(token, row.id, 'Suspension par la modération administrateur')
         setMessage({ tone: 'success', text: `${row.publicCode} suspendue.` })
       }
       reload()
@@ -113,7 +66,7 @@ function Addresses() {
     <main className="admin-page">
       <header className="admin-page__head">
         <h1>Adresses</h1>
-        <span>Annuaire public et adresses signalées / modérées</span>
+        <span>Registre complet des adresses (actives, non référencées, signalées, suspendues et archivées)</span>
       </header>
       <div className="admin-toolbar">
         <div className="admin-tabs" role="group" aria-label="Statut">
@@ -145,32 +98,31 @@ function Addresses() {
             {rows.length === 0 ? <p className="admin-empty">Aucune adresse ne correspond à ce filtre.</p> : (
               <div className="table-scroll">
                 <table className="admin-table">
-                  <thead><tr><th scope="col">Code</th><th scope="col">Lieu</th><th scope="col">Type</th><th scope="col">Quartier · Zone</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col"><span className="visually-hidden">Actions</span></th></tr></thead>
+                  <thead><tr><th scope="col">Code</th><th scope="col">Lieu</th><th scope="col">Type</th><th scope="col">Quartier · Zone</th><th scope="col">Visibilité</th><th scope="col">Date</th><th scope="col">Statut</th><th scope="col"><span className="visually-hidden">Actions</span></th></tr></thead>
                   <tbody>
                     {rows.map((a) => (
-                      <tr key={a.key}>
+                      <tr key={a.id}>
                         <td className="admin-table__code">{a.publicCode}</td>
                         <td>{a.title}</td>
                         <td>{PLACE_TYPE_LABELS[a.placeType]}</td>
                         <td>{a.district}, {a.city}</td>
+                        <td>{a.listed ? 'Annuaire' : 'Lien direct'}</td>
                         <td>{formatShortDate(a.createdAt)}</td>
                         <td><StatusBadge status={a.status} /></td>
                         <td className="admin-table__actions">
-                          {a.status === 'ACTIVE' && (
+                          {(a.status === 'ACTIVE' || a.status === 'SIGNALED') && (
                             <Link className="button button-ghost-dark button-sm" to={`/a/${encodeURIComponent(a.publicCode)}`} aria-label={`Fiche publique de ${a.publicCode}`}>
                               <Eye aria-hidden="true" />Fiche
                             </Link>
                           )}
-                          {a.addressId && (
-                            <button
-                              className={a.status === 'SUSPENDED' ? 'button button-success button-sm' : 'button button-danger button-sm'}
-                              type="button"
-                              disabled={busyId === a.addressId}
-                              onClick={() => void toggleSuspension(a)}
-                            >
-                              {a.status === 'SUSPENDED' ? <><RotateCcw aria-hidden="true" />Réactiver</> : <><ShieldBan aria-hidden="true" />Suspendre</>}
-                            </button>
-                          )}
+                          <button
+                            className={a.status === 'SUSPENDED' ? 'button button-success button-sm' : 'button button-danger button-sm'}
+                            type="button"
+                            disabled={busyId === a.id}
+                            onClick={() => void toggleSuspension(a)}
+                          >
+                            {a.status === 'SUSPENDED' ? <><RotateCcw aria-hidden="true" />Réactiver</> : <><ShieldBan aria-hidden="true" />Suspendre</>}
+                          </button>
                         </td>
                       </tr>
                     ))}

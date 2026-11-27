@@ -39,6 +39,8 @@ public class AuthService {
     @Value("${app.security.login-rate-limit:5}")
     private int loginRateLimit = 5;
 
+    private static final int MAX_GRACE_CACHE_ENTRIES = 2_000;
+    private static final int REGISTER_RATE_LIMIT_PER_MIN = 10;
     private final Map<String, CachedRefreshResponse> rotationGracePeriodCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     private record CachedRefreshResponse(String accessToken, String newRawRefreshToken, User user, Instant expiry) {}
@@ -49,13 +51,23 @@ public class AuthService {
 
     @Transactional
     public UserProfileResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new EmailAlreadyExistsException("L'adresse email '" + request.getEmail() + "' est déjà utilisée");
+        return register(request, null);
+    }
+
+    @Transactional
+    public UserProfileResponse register(RegisterRequest request, String ipAddress) {
+        if (StringUtils.hasText(ipAddress)) {
+            rateLimiterService.checkRateLimit("register", ipAddress, REGISTER_RATE_LIMIT_PER_MIN);
+        }
+
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new EmailAlreadyExistsException("Cette adresse email est déjà associée à un compte.");
         }
 
         User user = User.builder()
             .fullName(request.getFullName().trim())
-            .email(request.getEmail().trim().toLowerCase())
+            .email(normalizedEmail)
             .phoneNumber(request.getPhoneNumber().trim())
             .passwordHash(passwordEncoder.encode(request.getPassword()))
             .role(Role.PROPRIETAIRE)
@@ -162,11 +174,14 @@ public class AuthService {
 
         String newAccessToken = jwtProvider.generateAccessToken(user);
 
-        // Mettre en cache de grâce pour 30s et nettoyer les entrées expirées
+        // Mettre en cache de grâce pour 30s et nettoyer les entrées expirées (cache borné)
+        rotationGracePeriodCache.entrySet().removeIf(e -> e.getValue().expiry().isBefore(Instant.now()));
+        if (rotationGracePeriodCache.size() >= MAX_GRACE_CACHE_ENTRIES) {
+            rotationGracePeriodCache.clear();
+        }
         rotationGracePeriodCache.put(tokenHash, new CachedRefreshResponse(
             newAccessToken, newRawRefreshToken, user, Instant.now().plusSeconds(30)
         ));
-        rotationGracePeriodCache.entrySet().removeIf(e -> e.getValue().expiry().isBefore(Instant.now()));
 
         return AuthResponse.builder()
             .accessToken(newAccessToken)
@@ -178,12 +193,59 @@ public class AuthService {
 
     @Transactional
     public void logout(String rawRefreshToken, HttpServletResponse response) {
+        logout(rawRefreshToken, null, response);
+    }
+
+    @Transactional
+    public void logout(String rawRefreshToken, String authenticatedEmail, HttpServletResponse response) {
         if (StringUtils.hasText(rawRefreshToken)) {
             String tokenHash = HashUtils.hashSha256(rawRefreshToken);
             rotationGracePeriodCache.remove(tokenHash);
             refreshTokenRepository.deleteByTokenHash(tokenHash);
         }
+        if (StringUtils.hasText(authenticatedEmail)) {
+            userRepository.findByEmail(authenticatedEmail.trim().toLowerCase())
+                .ifPresent(refreshTokenRepository::deleteByUser);
+            rotationGracePeriodCache.entrySet().removeIf(
+                e -> e.getValue().user().getEmail().equalsIgnoreCase(authenticatedEmail.trim())
+            );
+        }
         clearRefreshTokenCookie(response);
+    }
+
+    @Transactional
+    public void changePassword(String authenticatedEmail, ChangePasswordRequest request, HttpServletResponse response) {
+        User user = userRepository.findByEmail(authenticatedEmail.trim().toLowerCase())
+            .orElseThrow(() -> new InvalidCredentialsException("Utilisateur non trouvé"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException("Le mot de passe actuel est incorrect.");
+        }
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+            throw new InvalidAddressOperationException("Le nouveau mot de passe doit être différent de l'ancien.");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        // Révoque tous les refresh tokens existants après changement de mot de passe
+        refreshTokenRepository.deleteByUser(user);
+        rotationGracePeriodCache.entrySet().removeIf(
+            e -> e.getValue().user().getId().equals(user.getId())
+        );
+
+        // Émet un nouveau couple cookie refresh pour la session en cours
+        String newRawRefresh = generateRawRefreshToken();
+        RefreshToken refreshEntity = RefreshToken.builder()
+            .tokenHash(HashUtils.hashSha256(newRawRefresh))
+            .user(user)
+            .expiryDate(Instant.now().plus(7, ChronoUnit.DAYS))
+            .revoked(false)
+            .build();
+        refreshTokenRepository.save(refreshEntity);
+        if (response != null) {
+            setRefreshTokenCookie(response, newRawRefresh, 7 * 24 * 60 * 60);
+        }
     }
 
     @Transactional(readOnly = true)
@@ -198,8 +260,9 @@ public class AuthService {
     }
 
     private void setRefreshTokenCookie(HttpServletResponse response, String value, int maxAgeSeconds) {
+        // Path=/api/auth garantit que le navigateur envoie le cookie à /api/auth/refresh ET /api/auth/logout
         String cookieHeader = String.format(
-            "refreshToken=%s; Max-Age=%d; Path=/api/auth/refresh; HttpOnly; SameSite=Strict%s",
+            "refreshToken=%s; Max-Age=%d; Path=/api/auth; HttpOnly; SameSite=Strict%s",
             value,
             maxAgeSeconds,
             cookieSecure ? "; Secure" : ""
@@ -209,6 +272,12 @@ public class AuthService {
 
     private void clearRefreshTokenCookie(HttpServletResponse response) {
         setRefreshTokenCookie(response, "", 0);
+        // Nettoie aussi un éventuel ancien cookie posé sur l'ancien chemin /api/auth/refresh
+        String legacyClear = String.format(
+            "refreshToken=; Max-Age=0; Path=/api/auth/refresh; HttpOnly; SameSite=Strict%s",
+            cookieSecure ? "; Secure" : ""
+        );
+        response.addHeader("Set-Cookie", legacyClear);
     }
 
     private UserProfileResponse mapToProfileResponse(User user) {

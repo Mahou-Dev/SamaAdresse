@@ -37,6 +37,12 @@ public class DirectoryItemResponse {
     @Schema(description = "Date d'enregistrement")
     private Instant createdAt;
 
+    @Schema(description = "Latitude GPS publique du lieu", example = "12.5738")
+    private Double latitude;
+
+    @Schema(description = "Longitude GPS publique du lieu", example = "-16.2650")
+    private Double longitude;
+
     @Schema(description = "Nom du propriétaire (uniquement si explicitement autorisé par ce dernier)", example = "Mamadou Diallo")
     private String ownerName;
 }

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/authContext'
 import { AddressMap, type MapAddress } from '../components/map/AddressMap'
 import { StatusBadge } from '../components/StatusBadge'
-import { apiUrl, getPublicAddress, listAllMyAddresses, searchDirectory, type AddressStatus, type DirectoryItem, type PlaceType } from '../lib/api'
+import { apiUrl, listAllMyAddresses, searchDirectory, type AddressStatus, type DirectoryItem, type PlaceType } from '../lib/api'
 import { errorMessage } from '../lib/errors'
 import { getAllQuartiers, getAllZones } from '../lib/geoGrid'
 import { PLACE_TYPE_LABELS } from '../lib/labels'
@@ -21,8 +21,6 @@ interface MapItem extends MapAddress {
 }
 
 type LoadState = { kind: 'loading' } | { kind: 'ready'; items: MapItem[]; truncated: boolean } | { kind: 'error'; message: string }
-
-const publicCoordCache = new Map<string, { latitude: number; longitude: number }>()
 
 function fallbackCoords(item: DirectoryItem): { latitude: number; longitude: number } | null {
   const quartier = getAllQuartiers().find(
@@ -44,22 +42,14 @@ function fallbackCoords(item: DirectoryItem): { latitude: number; longitude: num
   return null
 }
 
-async function resolveDirectoryMapItems(items: DirectoryItem[]): Promise<MapItem[]> {
-  // L'annuaire public ne retourne pas lat/lng : on résout les coordonnées exactes sur /api/addresses/{code}
-  // pour les 24 premiers résultats (dans la limite 60 req/min/IP) avec repli sur le centre du quartier.
-  const slice = items.slice(0, 24)
-  const resolved = await Promise.all(
-    slice.map(async (item): Promise<MapItem | null> => {
-      let coords = publicCoordCache.get(item.publicCode)
-      if (!coords) {
-        try {
-          const detail = await getPublicAddress(item.publicCode)
-          coords = { latitude: detail.latitude, longitude: detail.longitude }
-          publicCoordCache.set(item.publicCode, coords)
-        } catch {
-          coords = fallbackCoords(item) ?? undefined
-        }
-      }
+function mapDirectoryToMapItems(items: DirectoryItem[]): MapItem[] {
+  // P2-01 : latitude/longitude sont directement renvoyées par /api/public/directory (0 requête N+1).
+  return items
+    .map((item): MapItem | null => {
+      const coords =
+        typeof item.latitude === 'number' && typeof item.longitude === 'number'
+          ? { latitude: item.latitude, longitude: item.longitude }
+          : fallbackCoords(item)
       if (!coords) return null
       return {
         key: item.publicCode,
@@ -73,9 +63,8 @@ async function resolveDirectoryMapItems(items: DirectoryItem[]): Promise<MapItem
         href: `/a/${encodeURIComponent(item.publicCode)}`,
         photoUrl: item.photoUrl,
       }
-    }),
-  )
-  return resolved.filter((x): x is MapItem => x !== null)
+    })
+    .filter((x): x is MapItem => x !== null)
 }
 
 export function MapPage() {
@@ -110,9 +99,9 @@ export function MapPage() {
           photoUrl: a.photoUrl,
         })),
       }))
-      : searchDirectory({}, 0, 24).then(async (page) => ({
-        truncated: page.totalElements > 24,
-        items: await resolveDirectoryMapItems(page.items),
+      : searchDirectory({}, 0, 50).then((page) => ({
+        truncated: page.totalElements > 50,
+        items: mapDirectoryToMapItems(page.items),
       }))
     load
       .then((r) => { if (!cancelled) setState({ kind: 'ready', ...r }) })
@@ -198,7 +187,7 @@ export function MapPage() {
           </div>
           <aside className="map-page__panel" aria-label="Résultats">
             {geoMessage && <p className="alert" role="status">{geoMessage}</p>}
-            {state.truncated && <p className="alert alert--warning">Les 24 adresses publiques les plus récentes sont affichées sur la carte. Utilisez la recherche pour filtrer tout l’annuaire.</p>}
+            {state.truncated && <p className="alert alert--warning">Les 50 adresses publiques les plus récentes sont affichées sur la carte. Utilisez la recherche pour filtrer tout l’annuaire.</p>}
             {selected && (
               <div className="map-selected">
                 {selected.photoUrl && <img className="map-selected__photo" src={apiUrl(selected.photoUrl)} alt={`Façade : ${selected.title}`} />}

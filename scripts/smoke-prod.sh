@@ -239,7 +239,7 @@ else:
         rt_detail
     )
 
-# 8. POST /api/auth/login -> 200 + Set-Cookie (HttpOnly, SameSite=Strict, Path=/api/auth/refresh)
+# 8. POST /api/auth/login -> 200 + Set-Cookie (HttpOnly, SameSite=Strict, Path=/api/auth)
 login_payload = json.dumps({"email": "demo@samaadresse.sn", "password": demo_pass}).encode("utf-8")
 st_lg, hdrs_lg, body_lg, err_lg = req("POST", "/api/auth/login", {"Content-Type": "application/json"}, login_payload)
 token = ""
@@ -256,12 +256,12 @@ else:
         st_lg == 200 and bool(token)
         and "httponly" in set_cookie.lower()
         and "samesite=strict" in set_cookie.lower()
-        and "path=/api/auth/refresh" in set_cookie.lower()
+        and "path=/api/auth" in set_cookie.lower()
     )
     record(
         "POST /api/auth/login + attributs Set-Cookie",
         cookie_ok,
-        f"HTTP {st_lg}, token reçu ({len(token)} car.), Set-Cookie contient HttpOnly, SameSite=Strict, Path=/api/auth/refresh"
+        f"HTTP {st_lg}, token reçu ({len(token)} car.), Set-Cookie contient HttpOnly, SameSite=Strict, Path=/api/auth"
     )
 
 # 9. Création d'une adresse avec photo -> photo servie depuis PostgreSQL -> suppression de la photo -> 404

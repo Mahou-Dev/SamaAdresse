@@ -84,12 +84,16 @@ export function RouteControls({ code, latitude, longitude, onRoute }: {
         <div className="route-controls__summary" role="status">
           <p>
             <strong>{formatDistance(state.route.distanceMeters)}</strong> · environ {formatDuration(state.route.durationSeconds)} {state.route.profile === 'driving-car' ? 'en voiture' : 'à pied'}
-            <small>Calculé par OpenRouteService</small>
+            <small>
+              {state.route.approximateFallback
+                ? 'Estimation directe (itinéraire routier OpenRouteService indisponible)'
+                : 'Calculé par OpenRouteService'}
+            </small>
           </p>
           {state.route.steps.length > 0 && (
             <details>
               <summary>Étapes de guidage ({state.route.steps.length})</summary>
-              <ol style={{ margin: '8px 0 0', paddingLeft: '18px', fontSize: '12.5px' }}>
+              <ol className="route-controls__steps">
                 {state.route.steps.map((s, idx) => (
                   <li key={idx}>{s.instruction} ({formatDistance(s.distance)})</li>
                 ))}
