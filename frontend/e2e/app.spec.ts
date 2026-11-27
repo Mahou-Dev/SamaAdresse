@@ -66,8 +66,8 @@ test.describe('SamaAdresse E2E — Nouveau Frontend connecté au Backend Spring 
     test.skip(!DEMO_PASSWORD, 'DEMO_PASSWORD non défini dans l’environnement')
 
     await page.goto('/connexion')
-    await page.getByLabel('E-mail').fill(DEMO_EMAIL)
-    await page.getByLabel('Mot de passe').fill(DEMO_PASSWORD)
+    await page.getByLabel('E-mail', { exact: true }).fill(DEMO_EMAIL)
+    await page.getByLabel('Mot de passe', { exact: true }).fill(DEMO_PASSWORD)
     await page.getByRole('button', { name: 'Se connecter' }).click()
 
     await expect(page).toHaveURL(/\/tableau-de-bord$/)
@@ -99,7 +99,8 @@ test.describe('SamaAdresse E2E — Nouveau Frontend connecté au Backend Spring 
     await expect(page.getByRole('button', { name: /Restaurer l’adresse/ })).toBeVisible()
 
     await page.getByRole('button', { name: /Restaurer l’adresse/ }).click()
-    await expect(page.getByText(/Adresse restaurée et de nouveau active/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Archiver l’adresse' })).toBeVisible()
+    await expect(page.getByRole('link', { name: /QR code et partage/ })).toBeVisible()
 
     // Déconnexion
     await page.locator('aside').getByRole('button', { name: 'Se déconnecter' }).click()
