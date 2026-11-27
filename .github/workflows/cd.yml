@@ -1,0 +1,278 @@
+name: CD — Déploiement Production SamaAdresse (Render)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "URL publique de production à vérifier"
+        required: false
+        default: "https://samaadresse.onrender.com"
+      trigger_render_deploy:
+        description: "Déclencher le Deploy Hook Render (si secret RENDER_DEPLOY_HOOK_URL configuré)"
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: samaadresse-production-cd
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PROD_URL: ${{ inputs.target_url || 'https://samaadresse.onrender.com' }}
+
+jobs:
+  pre-deploy-gate:
+    name: Garde pré-déploiement (Qualité, Build & Image Docker)
+    runs-on: ubuntu-24.04
+    outputs:
+      expected_index_js: ${{ steps.bundle.outputs.index_js }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: samaadresse_db
+          POSTGRES_USER: samaadresse_user
+          POSTGRES_PASSWORD: cd_gate_db_password_non_secret
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Contrôle d'hygiène (secrets, .env.example, geo-grid.json)
+        run: |
+          test -z "$(git ls-files .env)"
+          ! grep -qE '^[A-Z0-9_]+=.+$' .env.example
+          python3 scripts/check-env-vars.py
+          cmp -s backend/src/main/resources/geo-grid.json frontend/src/data/geo-grid.json
+
+      - name: Configuration Node.js 22
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Vérification & Build Frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npx tsc -b --noEmit
+          npm run lint
+          npm run test:run
+          npm run build
+          npm run check:size
+
+      - name: Extraction de l'empreinte du bundle frontend attendu
+        id: bundle
+        run: |
+          INDEX_JS=$(grep -oE '/assets/index-[^"]+\.js' frontend/dist/index.html | head -n 1)
+          if [ -z "$INDEX_JS" ]; then
+            echo "ECHEC : impossible de trouver /assets/index-*.js dans frontend/dist/index.html"
+            exit 1
+          fi
+          echo "index_js=$INDEX_JS" >> "$GITHUB_OUTPUT"
+          echo "Bundle d'entrée attendu en production : $INDEX_JS"
+
+      - name: Configuration Java 21 (Temurin)
+        uses: actions/setup-java@v4.7.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Vérification Backend (mvn -B verify avec ressources SPA du build frontend)
+        env:
+          DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
+          DB_USERNAME: samaadresse_user
+          DB_PASSWORD: cd_gate_db_password_non_secret
+          JWT_SECRET: cd-gate-ephemeral-jwt-secret-key-at-least-32-bytes-long
+          DEMO_PASSWORD: CdGateDemoPassword2026!
+        run: |
+          mkdir -p backend/src/main/resources/static
+          cp -r frontend/dist/. backend/src/main/resources/static/
+          (cd backend && mvn -B verify)
+          rm -rf backend/src/main/resources/static
+
+      - name: Validation reproductibilité du Dockerfile de production
+        run: docker build -t samaadresse:cd-verify .
+
+  deploy-render:
+    name: Déploiement Render & attente bascule live
+    runs-on: ubuntu-24.04
+    needs: [pre-deploy-gate]
+    environment:
+      name: production
+      url: ${{ env.PROD_URL }}
+    steps:
+      - name: Déclenchement Render (Deploy Hook ou Auto-Deploy sur main)
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          TRIGGER_HOOK: ${{ inputs.trigger_render_deploy }}
+        run: |
+          if [ -n "$RENDER_DEPLOY_HOOK_URL" ] && [ "$TRIGGER_HOOK" != "false" ]; then
+            echo "Déclenchement explicite du déploiement Render via Deploy Hook…"
+            curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL" > /dev/null
+            echo "Deploy Hook Render appelé avec succès."
+          else
+            echo "::notice::Secret RENDER_DEPLOY_HOOK_URL non défini (ou désactivé) — le déploiement repose sur l'auto-deploy Render configuré sur la branche main (render.yaml)."
+          fi
+
+      - name: Attente disponibilité /api/health et bascule du bundle frontend
+        env:
+          EXPECTED_JS: ${{ needs.pre-deploy-gate.outputs.expected_index_js }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          BASE="${PROD_URL%/}"
+          echo "Cible : $BASE"
+          echo "Bundle attendu : $EXPECTED_JS"
+
+          # On laisse jusqu'à 10 minutes (40 * 15s) pour le build Docker multi-étapes Render Free
+          MATCHED=0
+          for i in $(seq 1 40); do
+            HEALTH=$(curl -sS --max-time 20 "$BASE/api/health" || true)
+            LIVE_JS=$(curl -sS --max-time 20 "$BASE/" | grep -oE '/assets/index-[^"]+\.js' | head -n 1 || true)
+            echo "[Tentative $i/40] health=$HEALTH | live_js=$LIVE_JS"
+
+            if echo "$HEALTH" | grep -q '"status":"UP"' && [ "$LIVE_JS" = "$EXPECTED_JS" ]; then
+              MATCHED=1
+              echo "Bascule confirmée : $LIVE_JS actif sur $BASE"
+              break
+            fi
+
+            # En workflow_dispatch sans hook ni changement de bundle, on sort dès que health est UP
+            if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ "$i" -ge 3 ] && echo "$HEALTH" | grep -q '"status":"UP"' && [ -n "$LIVE_JS" ]; then
+              echo "::notice::Vérification manuelle : instance UP avec $LIVE_JS (attendu $EXPECTED_JS)."
+              MATCHED=1
+              break
+            fi
+
+            sleep 15
+          done
+
+          if [ "$MATCHED" -ne 1 ]; then
+            echo "::error::Le nouveau bundle ($EXPECTED_JS) n'est pas apparu en production dans les 10 minutes. Consultez les logs Render et utilisez Rollback si nécessaire."
+            exit 1
+          fi
+
+  post-deploy-smoke:
+    name: Contrôles post-déploiement en production
+    runs-on: ubuntu-24.04
+    needs: [pre-deploy-gate, deploy-render]
+    steps:
+      - name: Vérification live complète (API, SPA, Sécurité, PWA, Base Neon)
+        env:
+          EXPECTED_JS: ${{ needs.pre-deploy-gate.outputs.expected_index_js }}
+        run: |
+          python3 - << 'PYEOF'
+          import json, os, sys, urllib.request, urllib.error
+
+          base = os.environ["PROD_URL"].rstrip("/")
+          expected_js = os.environ["EXPECTED_JS"]
+          results = []
+          failed = False
+
+          def req(method, path, headers=None):
+              r = urllib.request.Request(base + path, headers=headers or {}, method=method)
+              try:
+                  with urllib.request.urlopen(r, timeout=30) as resp:
+                      return resp.status, {k.lower(): v for k, v in resp.info().items()}, resp.read()
+              except urllib.error.HTTPError as e:
+                  return e.code, {k.lower(): v for k, v in e.headers.items()}, e.read()
+
+          def check(name, ok, detail):
+              global failed
+              if not ok:
+                  failed = True
+              results.append((name, "OK" if ok else "ECHEC", detail))
+              print(f"[{'OK' if ok else 'ECHEC'}] {name} — {detail}")
+
+          # 1. Health + en-têtes sécurité
+          st, hdrs, body = req("GET", "/api/health")
+          check("GET /api/health", st == 200 and '"status":"UP"' in body.decode("utf-8", "ignore"), f"HTTP {st}")
+          sec_ok = (
+              hdrs.get("x-content-type-options") == "nosniff"
+              and hdrs.get("x-frame-options") == "DENY"
+              and "strict-origin-when-cross-origin" in hdrs.get("referrer-policy", "")
+              and "geolocation=(self)" in hdrs.get("permissions-policy", "")
+              and "default-src 'self'" in hdrs.get("content-security-policy-report-only", "")
+          )
+          check("En-têtes de sécurité HTTP", sec_ok, f"HSTS={bool(hdrs.get('strict-transport-security'))}, XCTO={hdrs.get('x-content-type-options')}, XFO={hdrs.get('x-frame-options')}")
+
+          # 2. Page d'accueil + Asset immuable
+          st, hdrs, body = req("GET", "/", {"Accept": "text/html"})
+          html = body.decode("utf-8", "ignore")
+          check("GET / (HTML + no-cache + bundle)", st == 200 and "no-cache" in hdrs.get("cache-control", "") and expected_js in html, f"HTTP {st}, expected_js_present={expected_js in html}")
+
+          st_js, hdrs_js, body_js = req("GET", expected_js)
+          check(f"GET {expected_js} (immutable)", st_js == 200 and len(body_js) > 50000 and "immutable" in hdrs_js.get("cache-control", ""), f"HTTP {st_js}, {len(body_js)}B")
+
+          # 3. Repli SPA sur routes clés (nouvelles + alias rétrocompatibles)
+          spa_routes = ["/recherche", "/annuaire", "/carte", "/a/ZIG-KBG-4271", "/connexion", "/login", "/tableau-de-bord", "/mes-adresses", "/compte", "/admin"]
+          bad_spa = []
+          for route in spa_routes:
+              s, h, b = req("GET", route, {"Accept": "text/html"})
+              if s != 200 or '<div id="root">' not in b.decode("utf-8", "ignore") or "no-cache" not in h.get("cache-control", ""):
+                  bad_spa.append(f"{route}:{s}")
+          check(f"Repli SPA direct ({len(spa_routes)} routes)", len(bad_spa) == 0, "10/10 OK" if not bad_spa else f"Echecs: {bad_spa}")
+
+          # 4. API publiques & Neon DB
+          st, _, body = req("GET", "/api/public/directory?size=5")
+          dir_data = json.loads(body.decode("utf-8")) if st == 200 else {}
+          check("GET /api/public/directory (Neon DB)", st == 200 and isinstance(dir_data.get("content"), list), f"HTTP {st}, totalElements={dir_data.get('totalElements')}")
+
+          st, _, body = req("GET", "/api/addresses/ZIG-KBG-4271")
+          check("GET /api/addresses/ZIG-KBG-4271", st == 200 and '"ZIG-KBG-4271"' in body.decode("utf-8", "ignore"), f"HTTP {st}")
+
+          st, hdrs, body = req("GET", "/api/addresses/ZIG-KBG-4271/qrcode")
+          check("GET /api/addresses/ZIG-KBG-4271/qrcode", st == 200 and body[:8] == b"\x89PNG\r\n\x1a\n", f"HTTP {st}, {len(body)}B PNG")
+
+          st, _, _ = req("GET", "/v3/api-docs")
+          check("GET /v3/api-docs", st == 200, f"HTTP {st}")
+
+          # 5. Protection Auth & Admin
+          st_rf, _, _ = req("POST", "/api/auth/refresh")
+          st_mn, _, _ = req("GET", "/api/addresses/mine")
+          st_ad, _, _ = req("GET", "/api/admin/reports")
+          check("Protection endpoints privés (401)", st_rf == 401 and st_mn == 401 and st_ad == 401, f"refresh={st_rf}, mine={st_mn}, admin={st_ad}")
+
+          # 6. PWA
+          st_sw, _, b_sw = req("GET", "/sw.js")
+          st_mf, _, b_mf = req("GET", "/manifest.webmanifest")
+          mf = json.loads(b_mf.decode("utf-8")) if st_mf == 200 else {}
+          st_192, _, b_192 = req("GET", "/icons/icon-192.png")
+          st_512, _, b_512 = req("GET", "/icons/icon-512.png")
+          pwa_ok = (
+              st_sw == 200 and len(b_sw) > 500
+              and st_mf == 200 and mf.get("name") == "SamaAdresse"
+              and st_192 == 200 and b_192[:8] == b"\x89PNG\r\n\x1a\n"
+              and st_512 == 200 and b_512[:8] == b"\x89PNG\r\n\x1a\n"
+          )
+          check("Artefacts PWA (sw.js, manifest, icons)", pwa_ok, f"sw={st_sw}, manifest={mf.get('name')}, icons={st_192}/{st_512}")
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+          if summary_path:
+              with open(summary_path, "a", encoding="utf-8") as sf:
+                  sf.write(f"## Déploiement Production SamaAdresse\n\n")
+                  sf.write(f"- **URL :** {base}\n")
+                  sf.write(f"- **Commit :** `{os.environ.get('GITHUB_SHA', '')}`\n")
+                  sf.write(f"- **Bundle déployé :** `{expected_js}`\n\n")
+                  sf.write("| Contrôle | Statut | Détail |\n|---|:---:|---|\n")
+                  for name, st_str, det in results:
+                      sf.write(f"| {name} | **{st_str}** | `{det}` |\n")
+                  sf.write("\n> **Rollback non destructif :** Render Dashboard → Service `samaadresse` → *Events* → **Rollback to this deploy** (aucune donnée Neon supprimée).\n")
+
+          if failed:
+              sys.exit(1)
+          PYEOF

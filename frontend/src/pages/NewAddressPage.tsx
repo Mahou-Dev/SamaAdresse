@@ -1,557 +1,474 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { AlertCircle, WifiOff } from 'lucide-react';
-import { PublicLayout } from '../app/layouts/PublicLayout';
-import { Breadcrumb } from '../components/ui/Breadcrumb';
-import { useToast } from '../components/Toast';
-import { createAddress } from '../api/addressApi';
-import type { LocationType, AddressResponse } from '../api/addressApi';
-import { ApiError } from '../api/apiClient';
-import { compressImage } from '../utils/imageCompressor';
-import {
-  validateStep1Position,
-  validateStep2Details,
-  validateStep3Photo,
-} from '../utils/formValidation';
-import { useAuth } from '../context/AuthContext';
-import { resolveQuartier, formatOutOfZoneMessage, getZoneName } from '../utils/geoGrid';
-import {
-  getDraftsCount,
-  saveDraft,
-  getAvailableReservedCode,
-  MAX_DRAFTS,
-} from '../utils/offlineDb';
-import type { OfflineDraft } from '../utils/offlineDb';
-import { useOnlineStatus } from '../context/OnlineStatusContext';
-import { WizardStepper } from '../features/addresses/creation/WizardStepper';
-import { WizardStepLocation } from '../features/addresses/creation/WizardStepLocation';
-import { WizardStepDetails } from '../features/addresses/creation/WizardStepDetails';
-import { WizardStepPhoto } from '../features/addresses/creation/WizardStepPhoto';
-import type { CompressionStats } from '../features/addresses/creation/WizardStepPhoto';
-import { WizardStepResult } from '../features/addresses/creation/WizardStepResult';
+import { ArrowLeft, ArrowLeftRight, ArrowRight, Check, Info, LocateFixed, MapPin, Save } from 'lucide-react'
+import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/authContext'
+import { FormField } from '../components/FormField'
+import { AddressMap } from '../components/map/AddressMap'
+import { LocationPicker } from '../components/map/LocationPicker'
+import { PhotoPicker } from '../components/PhotoPicker'
+import { gridCell } from '../lib/addressCode'
+import { draftsSupported, saveDraft } from '../lib/drafts'
+import { ApiError, composeAddressDescription, createMyAddress, uploadMyAddressPhoto, type FieldErrors, type PlaceType } from '../lib/api'
+import { errorMessage } from '../lib/errors'
+import { describedBy } from '../lib/forms'
+import { looksSwapped, parseCoordinate, parseCoordinatePair } from '../lib/coordinates'
+import { formatOutOfZoneMessage, getAllZones, getZoneName, resolveQuartier, type GeoQuartier } from '../lib/geoGrid'
+import { accuracyLevel, formatDistance, GeolocationFailure, GEOLOCATION_MESSAGES, locateBestPosition } from '../lib/geolocation'
+import { PLACE_TYPE_LABELS } from '../lib/labels'
 
-export const NewAddressPage: React.FC = () => {
-  const { isOnline } = useOnlineStatus();
-  const { user } = useAuth();
-  const { showToast } = useToast();
+type ListingChoice = '' | 'yes' | 'no'
+type GeoState =
+  | { kind: 'idle' }
+  | { kind: 'locating'; accuracy?: number }
+  | { kind: 'done'; accuracy: number; timestamp: number }
+  | { kind: 'error'; message: string }
 
-  const [step, setStep] = useState<number>(1);
-  const headingRef = useRef<HTMLSpanElement | null>(null);
-  const submittingRef = useRef(false);
+interface FormValues {
+  title: string
+  placeType: PlaceType | ''
+  description: string
+  latitude: string
+  longitude: string
+  listed: ListingChoice
+  ownerNamePublic: boolean
+}
 
-  // Étape 1 : Coordonnées (Ziguinchor par défaut)
-  const [latitude, setLatitude] = useState<string>('12.578333');
-  const [longitude, setLongitude] = useState<string>('-16.271944');
-  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
-  const [loadingGps, setLoadingGps] = useState<boolean>(false);
-  const [gpsError, setGpsError] = useState<string | null>(null);
-  const [gpsAcquired, setGpsAcquired] = useState<boolean>(false);
+const EMPTY: FormValues = { title: '', placeType: '', description: '', latitude: '', longitude: '', listed: '', ownerNamePublic: false }
+const ZONES = getAllZones()
 
-  // Étape 2 : Détails & Visibilité
-  const [locationType, setLocationType] = useState<LocationType>('MAISON');
-  const [description, setDescription] = useState<string>('');
-  const [listed, setListed] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('sa_pref_default_listed') === 'true';
-    } catch {
-      return false;
-    }
-  });
-  const [showOwnerName, setShowOwnerName] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('sa_pref_default_show_owner') === 'true';
-    } catch {
-      return false;
-    }
-  });
+const STEPS = ['Informations', 'Localisation', 'Photo', 'Validation'] as const
+const STEP_TITLES = ['informations générales', 'localisation', 'photo de la façade (facultative)', 'vérification et annuaire']
+const STEP_FIELDS: Array<Array<string>> = [
+  ['title', 'placeType', 'locationType', 'description'],
+  ['latitude', 'longitude'],
+  ['photo', 'file'],
+  ['listed'],
+]
 
-  // Étape 3 : Photo
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [compressing, setCompressing] = useState<boolean>(false);
-  const [compressionStats, setCompressionStats] = useState<CompressionStats | null>(null);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  // Étape 4 & Soumission
-  const [submitting, setSubmitting] = useState<boolean>(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [createdAddress, setCreatedAddress] = useState<AddressResponse | null>(null);
-  const [isOfflineCreated, setIsOfflineCreated] = useState<boolean>(false);
-  const [hasTemporaryCode, setHasTemporaryCode] = useState<boolean>(false);
-
-  // Déplacement du focus lors du changement d'étape pour l'accessibilité
-  useEffect(() => {
-    headingRef.current?.focus();
-  }, [step]);
-
-  // Libération propre de l'URL Blob à la suppression / démontage
-  useEffect(() => {
-    return () => {
-      if (photoPreview && photoPreview.startsWith('blob:')) {
-        URL.revokeObjectURL(photoPreview);
+function tryResolveQuartier(lat: number, lng: number): { quartier: GeoQuartier | null; error: string | null } {
+  try {
+    return { quartier: resolveQuartier(lat, lng), error: null }
+  } catch {
+    if (looksSwapped(lat, lng)) {
+      return {
+        quartier: null,
+        error: 'Latitude et longitude semblent inversées : au Sénégal, la latitude est entre 12 et 16,8 et la longitude est négative (entre -17,6 et -11,3).',
       }
-    };
-  }, [photoPreview]);
-
-  const summaryQuartierLabel = useMemo(() => {
-    const latNum = parseFloat(latitude);
-    const lonNum = parseFloat(longitude);
-    if (!validateStep1Position(latNum, lonNum).isValid) return null;
-    try {
-      const q = resolveQuartier(latNum, lonNum);
-      return `${q.name} · ${getZoneName(q.zoneCode)}`;
-    } catch {
-      return null;
     }
-  }, [latitude, longitude]);
+    return { quartier: null, error: formatOutOfZoneMessage() }
+  }
+}
 
-  const handleCaptureGps = () => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGpsError("La géolocalisation n'est pas supportée par votre navigateur.");
-      return;
+function validateStep(step: number, values: FormValues): FieldErrors {
+  const errors: FieldErrors = {}
+  if (step === 0) {
+    if (values.title.trim().length < 2) errors.title = 'Le nom du lieu doit contenir au moins 2 caractères.'
+    if (!values.placeType) errors.placeType = 'Choisissez un type de lieu.'
+    const combined = composeAddressDescription(values.title, values.description)
+    if (combined.length > 500) {
+      errors.description = 'La description totale (nom + repères) ne doit pas dépasser 500 caractères.'
     }
-
-    setLoadingGps(true);
-    setGpsError(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lng = position.coords.longitude;
-        const accuracy = position.coords.accuracy;
-
-        setLatitude(lat.toFixed(6));
-        setLongitude(lng.toFixed(6));
-        setGpsAccuracy(accuracy);
-        setGpsAcquired(true);
-        setLoadingGps(false);
-        setSubmitError(null);
-        showToast('Position GPS capturée !', 'success');
-      },
-      (err) => {
-        setLoadingGps(false);
-        if (err.code === 1) {
-          setGpsError('Autorisation refusée. Vous pouvez positionner le repère sur la carte.');
-        } else if (err.code === 2) {
-          setGpsError('Position indisponible. Vérifiez votre signal GPS.');
-        } else {
-          setGpsError('Délai dépassé lors de la capture GPS. Réessayez.');
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
+  }
+  if (step === 1) {
+    const lat = parseCoordinate(values.latitude)
+    const lng = parseCoordinate(values.longitude)
+    if (lat === null || lat < -90 || lat > 90) errors.latitude = 'Saisissez une latitude valide (entre -90 et 90).'
+    if (lng === null || lng < -180 || lng > 180) errors.longitude = 'Saisissez une longitude valide (entre -180 et 180).'
+    if (!errors.latitude && !errors.longitude) {
+      const resolved = tryResolveQuartier(lat as number, lng as number)
+      if (!resolved.quartier && resolved.error) {
+        errors.latitude = resolved.error
       }
-    );
-  };
-
-  const handleMapPositionChange = (lat: number, lng: number) => {
-    setLatitude((prev) =>
-      Math.abs(parseFloat(prev) - lat) < 0.000001 ? prev : lat.toFixed(6)
-    );
-    setLongitude((prev) =>
-      Math.abs(parseFloat(prev) - lng) < 0.000001 ? prev : lng.toFixed(6)
-    );
-    setSubmitError(null);
-  };
-
-  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPhotoError(null);
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validation = validateStep3Photo(file);
-    if (!validation.isValid) {
-      setPhotoError(validation.error || 'Fichier invalide');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
     }
+  }
+  if (step === 3 && !values.listed) errors.listed = 'Indiquez si cette adresse doit figurer dans l’annuaire public.'
+  return errors
+}
 
+export function NewAddressPage() {
+  const { token, user, logout, refresh } = useAuth()
+  const navigate = useNavigate()
+  const [step, setStep] = useState(0)
+  const [values, setValues] = useState<FormValues>(EMPTY)
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [geo, setGeo] = useState<GeoState>({ kind: 'idle' })
+  const [photo, setPhoto] = useState<Blob | null>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const focusRafRef = useRef<number | null>(null)
+  const geolocationAvailable = typeof navigator !== 'undefined' && 'geolocation' in navigator
+
+  useEffect(() => () => {
+    if (focusRafRef.current !== null) cancelAnimationFrame(focusRafRef.current)
+  }, [])
+
+  const lat = parseCoordinate(values.latitude)
+  const lng = parseCoordinate(values.longitude)
+  const point = lat !== null && lng !== null && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : null
+  const resolvedGeo = point ? tryResolveQuartier(point.lat, point.lng) : { quartier: null, error: null }
+  const resolvedQuartier = resolvedGeo.quartier
+  const previewCode = point && resolvedQuartier
+    ? `${resolvedQuartier.zoneCode}-${resolvedQuartier.code}-${gridCell(point.lat, point.lng)}`
+    : null
+
+  function update<K extends keyof FormValues>(key: K, value: FormValues[K]) {
+    setValues((current) => ({ ...current, [key]: value }))
+  }
+
+  function setPoint(latitude: number, longitude: number) {
+    setValues((current) => ({ ...current, latitude: latitude.toFixed(6), longitude: longitude.toFixed(6) }))
+  }
+
+  function placeManually(latitude: number, longitude: number) {
+    setPoint(latitude, longitude)
+    setGeo((current) => (current.kind === 'done' ? { kind: 'idle' } : current))
+  }
+
+  function changeCoordinate(key: 'latitude' | 'longitude', value: string) {
+    update(key, value)
+    setGeo((current) => (current.kind === 'done' ? { kind: 'idle' } : current))
+  }
+
+  function pasteCoordinates(event: ClipboardEvent<HTMLInputElement>) {
+    const pair = parseCoordinatePair(event.clipboardData.getData('text'))
+    if (!pair) return
+    event.preventDefault()
+    setValues((current) => ({ ...current, latitude: String(pair.lat), longitude: String(pair.lng) }))
+    setGeo((current) => (current.kind === 'done' ? { kind: 'idle' } : current))
+  }
+
+  function swapCoordinates() {
+    setValues((current) => ({ ...current, latitude: current.longitude, longitude: current.latitude }))
+    setFieldErrors((current) => ({ ...current, latitude: '', longitude: '' }))
+  }
+
+  function goTo(nextStep: number) {
+    setStep(nextStep)
+    setError(null)
+    if (focusRafRef.current !== null) cancelAnimationFrame(focusRafRef.current)
+    focusRafRef.current = requestAnimationFrame(() => {
+      focusRafRef.current = null
+      const active = document.activeElement
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+        return
+      }
+      headingRef.current?.focus()
+    })
+  }
+
+  function next() {
+    const errors = validateStep(step, values)
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) {
+      setError('Corrigez les champs signalés pour continuer.')
+      return
+    }
+    goTo(step + 1)
+  }
+
+  async function locateMe() {
+    setGeo({ kind: 'locating' })
     try {
-      setCompressing(true);
-      const result = await compressImage(file, 800, 0.8);
-      setPhotoFile(result.file);
-      setPhotoPreview(result.previewUrl);
-      setCompressionStats({
-        originalSize: result.originalSize,
-        compressedSize: result.compressedSize,
-        reductionPercentage: result.reductionPercentage,
-      });
-      showToast('Photo optimisée pour le chargement mobile', 'info');
-    } catch {
-      setPhotoError("Impossible de traiter l'image. Veuillez réessayer.");
-    } finally {
-      setCompressing(false);
+      const fix = await locateBestPosition(undefined, {
+        onProgress: (progress) => setGeo({ kind: 'locating', accuracy: progress.accuracy }),
+      })
+      const check = tryResolveQuartier(fix.latitude, fix.longitude)
+      if (!check.quartier) {
+        setGeo({
+          kind: 'error',
+          message: `Position relevée (${fix.latitude.toFixed(5)}, ${fix.longitude.toFixed(5)}, ±${formatDistance(fix.accuracy)}) hors zones couvertes (Ziguinchor, Dakar, Saint-Louis). Placez le point sur la carte.`,
+        })
+        return
+      }
+      setPoint(fix.latitude, fix.longitude)
+      setGeo({ kind: 'done', accuracy: fix.accuracy, timestamp: fix.timestamp })
+    } catch (failure) {
+      setGeo({ kind: 'error', message: failure instanceof GeolocationFailure ? failure.message : GEOLOCATION_MESSAGES.unavailable })
     }
-  };
+  }
 
-  const handleRemovePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setCompressionStats(null);
-    setPhotoError(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  async function submitAddress(activeToken: string, clientRequestId: string) {
+    const input = {
+      title: values.title.trim(),
+      placeType: values.placeType as PlaceType,
+      description: values.description.trim() || null,
+      latitude: lat as number,
+      longitude: lng as number,
+      listed: values.listed === 'yes',
+      ownerNamePublic: values.listed === 'yes' && values.ownerNamePublic,
+      clientRequestId,
     }
-  };
-
-  const handleGoToStep2 = () => {
-    const latNum = parseFloat(latitude);
-    const lonNum = parseFloat(longitude);
-    const val = validateStep1Position(latNum, lonNum);
-    if (!val.isValid) {
-      setSubmitError(val.error || 'Coordonnées invalides');
-      return;
-    }
-    try {
-      resolveQuartier(latNum, lonNum);
-    } catch {
-      setSubmitError(formatOutOfZoneMessage());
-      window.scrollTo({ top: 0, behavior: 'instant' });
-      return;
-    }
-    setSubmitError(null);
-    setStep(2);
-  };
-
-  const handleGoToStep3 = () => {
-    const val = validateStep2Details(locationType, description);
-    if (!val.isValid) {
-      setSubmitError(val.error || 'Description requise');
-      return;
-    }
-    setSubmitError(null);
-    setStep(3);
-  };
-
-  const handleFinalSubmit = async (includePhoto = true) => {
-    if (submittingRef.current || submitting) return;
-
-    const latNum = parseFloat(latitude);
-    const lonNum = parseFloat(longitude);
-    const posVal = validateStep1Position(latNum, lonNum);
-    if (!posVal.isValid) {
-      setSubmitError(posVal.error || 'Coordonnées invalides');
-      setStep(1);
-      return;
-    }
-
-    const detailsVal = validateStep2Details(locationType, description);
-    if (!detailsVal.isValid) {
-      setSubmitError(detailsVal.error || 'Description requise');
-      setStep(2);
-      return;
-    }
-
-    submittingRef.current = true;
-    setSubmitError(null);
-    setSubmitting(true);
-
-    const executeLocalOfflineSave = async (fromLostConnection = false) => {
+    const created = await createMyAddress(activeToken, input)
+    let photoError: string | null = null
+    if (photo) {
       try {
-        const count = await getDraftsCount();
-        if (count >= MAX_DRAFTS) {
-          setSubmitError(
-            "File d'attente pleine (20 adresses). Veuillez vous reconnecter pour les transmettre."
-          );
-          return;
-        }
-
-        performance.mark('offline-address-create-start');
-
-        let quartier;
-        try {
-          quartier = resolveQuartier(latNum, lonNum);
-        } catch {
-          setSubmitError(formatOutOfZoneMessage());
-          setStep(1);
-          return;
-        }
-
-        const clientRequestId = crypto.randomUUID();
-        const draftId = crypto.randomUUID();
-
-        const reservedCode = await getAvailableReservedCode(quartier.zoneCode, quartier.code);
-        const isTemp = !reservedCode;
-        const assignedCode = reservedCode || `${quartier.zoneCode}-${quartier.code}-????`;
-
-        const photoBlob: Blob | null = includePhoto && photoFile ? photoFile : null;
-
-        const draft: OfflineDraft = {
-          id: draftId,
-          clientRequestId,
-          latitude: latNum,
-          longitude: lonNum,
-          zone: quartier.zoneCode,
-          quartier: quartier.code,
-          description: description.trim(),
-          locationType,
-          photoBlob,
-          reservedCode: reservedCode || null,
-          status: 'PENDING',
-          createdAt: new Date().toISOString(),
-          attempts: 0,
-        };
-
-        await saveDraft(draft);
-
-        const offlineResp: AddressResponse = {
-          id: draftId,
-          code: assignedCode,
-          latitude: latNum,
-          longitude: lonNum,
-          zone: quartier.zoneCode,
-          quartier: quartier.code,
-          description: description.trim(),
-          locationType,
-          status: 'ACTIVE',
-          createdAt: draft.createdAt,
-          owner: {
-            id: user?.id || 'offline',
-            fullName: user?.fullName || 'Propriétaire',
-            email: user?.email || '',
-            phoneNumber: user?.phoneNumber || '',
-            role: 'PROPRIETAIRE',
-          },
-        };
-
-        setCreatedAddress(offlineResp);
-        setIsOfflineCreated(true);
-        setHasTemporaryCode(isTemp);
-        setStep(4);
-
-        performance.mark('offline-address-create-end');
-        try {
-          performance.measure(
-            'offline-address-create-time',
-            'offline-address-create-start',
-            'offline-address-create-end'
-          );
-        } catch {
-          // ignorer
-        }
-
-        if (fromLostConnection) {
-          showToast('Connexion perdue · adresse enregistrée sur cet appareil', 'info');
-        } else {
-          showToast('Adresse enregistrée sur cet appareil', 'success');
-        }
-      } catch (err: unknown) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : "Erreur lors de l'enregistrement local de l'adresse.";
-        setSubmitError(msg);
-      } finally {
-        submittingRef.current = false;
-        setSubmitting(false);
+        await uploadMyAddressPhoto(activeToken, created.id, photo)
+      } catch (photoErr) {
+        photoError = photoErr instanceof ApiError && (photoErr.fieldErrors.file || photoErr.fieldErrors.photo)
+          ? (photoErr.fieldErrors.file || photoErr.fieldErrors.photo)
+          : errorMessage(photoErr)
       }
-    };
+    }
+    navigate(`/mes-adresses/${created.id}`, {
+      state: { justCreated: true, photoError, provisionalCode: previewCode ?? undefined },
+    })
+  }
 
-    if (!isOnline) {
-      await executeLocalOfflineSave(false);
-      return;
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (step < STEPS.length - 1) {
+      next()
+      return
+    }
+    for (let s = 0; s < STEPS.length; s++) {
+      const errors = validateStep(s, values)
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
+        setError('Corrigez les champs signalés avant d’enregistrer.')
+        if (s !== step) goTo(s)
+        return
+      }
+    }
+    if (!token) return
+    setSubmitting(true)
+    setError(null)
+    const clientRequestId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}`
+
+    const draftInput = {
+      title: values.title.trim(),
+      placeType: values.placeType as PlaceType,
+      description: values.description.trim() || null,
+      latitude: lat as number,
+      longitude: lng as number,
+      listed: values.listed === 'yes',
+      ownerNamePublic: values.listed === 'yes' && values.ownerNamePublic,
+      clientRequestId,
     }
 
-    // Tentative en ligne avec timeout de 8 secondes
     try {
-      const clientReqId = crypto.randomUUID();
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        window.setTimeout(() => reject(new Error('TIMEOUT_8S')), 8000)
-      );
-
-      const onlinePromise = createAddress(
-        {
-          latitude: latNum,
-          longitude: lonNum,
-          description: description.trim(),
-          locationType,
-          listed,
-          showOwnerName: listed ? showOwnerName : false,
-          clientRequestId: clientReqId,
-        },
-        includePhoto && photoFile ? photoFile : undefined
-      );
-
-      const result = await Promise.race([onlinePromise, timeoutPromise]);
-      setCreatedAddress(result);
-      setIsOfflineCreated(false);
-      setHasTemporaryCode(false);
-      setStep(4);
-      showToast(`Adresse ${result.code} créée avec succès !`, 'success');
-      submittingRef.current = false;
-      setSubmitting(false);
-    } catch (err: unknown) {
-      if (err instanceof ApiError && (err.status === 400 || err.status === 422)) {
-        if (err.status === 422) {
-          setSubmitError('Coordonnées hors zone couverte');
-          setStep(1);
-        } else {
-          setSubmitError(err.message || 'Données invalides.');
+      await submitAddress(token, clientRequestId)
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        const fresh = await refresh()
+        if (fresh) {
+          try {
+            await submitAddress(fresh, clientRequestId)
+            return
+          } catch (retryErr) {
+            if (retryErr instanceof ApiError && retryErr.status === 401) { void logout(); return }
+            setSubmitting(false)
+            setError(errorMessage(retryErr))
+            return
+          }
         }
-        submittingRef.current = false;
-        setSubmitting(false);
-        return;
+        void logout()
+        return
       }
-
-      // Échec réseau, timeout 8s ou erreur 5xx : bascule automatique sur l'enregistrement local
-      await executeLocalOfflineSave(true);
+      if (err instanceof ApiError && err.status === 0 && user && draftsSupported()) {
+        try {
+          const draft = await saveDraft(user.id, draftInput, previewCode ?? 'BROUILLON', photo)
+          navigate('/mes-adresses', { state: { draftSaved: draft.provisionalCode } })
+          return
+        } catch {
+          // Stockage local refusé : affiche l'erreur réseau ci-dessous.
+        }
+      }
+      setSubmitting(false)
+      setError(errorMessage(err))
+      if (err instanceof ApiError) {
+        setFieldErrors(err.fieldErrors)
+        const target = STEP_FIELDS.findIndex((fields) => fields.some((f) => f in err.fieldErrors))
+        if (target >= 0 && target !== step) goTo(target)
+      }
     }
-  };
+  }
 
-  const handleReset = () => {
-    setCreatedAddress(null);
-    setIsOfflineCreated(false);
-    setHasTemporaryCode(false);
-    setDescription('');
-    setLocationType('MAISON');
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setCompressionStats(null);
-    setPhotoError(null);
-    setSubmitError(null);
-    setStep(1);
-  };
-
-  const handleDownloadQrCode = (addressCode: string) => {
-    const link = document.createElement('a');
-    link.href = `${import.meta.env.VITE_API_BASE_URL || ''}/api/addresses/${encodeURIComponent(addressCode)}/qrcode`;
-    link.download = `samaadresse-${addressCode}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Téléchargement du QR Code démarré', 'success');
-  };
-
+  const fe = fieldErrors
   return (
-    <PublicLayout maxWidth="form" surface="canvas">
-      <div className="space-y-6 pb-8">
-        {/* Fil d'Ariane et titre de contexte ("Nouvelle adresse" préservé pour lot7.spec.ts) */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Breadcrumb
-            items={[
-              { label: 'Accueil', to: '/' },
-              { label: 'Mes adresses', to: '/addresses/mine' },
-              { label: 'Nouvelle adresse' },
-            ]}
-          />
-        </div>
+    <main className="app-page app-page--narrow">
+      <Link className="back-link" to="/mes-adresses"><ArrowLeft aria-hidden="true" />Mes adresses</Link>
+      <section className="panel wizard" aria-labelledby="new-address-title">
+        <h1 id="new-address-title" className="wizard__title">Créer une nouvelle adresse</h1>
+        <ol className="stepper" aria-label="Étapes de création">
+          {STEPS.map((label, index) => (
+            <li key={label} className={index === step ? 'stepper__item stepper__item--current' : index < step ? 'stepper__item stepper__item--done' : 'stepper__item'}
+              aria-current={index === step ? 'step' : undefined}>
+              <span className="stepper__num">{index < step ? <Check aria-hidden="true" /> : index + 1}</span>
+              <span className="stepper__label">{label}</span>
+            </li>
+          ))}
+        </ol>
 
-        {/* Stepper visuel 4 étapes */}
-        <WizardStepper
-          currentStep={step}
-          headingRef={headingRef}
-          onStepSelect={(target) => {
-            if (target < step && step < 4 && !submitting) {
-              setSubmitError(null);
-              setStep(target);
-            }
-          }}
-          disabled={submitting}
-        />
+        <form className="stack-form" onSubmit={handleSubmit} noValidate aria-label="Création d’adresse">
+          <h2 className="wizard__step-title" ref={headingRef} tabIndex={-1}>
+            Étape {step + 1} sur {STEPS.length} : {STEP_TITLES[step]}
+          </h2>
 
-        {/* Alerte erreur globale (ex : Hors zone 422 ou file pleine) */}
-        {submitError && (
-          <div
-            role="alert"
-            className="p-4 rounded-2xl bg-danger-soft border border-danger-border text-danger text-xs sm:text-sm font-medium flex items-start gap-2.5 sa-animate-fade-in"
-          >
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-            <div className="space-y-0.5">
-              <p className="font-bold">Attention</p>
-              <p>{submitError}</p>
+          {step === 0 && (
+            <div className="wizard__grid">
+              <FormField id="address-type" label="Type de lieu" error={fe.placeType || fe.locationType}>
+                <select id="address-type" value={values.placeType} aria-invalid={!!(fe.placeType || fe.locationType)}
+                  aria-describedby={describedBy('address-type', fe.placeType || fe.locationType)} onChange={(e) => update('placeType', e.target.value as PlaceType | '')}>
+                  <option value="">Choisir…</option>
+                  {(Object.keys(PLACE_TYPE_LABELS) as PlaceType[]).map((type) => (
+                    <option key={type} value={type}>{PLACE_TYPE_LABELS[type]}</option>
+                  ))}
+                </select>
+              </FormField>
+              <FormField id="address-title" label="Nom du lieu" error={fe.title}>
+                <input id="address-title" value={values.title} maxLength={160} aria-invalid={!!fe.title} placeholder="Ex. Maison familiale Diallo"
+                  aria-describedby={describedBy('address-title', fe.title)} onChange={(e) => update('title', e.target.value)} />
+              </FormField>
+              <FormField id="address-description" label="Repères visuels utiles (facultatif)" error={fe.description} hint="Nom + repères limités à 500 caractères au total. La zone et le quartier sont déterminés automatiquement depuis le point GPS.">
+                <textarea id="address-description" rows={3} maxLength={450} value={values.description} aria-invalid={!!fe.description}
+                  placeholder="Ex. portail bleu, 3e concession à gauche après la mosquée"
+                  aria-describedby={describedBy('address-description', fe.description)} onChange={(e) => update('description', e.target.value)} />
+              </FormField>
             </div>
+          )}
+
+          {step === 1 && (
+            <div className="wizard__location">
+              <div className="wizard__location-controls">
+                <button className="button button-secondary" type="button" onClick={() => void locateMe()}
+                  disabled={!geolocationAvailable || geo.kind === 'locating'}>
+                  <LocateFixed aria-hidden="true" />{geo.kind === 'locating' ? 'Localisation…' : 'Utiliser ma position actuelle'}
+                </button>
+                <div className="chip-row" role="group" aria-label="Aller rapidement vers une zone couverte">
+                  {ZONES.map((z) => (
+                    <button key={z.code} type="button" className="chip"
+                      onClick={() => placeManually((z.latMin + z.latMax) / 2, (z.lonMin + z.lonMax) / 2)}>
+                      <MapPin aria-hidden="true" />{z.name}
+                    </button>
+                  ))}
+                </div>
+                {!geolocationAvailable && <p className="field-hint">{GEOLOCATION_MESSAGES.unsupported}</p>}
+                {geo.kind === 'locating' && geo.accuracy !== undefined && (
+                  <p className="field-hint" role="status">Affinage de la position… meilleure précision actuelle : {formatDistance(geo.accuracy)}.</p>
+                )}
+                {geo.kind === 'done' && <GeoFeedback accuracy={geo.accuracy} timestamp={geo.timestamp} />}
+                {geo.kind === 'error' && <p className="field-error" role="alert">{geo.message}</p>}
+                <div className="field-row">
+                  <FormField id="address-latitude" label="Latitude" error={fe.latitude}>
+                    <input id="address-latitude" inputMode="decimal" value={values.latitude} aria-invalid={!!fe.latitude} placeholder="ex. 12.5738"
+                      aria-describedby={fe.latitude ? 'address-latitude-error' : 'coordinates-hint'} onChange={(e) => changeCoordinate('latitude', e.target.value)} onPaste={pasteCoordinates} />
+                  </FormField>
+                  <FormField id="address-longitude" label="Longitude" error={fe.longitude}>
+                    <input id="address-longitude" inputMode="decimal" value={values.longitude} aria-invalid={!!fe.longitude} placeholder="ex. -16.2650"
+                      aria-describedby={fe.longitude ? 'address-longitude-error' : 'coordinates-hint'} onChange={(e) => changeCoordinate('longitude', e.target.value)} onPaste={pasteCoordinates} />
+                  </FormField>
+                </div>
+                {point && looksSwapped(point.lat, point.lng) && (
+                  <button className="button button-secondary button-sm" type="button" onClick={swapCoordinates}>
+                    <ArrowLeftRight aria-hidden="true" />Inverser latitude et longitude
+                  </button>
+                )}
+                {resolvedQuartier && previewCode && (
+                  <p className="provisional-code" role="status">
+                    Zone détectée : <strong>{getZoneName(resolvedQuartier.zoneCode)} · {resolvedQuartier.name}</strong>
+                    <small>Aperçu du format : {resolvedQuartier.zoneCode}-{resolvedQuartier.code}-XXXX (code définitif attribué par le serveur)</small>
+                  </p>
+                )}
+                {point && !resolvedQuartier && resolvedGeo.error && (
+                  <p className="field-error" role="alert">{resolvedGeo.error}</p>
+                )}
+                <p className="field-hint" id="coordinates-hint">Cliquez sur la carte pour placer le point, puis déplacez le marqueur pour l’ajuster. Zones couvertes : Ziguinchor, Dakar et Saint-Louis.</p>
+              </div>
+              <div className="map-frame wizard__map">
+                <LocationPicker value={point} onChange={placeManually} accuracy={geo.kind === 'done' ? geo.accuracy : undefined} />
+              </div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="wizard__photo">
+              <p className="muted">Une photo de la façade aide vos visiteurs et livreurs à reconnaître le lieu. Formats acceptés : JPEG, PNG ou WebP (max 5 Mo).</p>
+              <PhotoPicker value={photo} onChange={setPhoto} error={fe.photo || fe.file} />
+            </div>
+          )}
+
+          {step === 3 && (<>
+            <div className="wizard__review">
+              <div className="code-preview" aria-label="Aperçu du code">
+                <small>Zone & quartier résolus</small>
+                <strong>{resolvedQuartier ? `${resolvedQuartier.zoneCode}-${resolvedQuartier.code}-XXXX` : '—'}</strong>
+                <p>{resolvedQuartier ? `${getZoneName(resolvedQuartier.zoneCode)} · ${resolvedQuartier.name}` : 'Position requise'}. Le serveur génère votre code court unique et immuable dès l’enregistrement.</p>
+              </div>
+              {point && (
+                <div className="map-frame wizard__review-map">
+                  <AddressMap addresses={[{
+                    key: 'apercu',
+                    publicCode: 'Aperçu',
+                    title: values.title,
+                    placeType: (values.placeType || 'MAISON') as PlaceType,
+                    district: resolvedQuartier?.name ?? '',
+                    latitude: point.lat,
+                    longitude: point.lng,
+                  }]}
+                    label="Position choisie" interactive={false} zoom={16} />
+                </div>
+              )}
+            </div>
+            <div className="wizard__grid">
+              <dl className="summary">
+                <div><dt>Lieu</dt><dd>{values.title} · {values.placeType && PLACE_TYPE_LABELS[values.placeType]}</dd></div>
+                {resolvedQuartier && <div><dt>Quartier · Zone</dt><dd>{resolvedQuartier.name}, {getZoneName(resolvedQuartier.zoneCode)}</dd></div>}
+                <div><dt>Coordonnées</dt><dd>{values.latitude}, {values.longitude}</dd></div>
+                {values.description.trim() && <div><dt>Repères</dt><dd>{values.description}</dd></div>}
+                <div><dt>Photo de façade</dt><dd>{photo ? 'Jointe (envoyée juste après l’enregistrement)' : 'Aucune'}</dd></div>
+              </dl>
+              <fieldset className="consent" aria-describedby={fe.listed ? 'consent-error' : 'consent-help'}>
+                <legend>Visibilité dans l’annuaire public</legend>
+                <p className="field-hint" id="consent-help">Votre code et son QR code sont immédiatement utilisables. Choisissez en plus si ce lieu doit apparaître dans la recherche de l’annuaire public.</p>
+                <label className="choice">
+                  <input type="radio" name="consent" value="yes" checked={values.listed === 'yes'} onChange={() => update('listed', 'yes')} />
+                  <span>Oui, référencer cette adresse dans l’annuaire public</span>
+                </label>
+                <label className="choice">
+                  <input type="radio" name="consent" value="no" checked={values.listed === 'no'} onChange={() => update('listed', 'no')} />
+                  <span>Non, accessible uniquement aux personnes à qui je transmets le code</span>
+                </label>
+                {values.listed === 'yes' && (
+                  <label className="choice choice--check">
+                    <input type="checkbox" checked={values.ownerNamePublic} onChange={(e) => update('ownerNamePublic', e.target.checked)} />
+                    <span>Afficher mon nom dans l’annuaire<small>On pourra retrouver cette adresse en cherchant votre nom. Votre e-mail et téléphone ne sont jamais montrés.</small></span>
+                  </label>
+                )}
+                {fe.listed && <p className="field-error" id="consent-error">{fe.listed}</p>}
+              </fieldset>
+              <p className="alert"><Info aria-hidden="true" className="inline-icon" /> Votre adresse sera immédiatement active dès l’enregistrement, avec sa fiche publique et son QR code.</p>
+            </div>
+          </>)}
+
+          {error && <p className="alert alert--error" role="alert">{error}</p>}
+          <div className="wizard__nav">
+            {step > 0
+              ? <button className="button button-secondary" type="button" onClick={() => goTo(step - 1)}><ArrowLeft aria-hidden="true" />Précédent</button>
+              : <span />}
+            {step < STEPS.length - 1
+              ? <button className="button button-primary" type="submit">Suivant<ArrowRight aria-hidden="true" /></button>
+              : <button className="button button-primary" type="submit" disabled={submitting}><Save aria-hidden="true" />{submitting ? 'Enregistrement…' : 'Enregistrer l’adresse'}</button>}
           </div>
-        )}
+        </form>
+      </section>
+    </main>
+  )
+}
 
-        {/* Information mode hors ligne pour le wizard */}
-        {!isOnline && step < 4 && (
-          <div
-            role="status"
-            className="p-3.5 rounded-2xl bg-warning-soft border border-warning-border text-warning text-xs sm:text-sm font-medium flex items-start gap-2.5"
-          >
-            <WifiOff className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-            <span>
-              Mode hors ligne · cette adresse sera enregistrée sur votre appareil et transmise dès votre retour sur le réseau.
-            </span>
-          </div>
-        )}
-
-        {/* Étape 1 : Emplacement */}
-        {step === 1 && (
-          <WizardStepLocation
-            latitude={latitude}
-            longitude={longitude}
-            onLatitudeChange={setLatitude}
-            onLongitudeChange={setLongitude}
-            onMapPositionChange={handleMapPositionChange}
-            gpsAccuracy={gpsAccuracy}
-            loadingGps={loadingGps}
-            gpsAcquired={gpsAcquired}
-            gpsError={gpsError}
-            onCaptureGps={handleCaptureGps}
-            onNext={handleGoToStep2}
-          />
-        )}
-
-        {/* Étape 2 : Détails & Visibilité */}
-        {step === 2 && (
-          <WizardStepDetails
-            locationType={locationType}
-            onLocationTypeChange={setLocationType}
-            description={description}
-            onDescriptionChange={setDescription}
-            listed={listed}
-            onListedChange={setListed}
-            showOwnerName={showOwnerName}
-            onShowOwnerNameChange={setShowOwnerName}
-            onBack={() => {
-              setSubmitError(null);
-              setStep(1);
-            }}
-            onNext={handleGoToStep3}
-          />
-        )}
-
-        {/* Étape 3 : Photo de façade */}
-        {step === 3 && (
-          <WizardStepPhoto
-            fileInputRef={fileInputRef}
-            photoFile={photoFile}
-            photoPreview={photoPreview}
-            compressing={compressing}
-            compressionStats={compressionStats}
-            photoError={photoError}
-            submitting={submitting}
-            summaryQuartierLabel={summaryQuartierLabel}
-            locationType={locationType}
-            onPhotoSelect={handlePhotoSelect}
-            onRemovePhoto={handleRemovePhoto}
-            onBack={() => {
-              setSubmitError(null);
-              setStep(2);
-            }}
-            onSubmitWithoutPhoto={() => {
-              void handleFinalSubmit(false);
-            }}
-            onSubmitWithPhoto={() => {
-              void handleFinalSubmit(true);
-            }}
-          />
-        )}
-
-        {/* Étape 4 : Plaque créée / Brouillon hors ligne */}
-        {step === 4 && createdAddress && (
-          <WizardStepResult
-            createdAddress={createdAddress}
-            isOfflineCreated={isOfflineCreated}
-            hasTemporaryCode={hasTemporaryCode}
-            onDownloadQrCode={handleDownloadQrCode}
-            onReset={handleReset}
-          />
-        )}
-      </div>
-    </PublicLayout>
-  );
-};
+function GeoFeedback({ accuracy, timestamp }: { accuracy: number; timestamp: number }) {
+  const level = accuracyLevel(accuracy)
+  const time = new Intl.DateTimeFormat('fr-FR', { timeStyle: 'medium' }).format(new Date(timestamp))
+  if (level === 'good') {
+    return <p className="field-hint" role="status">Position de l’appareil relevée à {time}, précise à environ {formatDistance(accuracy)} (cercle bleu). Vérifiez-la sur la carte.</p>
+  }
+  return (
+    <p className="alert alert--warning" role="status">
+      Position approximative : l’appareil annonce une incertitude d’environ {formatDistance(accuracy)} (relevé de {time}, cercle bleu sur la carte).
+      {level === 'poor' && ' Sur un ordinateur ou à l’intérieur, la position vient souvent du Wi-Fi ou du réseau et peut être éloignée du vrai lieu.'}
+      {' '}Déplacez le marqueur sur l’entrée exacte avant d’enregistrer.
+    </p>
+  )
+}

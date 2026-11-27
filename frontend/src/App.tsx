@@ -1,137 +1,94 @@
-import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { OnlineStatusProvider } from './context/OnlineStatusContext';
-import { ToastProvider } from './components/Toast';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { HomePage } from './pages/HomePage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { AppNavigation } from './components/AppNavigation';
-import { AppFooter } from './components/AppFooter';
-import { OfflineBanner } from './components/OfflineBanner';
-import { ReloadPrompt } from './components/ReloadPrompt';
-import { ErrorBoundary } from './app/boundaries/ErrorBoundary';
+import { lazy, Suspense } from 'react'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react-router-dom'
+import './styles/components.css'
+import './styles/public.css'
+import './styles/app.css'
+import './styles/admin.css'
+import { AuthProvider } from './auth/AuthProvider'
+import { RequireAuth } from './auth/RequireAuth'
+import { AdaptiveLayout } from './components/layout/AdaptiveLayout'
+import { AdminLayout } from './components/layout/AdminLayout'
+import { AppLayout } from './components/layout/AppLayout'
+import { PublicLayout } from './components/layout/PublicLayout'
+import { AccountPage } from './pages/AccountPage'
+import { HomePage } from './pages/HomePage'
+import { LoginPage } from './pages/LoginPage'
+import { MyAddressesPage } from './pages/MyAddressesPage'
+import { NotFoundPage } from './pages/NotFoundPage'
+import { RegisterPage } from './pages/RegisterPage'
+import { SearchPage } from './pages/SearchPage'
 
-// Lazy loading des routes secondaires et volumineuses (Partie 0.7, P03 & P04)
-const initialPathname = typeof window !== 'undefined' ? window.location.pathname : '';
-const loginPreload = initialPathname === '/login' ? import('./pages/LoginPage') : null;
-const registerPreload = initialPathname === '/register' ? import('./pages/RegisterPage') : null;
-const publicAddressPreload = initialPathname.startsWith('/a/') ? import('./pages/PublicAddressPage') : null;
-const myAddressesPreload = initialPathname.startsWith('/addresses/mine') ? import('./pages/MyAddressesPage') : null;
-const newAddressPreload = initialPathname.startsWith('/addresses/new') ? import('./pages/NewAddressPage') : null;
-const directoryPreload = initialPathname.startsWith('/annuaire') ? import('./pages/DirectoryPage') : null;
-const dashboardPreload = initialPathname.startsWith('/tableau-de-bord') ? import('./pages/DashboardPage') : null;
+// Pages avec carte Leaflet ou QR code : chargées à la demande pour alléger l'accueil.
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })))
+const AdminReportsPage = lazy(() => import('./pages/admin/AdminReportsPage').then((m) => ({ default: m.AdminReportsPage })))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })))
+const AdminAddressesPage = lazy(() => import('./pages/admin/AdminAddressesPage').then((m) => ({ default: m.AdminAddressesPage })))
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })))
+const MapPage = lazy(() => import('./pages/MapPage').then((m) => ({ default: m.MapPage })))
+const MyAddressDetailPage = lazy(() => import('./pages/MyAddressDetailPage').then((m) => ({ default: m.MyAddressDetailPage })))
+const NewAddressPage = lazy(() => import('./pages/NewAddressPage').then((m) => ({ default: m.NewAddressPage })))
+const PublicAddressPage = lazy(() => import('./pages/PublicAddressPage').then((m) => ({ default: m.PublicAddressPage })))
+const SharePage = lazy(() => import('./pages/SharePage').then((m) => ({ default: m.SharePage })))
 
-const LoginPage = lazy(() => (loginPreload ?? import('./pages/LoginPage')).then(m => ({ default: m.LoginPage })));
-const RegisterPage = lazy(() => (registerPreload ?? import('./pages/RegisterPage')).then(m => ({ default: m.RegisterPage })));
-const PublicAddressPage = lazy(() => (publicAddressPreload ?? import('./pages/PublicAddressPage')).then(m => ({ default: m.PublicAddressPage })));
-const DashboardPage = lazy(() => (dashboardPreload ?? import('./pages/DashboardPage')).then(m => ({ default: m.DashboardPage })));
-const MyAddressesPage = lazy(() => (myAddressesPreload ?? import('./pages/MyAddressesPage')).then(m => ({ default: m.MyAddressesPage })));
-const NewAddressPage = lazy(() => (newAddressPreload ?? import('./pages/NewAddressPage')).then(m => ({ default: m.NewAddressPage })));
-const EditAddressPage = lazy(() => import('./pages/EditAddressPage').then(m => ({ default: m.EditAddressPage })));
-const AdminPage = lazy(() => import('./pages/AdminPage').then(m => ({ default: m.AdminPage })));
-const AccountPage = lazy(() => import('./pages/AccountPage').then(m => ({ default: m.AccountPage })));
-const DirectoryPage = lazy(() => (directoryPreload ?? import('./pages/DirectoryPage')).then(m => ({ default: m.DirectoryPage })));
-
-const RouteLoadingFallback = () => (
-  <div
-    className="max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6 min-h-[720px] animate-pulse"
-    aria-label="Chargement de la page"
-  >
-    <div className="h-9 bg-surface-hover rounded-xl w-1/3" />
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-      <div className="h-64 bg-surface border border-border rounded-2xl" />
-      <div className="h-64 bg-surface border border-border rounded-2xl" />
-      <div className="h-64 bg-surface border border-border rounded-2xl" />
-    </div>
-  </div>
-);
-
-export function App() {
-  return (
-    <OnlineStatusProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <BrowserRouter>
-            <div className="min-h-screen flex flex-col bg-canvas text-ink">
-              <a
-                href="#main-content"
-                className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[var(--z-tooltip)] focus:px-4 focus:py-2.5 focus:rounded-xl focus:bg-institution focus:text-ink-inverse focus:text-sm focus:font-semibold focus:shadow-lg"
-              >
-                Aller au contenu principal
-              </a>
-              <AppNavigation />
-              <OfflineBanner />
-              <main id="main-content" className="flex-1 flex flex-col">
-                <ErrorBoundary>
-                  <Suspense fallback={<RouteLoadingFallback />}>
-                    <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/register" element={<RegisterPage />} />
-                    <Route path="/annuaire" element={<DirectoryPage />} />
-                    <Route
-                      path="/tableau-de-bord"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/account"
-                      element={
-                        <ProtectedRoute>
-                          <AccountPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="/a/:code" element={<PublicAddressPage />} />
-                    <Route
-                      path="/addresses/new"
-                      element={
-                        <ProtectedRoute>
-                          <NewAddressPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/addresses/mine"
-                      element={
-                        <ProtectedRoute>
-                          <MyAddressesPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/addresses/:id/edit"
-                      element={
-                        <ProtectedRoute>
-                          <EditAddressPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin"
-                      element={
-                        <ProtectedRoute allowedRoles={['ADMIN']}>
-                          <AdminPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                      <Route path="*" element={<NotFoundPage />} />
-                    </Routes>
-                  </Suspense>
-                </ErrorBoundary>
-              </main>
-              <AppFooter />
-              <ReloadPrompt />
-            </div>
-          </BrowserRouter>
-        </ToastProvider>
-      </AuthProvider>
-    </OnlineStatusProvider>
-  );
+function LegacyEditRedirect() {
+  const { id } = useParams()
+  return <Navigate to={id ? `/mes-adresses/${encodeURIComponent(id)}` : '/mes-adresses'} replace />
 }
 
-export default App;
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Suspense fallback={<p className="loading page-fallback" role="status">Chargement…</p>}>
+          <Routes>
+            {/* Site public + redirections de compatibilité des anciennes URL */}
+            <Route element={<PublicLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="connexion" element={<LoginPage />} />
+              <Route path="inscription" element={<RegisterPage />} />
+              <Route path="login" element={<Navigate to="/connexion" replace />} />
+              <Route path="register" element={<Navigate to="/inscription" replace />} />
+              <Route path="annuaire" element={<Navigate to="/recherche" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
+
+            {/* Pages publiques affichées dans l'espace personnel quand on est connecté */}
+            <Route element={<AdaptiveLayout />}>
+              <Route path="recherche" element={<SearchPage />} />
+              <Route path="carte" element={<MapPage />} />
+              <Route path="a/:code" element={<PublicAddressPage />} />
+              <Route path="a/:code/partage" element={<SharePage />} />
+            </Route>
+
+            {/* Espace personnel (la protection réelle est assurée par le backend JWT) */}
+            <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+              <Route path="tableau-de-bord" element={<DashboardPage />} />
+              <Route path="mes-adresses" element={<MyAddressesPage />} />
+              <Route path="mes-adresses/nouvelle" element={<NewAddressPage />} />
+              <Route path="mes-adresses/:id" element={<MyAddressDetailPage />} />
+              <Route path="compte" element={<AccountPage />} />
+              {/* Alias de compatibilité avec les anciens liens / raccourcis PWA */}
+              <Route path="addresses/mine" element={<Navigate to="/mes-adresses" replace />} />
+              <Route path="addresses/new" element={<Navigate to="/mes-adresses/nouvelle" replace />} />
+              <Route path="addresses/:id/edit" element={<LegacyEditRedirect />} />
+              <Route path="account" element={<Navigate to="/compte" replace />} />
+            </Route>
+
+            {/* Administration (rôle ADMIN vérifié par le backend /api/admin/**) */}
+            <Route element={<RequireAuth><AdminLayout /></RequireAuth>}>
+              <Route path="admin" element={<Outlet />}>
+                <Route index element={<AdminDashboardPage />} />
+                <Route path="signalements" element={<AdminReportsPage />} />
+                <Route path="moderation" element={<Navigate to="/admin/signalements" replace />} />
+                <Route path="adresses" element={<AdminAddressesPage />} />
+                <Route path="utilisateurs" element={<AdminUsersPage />} />
+              </Route>
+            </Route>
+          </Routes>
+        </Suspense>
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
+
+export default App
