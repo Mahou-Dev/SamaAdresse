@@ -78,6 +78,23 @@ jobs:
           cache: maven
           cache-dependency-path: backend/pom.xml
 
+      - name: Préparation de la ressource SPA minimale (test ProductionFeaturesTest)
+        run: |
+          mkdir -p backend/src/main/resources/static
+          cat <<'EOF' > backend/src/main/resources/static/index.html
+          <!doctype html>
+          <html lang="fr">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>SamaAdresse — Adressage numérique citoyen</title>
+            </head>
+            <body>
+              <div id="root"></div>
+            </body>
+          </html>
+          EOF
+
       - name: Vérification Maven et couverture JaCoCo (./mvnw -B verify)
         working-directory: backend
         env:
@@ -169,6 +186,7 @@ jobs:
             fi
             sleep 2
           done
+          curl -sf http://localhost:8082/api/health
 
       - name: Exécution de la collection Postman via Newman
         run: |
@@ -193,6 +211,7 @@ jobs:
             fi
             sleep 2
           done
+          curl -sf http://localhost:8082/api/health
 
       - name: Exécution de smoke-prod.sh
         env:

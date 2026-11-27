@@ -56,24 +56,6 @@ jobs:
           python3 scripts/check-env-vars.py
           cmp -s backend/src/main/resources/geo-grid.json frontend/src/data/geo-grid.json
 
-      - name: Configuration Java 21 (Temurin)
-        uses: actions/setup-java@v4.7.0
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-          cache-dependency-path: backend/pom.xml
-
-      - name: Vérification Backend (./mvnw -B verify)
-        working-directory: backend
-        env:
-          DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
-          DB_USERNAME: samaadresse_user
-          DB_PASSWORD: cd_gate_db_password_non_secret
-          JWT_SECRET: cd-gate-ephemeral-jwt-secret-key-at-least-32-bytes-long
-          DEMO_PASSWORD: CdGateDemoPassword2026!
-        run: ./mvnw -B verify
-
       - name: Configuration Node.js 22
         uses: actions/setup-node@v4.2.0
         with:
@@ -101,6 +83,27 @@ jobs:
           fi
           echo "index_js=$INDEX_JS" >> "$GITHUB_OUTPUT"
           echo "Bundle d'entrée attendu en production : $INDEX_JS"
+
+      - name: Configuration Java 21 (Temurin)
+        uses: actions/setup-java@v4.7.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Vérification Backend (./mvnw -B verify avec ressources SPA du build frontend)
+        env:
+          DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
+          DB_USERNAME: samaadresse_user
+          DB_PASSWORD: cd_gate_db_password_non_secret
+          JWT_SECRET: cd-gate-ephemeral-jwt-secret-key-at-least-32-bytes-long
+          DEMO_PASSWORD: CdGateDemoPassword2026!
+        run: |
+          mkdir -p backend/src/main/resources/static
+          cp -r frontend/dist/. backend/src/main/resources/static/
+          (cd backend && ./mvnw -B verify)
+          rm -rf backend/src/main/resources/static
 
       - name: Validation reproductibilité du Dockerfile de production
         run: docker build -t samaadresse:cd-verify .

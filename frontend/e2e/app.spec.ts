@@ -26,8 +26,9 @@ test.describe('SamaAdresse E2E — Nouveau Frontend connecté au Backend Spring 
     // Photo de façade chargée depuis PostgreSQL /uploads/
     const facadeImg = page.locator('.address-sheet__banner img')
     await expect(facadeImg).toBeVisible()
-    const naturalWidth = await facadeImg.evaluate((el: HTMLImageElement) => el.naturalWidth)
-    expect(naturalWidth).toBeGreaterThan(0)
+    await expect
+      .poll(async () => facadeImg.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0))
+      .toBe(true)
 
     // Page partage QR code
     await page.getByRole('link', { name: /QR code/ }).click()
