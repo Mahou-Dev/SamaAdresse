@@ -68,7 +68,7 @@ jobs:
         working-directory: backend
         env:
           DB_URL: jdbc:postgresql://localhost:5434/samaadresse_db
-          DB_USER: samaadresse_user
+          DB_USERNAME: samaadresse_user
           DB_PASSWORD: cd_gate_db_password_non_secret
           JWT_SECRET: cd-gate-ephemeral-jwt-secret-key-at-least-32-bytes-long
           DEMO_PASSWORD: CdGateDemoPassword2026!
