@@ -1,158 +1,23 @@
-/* ==============================================================================
- * SamaAdresse — Système Visuel & Tokens de Design (Lot 9 — Palette Plus Forte)
- * ==============================================================================
- * Typographie : Outfit (12/14/16/18/22/28/36), JetBrains Mono (Codes d'adresses).
- * Palette : Sable doré #EADFC8, Carte crème #FBF7EF, Sienne #F2ECE1,
- *           Bleu nuit #12304F, Encre #231A15, Texte secondaire #5C4D44,
- *           Ocre #B84A24 & #8A3112, Bleu #1D528F, Vert #2A6B44,
- *           Jaune soleil #F2B233, Bordure #766B5B.
- * Ratios de contraste WCAG calculés :
- *   - Encre #231A15 sur Sable doré #EADFC8 : 12.92:1 (AAA >= 7:1)
- *   - Encre #231A15 sur Crème #FBF7EF : 15.65:1 (AAA >= 7:1)
- *   - Texte secondaire #5C4D44 sur Sable doré #EADFC8 : 6.11:1 (AA >= 4.5:1)
- *   - Texte secondaire #5C4D44 sur Crème #FBF7EF : 7.40:1 (AAA >= 7:1)
- *   - Ocre accent #8A3112 sur Sable doré #EADFC8 : 5.86:1 (AA >= 4.5:1)
- *   - Ocre accent #8A3112 sur Crème #FBF7EF : 7.10:1 (AAA >= 7:1)
- *   - Blanc #FFFFFF sur Ocre bouton #B84A24 : 5.19:1 (AA >= 4.5:1)
- *   - Crème #FBF7EF sur Bleu nuit #12304F : 12.59:1 (AAA >= 7:1)
- *   - Jaune soleil #F2B233 sur Bleu nuit #12304F : 7.17:1 (AAA >= 7:1)
- *   - Encre #231A15 sur Jaune soleil #F2B233 : 9.10:1 (AAA >= 7:1)
- * ============================================================================== */
+@import './styles/tokens.css';
 
-@import "tailwindcss";
-@import "./styles/tokens.css";
-
-@font-face {
-  font-family: 'Outfit';
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('/fonts/outfit-latin.woff2') format('woff2');
+:root {
+  font-family: var(--font-sans);
+  color: var(--ink-900);
+  background: var(--surface);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-
-@font-face {
-  font-family: 'JetBrains Mono';
-  font-style: normal;
-  font-weight: 100 800;
-  font-display: swap;
-  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
-}
-
-@theme {
-  /* ---------------------------------------------------------------------------
-   * Alias de compatibilité hérités (Lot 9 — dépréciés, suppression prévue P04)
-   * La source de vérité SamaAdresse 2.0 Clarté se trouve dans ./styles/tokens.css
-   * --------------------------------------------------------------------------- */
-  --color-sable-dore: #EADFC8;
-  --color-creme: #FBF7EF;
-  --color-sienne: #F2ECE1;
-  --color-sienne-dark: #E6DDD0;
-  --color-bleu-nuit: #12304F;
-  --color-encre: #231A15;
-  --color-texte-secondaire: #5C4D44;
-  --color-ocre: #B84A24;
-  --color-ocre-hover: #9A3816;
-  --color-ocre-accent: #8A3112;
-  --color-bleu: #1D528F;
-  --color-bleu-hover: #153C6B;
-  --color-vert: #2A6B44;
-  --color-vert-hover: #215435;
-  --color-jaune-soleil: #F2B233;
-  --color-jaune-soleil-hover: #DDA025;
-  --color-bordure: #766B5B;
-
-  /* Compatibilité thématique */
-  --color-sable: #EADFC8;
-  --color-border-field: #766B5B;
-  --color-border-subtle: #766B5B;
-  --color-ombre: #231A15;
-  --color-ombre-light: #5C4D44;
-  --color-ombre-muted: #766B5B;
-  --color-manguier: #2A6B44;
-  --color-manguier-hover: #215435;
-  --color-ocre-accessible-on-beige: #8A3112;
-  --color-placeholder: #5C4D44;
-
-  /* Ombres franches héritées */
-  --shadow-crisp-sm: 0 1px 0 rgba(35, 26, 21, 0.08);
-  --shadow-crisp-md: 0 2px 0 rgba(35, 26, 21, 0.12);
-  --shadow-plate: inset 0 1px 2px rgba(255, 255, 255, 0.6), inset 0 -2px 4px rgba(29, 82, 143, 0.15), 0 2px 0 rgba(35, 26, 21, 0.08);
-}
-
-@layer base {
-  body {
-    background-color: var(--color-canvas);
-    color: var(--color-ink);
-    min-height: 100vh;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-
-  ::selection {
-    background-color: var(--color-brand);
-    color: var(--color-ink-inverse);
-  }
-
-  /* Cibles tactiles et focus clavier visible */
-  a, button, input, select, textarea {
-    touch-action: manipulation;
-  }
-
-  ::placeholder,
-  input::placeholder,
-  textarea::placeholder {
-    color: var(--color-ink-muted);
-    opacity: 1;
-  }
-
-  /* Suppression de l'icône de suppression native WebKit pour les champs de recherche */
-  input[type="search"]::-webkit-search-cancel-button,
-  input[type="search"]::-webkit-search-decoration,
-  input[type="search"]::-webkit-search-results-button,
-  input[type="search"]::-webkit-search-results-decoration {
-    -webkit-appearance: none;
-    display: none;
-  }
-
-  :focus-visible {
-    outline: 2px solid var(--color-institution);
-    outline-offset: 2px;
-  }
-}
-
-/* Rendu cartographique net harmonisé avec la charte SamaAdresse Clarté */
-.leaflet-tile-pane {
-  filter: saturate(0.95) contrast(1.02);
-}
-
-/* Cible tactile minimale recommandée */
-.touch-target {
-  min-height: 44px;
-  min-width: 44px;
-}
-
-/* Accessibilité : respect du paramètre prefers-reduced-motion */
+* { box-sizing: border-box; }
+html { min-width: 320px; scroll-behavior: smooth; }
+body { min-width: 320px; min-height: 100vh; margin: 0; }
+#root { min-height: 100vh; }
+button, input, select, textarea { font: inherit; }
+img, svg { display: block; }
+::selection { color: var(--navy-800); background: #cce5ff; }
+:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Styles d'impression pour plaques */
-@media print {
-  body {
-    background: #FFFFFF !important;
-    background-image: none !important;
-    color: #000000 !important;
-  }
-
-  header, nav, footer, .no-print {
-    display: none !important;
-  }
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
