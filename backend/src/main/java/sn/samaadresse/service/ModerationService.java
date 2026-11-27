@@ -194,6 +194,35 @@ public class ModerationService {
         return mapToAdminReportResponse(savedReport);
     }
 
+    @Transactional(readOnly = true)
+    public Page<AdminActionResponse> getAdminActions(int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(100, Math.max(1, size));
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        return adminActionRepository.findAllByOrderByCreatedAtDesc(pageable)
+                .map(a -> AdminActionResponse.builder()
+                        .id(a.getId())
+                        .adminId(a.getAdminId())
+                        .adminEmail(a.getAdminEmail())
+                        .action(a.getAction())
+                        .addressId(a.getAddressId())
+                        .addressCode(a.getAddressCode())
+                        .reportId(a.getReportId())
+                        .reason(a.getReason())
+                        .createdAt(a.getCreatedAt())
+                        .build());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<AddressResponse> getAdminAddresses(AddressStatus status, String q, int page, int size) {
+        int safePage = Math.max(0, page);
+        int safeSize = Math.min(100, Math.max(1, size));
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        String cleanQ = (q != null && !q.isBlank()) ? q.trim() : null;
+        return addressRepository.searchAdminAddresses(status, cleanQ, pageable)
+                .map(addressService::mapToAddressResponse);
+    }
+
     public AdminReportResponse mapToAdminReportResponse(AddressReport report) {
         Address addr = report.getAddress();
         return AdminReportResponse.builder()

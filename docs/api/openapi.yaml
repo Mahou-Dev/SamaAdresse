@@ -26,10 +26,11 @@ tags:
 - name: Photos
   description: Service de restitution des photos de façade avec cache HTTP immuable
     et ETag
-- name: Santé
-  description: Contrôle de disponibilité léger (sans accès à la base de données)
 - name: Réservations de codes d'adresse
   description: Endpoints de pré-réservation de codes pour la capture hors ligne
+- name: Santé
+  description: Contrôle de disponibilité léger (liveness) et vérification base de
+    données (readiness)
 - name: Administration & Modération
   description: Endpoints réservés aux administrateurs (ROLE_ADMIN)
 - name: Signalements Publics
@@ -91,7 +92,8 @@ paths:
       tags:
       - Authentification
       summary: Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)
-      description: Crée un compte utilisateur avec hachage BCrypt (coût 12).
+      description: Crée un compte utilisateur avec hachage BCrypt (coût 12). Limité
+        à 10 inscriptions/min/IP.
       operationId: register
       requestBody:
         content:
@@ -114,6 +116,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "409":
           description: Adresse email déjà utilisée
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Trop de tentatives d'inscription
           content:
             '*/*':
               schema:
@@ -150,7 +158,8 @@ paths:
       tags:
       - Authentification
       summary: Déconnexion utilisateur
-      description: Révoque le Refresh Token en base et efface le cookie HttpOnly
+      description: Révoque le Refresh Token en base (cookie Path=/api/auth et/ou session
+        authentifiée) et efface le cookie HttpOnly
       operationId: logout
       parameters:
       - name: refreshToken
@@ -214,6 +223,41 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /api/auth/change-password:
+    post:
+      tags:
+      - Authentification
+      summary: Modifier le mot de passe de l'utilisateur connecté
+      description: "Vérifie le mot de passe actuel, met à jour le hash BCrypt (coû\
+        t 12) et renouvelle le cookie Refresh Token."
+      operationId: changePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+        required: true
+      responses:
+        "200":
+          description: Mot de passe modifié
+          content:
+            '*/*':
+              example:
+                message: Mot de passe mis à jour avec succès
+        "400":
+          description: Nouveau mot de passe invalide ou identique à l'ancien
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Non authentifié ou mot de passe actuel incorrect
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - bearerAuth: []
   /api/admin/system/reset-rate-limits:
     post:
       tags:
@@ -779,14 +823,14 @@ paths:
       tags:
       - Réservations de codes d'adresse
       summary: Compléter le stock de codes réservés pour une zone
-      description: "Complète à 3 codes actifs par quartier pour la zone demandée (ZIG\
-        \ ou DKR), dans la limite de 40 réservations actives par utilisateur. Limité\
+      description: "Complète à 3 codes actifs par quartier pour la zone demandée (ZIG,\
+        \ DKR ou SL), dans la limite de 40 réservations actives par utilisateur. Limité\
         \ à 5 appels par heure."
       operationId: topUpReservations
       parameters:
       - name: zone
         in: query
-        description: Code de zone (ZIG ou DKR)
+        description: "Code de zone (ZIG, DKR ou SL)"
         required: true
         schema:
           type: string
@@ -1208,6 +1252,29 @@ paths:
             application/json:
               example:
                 status: UP
+  /api/health/ready:
+    get:
+      tags:
+      - Santé
+      summary: Vérifier la disponibilité complète du service et de PostgreSQL (readiness)
+      description: Exécute une requête légère SELECT 1 sur la base de données pour
+        confirmer la connectivité PostgreSQL.
+      operationId: readinessCheck
+      responses:
+        "200":
+          description: Service et base de données opérationnels
+          content:
+            application/json:
+              example:
+                status: UP
+                database: UP
+        "503":
+          description: Base de données indisponible
+          content:
+            application/json:
+              example:
+                status: DOWN
+                database: DOWN
   /api/auth/me:
     get:
       tags:
@@ -1271,6 +1338,114 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/PageAdminReportResponse"
+        "401":
+          description: Non authentifié
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Accès réservé aux administrateurs
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - bearerAuth: []
+  /api/admin/addresses:
+    get:
+      tags:
+      - Administration & Modération
+      summary: "Lister toutes les adresses du registre (y compris non listées, archivé\
+        es et suspendues)"
+      description: "Filtrable par statut et recherche texte (code, description, quartier)."
+      operationId: getAdminAddresses
+      parameters:
+      - name: status
+        in: query
+        description: "Statut de l'adresse (ACTIVE, ARCHIVED, SUSPENDED, SIGNALED)"
+        required: false
+        schema:
+          type: string
+          enum:
+          - ACTIVE
+          - ARCHIVED
+          - SUSPENDED
+          - SIGNALED
+      - name: q
+        in: query
+        description: "Filtre texte libre (code, description, quartier)"
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        description: Index de page (base 0)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Taille de page (max 100)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Page d'adresses retournée
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageAddressResponse"
+        "401":
+          description: Non authentifié
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Accès réservé aux administrateurs
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+      security:
+      - bearerAuth: []
+  /api/admin/actions:
+    get:
+      tags:
+      - Administration & Modération
+      summary: Consulter le journal d'audit des actions administratives (paginé)
+      description: Retourne l'historique immuable des décisions de modération (admin_actions).
+      operationId: getAdminActions
+      parameters:
+      - name: page
+        in: query
+        description: Index de page (base 0)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        description: Taille de page (max 100)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: Page d'actions administratives retournée
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageAdminActionResponse"
         "401":
           description: Non authentifié
           content:
@@ -1492,6 +1667,20 @@ components:
           type: string
         password:
           type: string
+    ChangePasswordRequest:
+      required:
+      - currentPassword
+      - newPassword
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          description: Mot de passe actuel de l'utilisateur
+        newPassword:
+          pattern: "^(?=.*[0-9])(?=.*[A-Z]).{8,}$"
+          type: string
+          description: "Nouveau mot de passe (min 8 car., 1 majuscule, 1 chiffre)"
+      description: Requête de changement de mot de passe de l'utilisateur connecté
     SuspendAddressRequest:
       required:
       - reason
@@ -1845,6 +2034,11 @@ components:
           description: Étapes textuelles de l'itinéraire (max 15)
           items:
             $ref: "#/components/schemas/RouteStep"
+        approximateFallback:
+          type: boolean
+          description: Indique s'il s'agit d'une estimation à vol d'oiseau en secours
+            (fournisseur ORS indisponible)
+          example: false
       description: Réponse d'itinéraire calculé depuis la position de l'utilisateur
     RouteStep:
       type: object
@@ -1899,6 +2093,16 @@ components:
           type: string
           description: Date d'enregistrement
           format: date-time
+        latitude:
+          type: number
+          description: Latitude GPS publique du lieu
+          format: double
+          example: 12.5738
+        longitude:
+          type: number
+          description: Longitude GPS publique du lieu
+          format: double
+          example: -16.265
         ownerName:
           type: string
           description: Nom du propriétaire (uniquement si explicitement autorisé par
@@ -1996,6 +2200,97 @@ components:
           format: int32
         empty:
           type: boolean
+    PageAddressResponse:
+      type: object
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
+        first:
+          type: boolean
+        last:
+          type: boolean
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AddressResponse"
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        numberOfElements:
+          type: integer
+          format: int32
+        empty:
+          type: boolean
+    AdminActionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        adminId:
+          type: string
+          format: uuid
+        adminEmail:
+          type: string
+        action:
+          type: string
+        addressId:
+          type: string
+          format: uuid
+        addressCode:
+          type: string
+        reportId:
+          type: string
+          format: uuid
+        reason:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      description: Entrée du journal d'audit administratif (admin_actions)
+    PageAdminActionResponse:
+      type: object
+      properties:
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+        pageable:
+          $ref: "#/components/schemas/PageableObject"
+        first:
+          type: boolean
+        last:
+          type: boolean
+        size:
+          type: integer
+          format: int32
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminActionResponse"
+        number:
+          type: integer
+          format: int32
+        sort:
+          $ref: "#/components/schemas/SortObject"
+        numberOfElements:
+          type: integer
+          format: int32
+        empty:
+          type: boolean
     PublicAddressResponse:
       type: object
       properties:
@@ -2037,6 +2332,11 @@ components:
           type: string
           description: URL de la photo de façade de l'adresse
           example: /uploads/123e4567-e89b-12d3-a456-426614174000.jpg
+        ownerName:
+          type: string
+          description: Nom du propriétaire (uniquement si explicitement autorisé par
+            ce dernier)
+          example: Mamadou Diallo
         createdAt:
           type: string
           description: Date de création

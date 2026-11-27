@@ -26,7 +26,6 @@ public class ReservedCodeService {
     private static final int MAX_ACTIVE_RESERVATIONS_PER_USER = 40;
     private static final int TARGET_ACTIVE_PER_QUARTIER = 3;
     private static final int HOURLY_RATE_LIMIT = 5;
-    private static final Set<String> ALLOWED_ZONES = Set.of("ZIG", "DKR");
 
     private final ReservedCodeRepository reservedCodeRepository;
     private final AddressCodeGenerator addressCodeGenerator;
@@ -36,11 +35,17 @@ public class ReservedCodeService {
     @Transactional
     public List<ReservedCodeResponse> topUpReservations(User user, String zoneParam) {
         if (zoneParam == null || zoneParam.isBlank()) {
-            throw new IllegalArgumentException("Le paramètre zone est obligatoire (ZIG ou DKR).");
+            throw new IllegalArgumentException("Le paramètre zone est obligatoire.");
         }
         String zone = zoneParam.trim().toUpperCase();
-        if (!ALLOWED_ZONES.contains(zone)) {
-            throw new IllegalArgumentException("Zone géographique non couverte : " + zone + " (doit être ZIG ou DKR).");
+        Set<String> allowedZones = geoGridService.getAllZones().stream()
+                .map(z -> z.getCode().toUpperCase())
+                .collect(java.util.stream.Collectors.toSet());
+        if (allowedZones.isEmpty()) {
+            allowedZones = Set.of("ZIG", "DKR", "SL");
+        }
+        if (!allowedZones.contains(zone)) {
+            throw new IllegalArgumentException("Zone géographique non couverte : " + zone + " (zones disponibles : " + String.join(", ", allowedZones) + ").");
         }
 
         // 1. Limitation de débit (5 appels par heure par utilisateur)

@@ -45,7 +45,7 @@ public class DbPhotoStorage extends FileStorageService {
                 .createdAt(Instant.now())
                 .build();
         photoBlobRepository.save(blob);
-        return "/uploads/" + id + ".jpg";
+        return "/uploads/" + id + processed.extension();
     }
 
     @Override

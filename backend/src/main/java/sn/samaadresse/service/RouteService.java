@@ -40,6 +40,7 @@ public class RouteService {
 
     private static final Set<String> ALLOWED_PROFILES = Set.of("driving-car", "foot-walking");
 
+    private static final int MAX_ROUTE_CACHE_ENTRIES = 500;
     private final AddressRepository addressRepository;
     private final RestClient restClient;
     private final String orsApiKey;
@@ -157,8 +158,13 @@ public class RouteService {
             response = generateFallbackRoute(fromLat, fromLon, destAddress, cleanProfile);
         }
 
-        // 8. Mise en cache mémoire pour 5 minutes
-        routeCache.put(cacheKey, new CachedRoute(response, Instant.now().plus(Duration.ofMinutes(5))));
+        // 8. Mise en cache mémoire bornée pour 5 minutes
+        Instant now = Instant.now();
+        routeCache.entrySet().removeIf(e -> now.isAfter(e.getValue().expiresAt));
+        if (routeCache.size() >= MAX_ROUTE_CACHE_ENTRIES) {
+            routeCache.clear();
+        }
+        routeCache.put(cacheKey, new CachedRoute(response, now.plus(Duration.ofMinutes(5))));
 
         return response;
     }
@@ -167,7 +173,7 @@ public class RouteService {
         double destLat = destAddress.getLatitude();
         double destLon = destAddress.getLongitude();
 
-        // Distance orthodromique (Haversine)
+        // Distance orthodromique (Haversine) — estimation honnête à vol d'oiseau sans déformation de tracé
         double earthRadius = 6371000.0;
         double dLat = Math.toRadians(destLat - fromLat);
         double dLon = Math.toRadians(destLon - fromLon);
@@ -177,7 +183,7 @@ public class RouteService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double straightDistance = earthRadius * c;
 
-        // Facteur de détour routier/piéton (~1.25)
+        // Facteur de détour estimatif (~1.25)
         double distance = Math.round(straightDistance * 1.25 * 10.0) / 10.0;
         if (distance < 10.0) distance = 10.0;
 
@@ -186,48 +192,31 @@ public class RouteService {
         double speed = isFoot ? 1.25 : 9.72;
         double duration = Math.round((distance / speed) * 10.0) / 10.0;
 
-        // Géométrie : LineString avec coordonnées intermédiaires
-        List<List<Double>> coords = new ArrayList<>();
-        coords.add(List.of(fromLon, fromLat));
-        coords.add(List.of(
-                fromLon + (destLon - fromLon) * 0.33 + 0.0005,
-                fromLat + (destLat - fromLat) * 0.33 - 0.0003
-        ));
-        coords.add(List.of(
-                fromLon + (destLon - fromLon) * 0.66 - 0.0004,
-                fromLat + (destLat - fromLat) * 0.66 + 0.0002
-        ));
-        coords.add(List.of(destLon, destLat));
+        // Segment direct explicite (pas de zigzag fictif)
+        List<List<Double>> coords = List.of(
+                List.of(fromLon, fromLat),
+                List.of(destLon, destLat)
+        );
 
         GeoJsonLineString geometry = GeoJsonLineString.builder()
                 .type("LineString")
                 .coordinates(coords)
                 .build();
 
-        // Étapes textuelles
-        List<RouteStep> steps = new ArrayList<>();
-        String startInstruction = isFoot ? "Démarrez en marchant vers votre destination" : "Démarrez en direction de votre destination";
-        steps.add(RouteStep.builder()
-                .instruction(startInstruction)
-                .distance(Math.round(distance * 0.4 * 10.0) / 10.0)
-                .duration(Math.round(duration * 0.4 * 10.0) / 10.0)
-                .build());
-        steps.add(RouteStep.builder()
-                .instruction("Continuez tout droit sur l'axe principal")
-                .distance(Math.round(distance * 0.5 * 10.0) / 10.0)
-                .duration(Math.round(duration * 0.5 * 10.0) / 10.0)
-                .build());
-        steps.add(RouteStep.builder()
-                .instruction("Arrivé à destination : " + destAddress.getCode())
-                .distance(Math.round(distance * 0.1 * 10.0) / 10.0)
-                .duration(Math.round(duration * 0.1 * 10.0) / 10.0)
-                .build());
+        List<RouteStep> steps = List.of(
+                RouteStep.builder()
+                        .instruction("Estimation directe (itinéraire routier OpenRouteService temporairement indisponible)")
+                        .distance(distance)
+                        .duration(duration)
+                        .build()
+        );
 
         return RouteResponse.builder()
                 .distance(distance)
                 .duration(duration)
                 .geometry(geometry)
                 .steps(steps)
+                .approximateFallback(true)
                 .build();
     }
 

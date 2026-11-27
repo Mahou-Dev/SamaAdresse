@@ -13,9 +13,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class RateLimiterService {
 
+    private static final int MAX_CACHE_ENTRIES = 10_000;
     private final Map<String, Bucket> cache = new ConcurrentHashMap<>();
 
+    private void ensureCacheCapacity() {
+        if (cache.size() >= MAX_CACHE_ENTRIES) {
+            cache.clear();
+        }
+    }
+
     public boolean tryConsume(String key) {
+        ensureCacheCapacity();
         Bucket bucket = cache.computeIfAbsent(key, this::createNewBucket);
         return bucket.tryConsume(1);
     }
@@ -23,6 +31,7 @@ public class RateLimiterService {
     public void checkRateLimit(String prefix, String clientIp, int requestsPerMinute) {
         String safeIp = (clientIp == null || clientIp.isBlank()) ? "0.0.0.0" : clientIp.trim();
         String key = prefix + ":" + HashUtils.hashSha256(safeIp);
+        ensureCacheCapacity();
 
         Bucket bucket = cache.computeIfAbsent(key, k -> Bucket.builder()
                 .addLimit(Bandwidth.builder()
@@ -41,6 +50,7 @@ public class RateLimiterService {
     public void checkHourlyRateLimit(String prefix, String identifier, int requestsPerHour) {
         String safeId = (identifier == null || identifier.isBlank()) ? "anonymous" : identifier.trim();
         String key = prefix + ":" + safeId;
+        ensureCacheCapacity();
 
         Bucket bucket = cache.computeIfAbsent(key, k -> Bucket.builder()
                 .addLimit(Bandwidth.builder()

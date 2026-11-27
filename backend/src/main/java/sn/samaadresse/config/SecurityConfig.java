@@ -1,5 +1,6 @@
 package sn.samaadresse.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,9 +26,11 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
+import sn.samaadresse.dto.ErrorResponse;
 import sn.samaadresse.security.JwtAuthenticationFilter;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 @Configuration
@@ -46,8 +49,21 @@ public class SecurityConfig {
             "manifest-src 'self'; " +
             "frame-ancestors 'none'";
 
+    public static final String CSP_ENFORCING_VALUE =
+            "default-src 'self'; " +
+            "script-src 'self'; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "img-src 'self' data: blob: https://*.tile.openstreetmap.org https://tile.openstreetmap.org; " +
+            "connect-src 'self'; " +
+            "worker-src 'self'; " +
+            "manifest-src 'self'; " +
+            "base-uri 'self'; " +
+            "form-action 'self'; " +
+            "frame-ancestors 'none'";
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final Environment environment;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -73,17 +89,33 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Authentification requise\",\"path\":\"" + request.getRequestURI() + "\"}");
+                    ErrorResponse body = ErrorResponse.builder()
+                        .timestamp(Instant.now())
+                        .status(HttpServletResponse.SC_UNAUTHORIZED)
+                        .error("Unauthorized")
+                        .message("Authentification requise")
+                        .path(request.getRequestURI())
+                        .build();
+                    objectMapper.writeValue(response.getWriter(), body);
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     response.setContentType("application/json;charset=UTF-8");
-                    response.getWriter().write("{\"status\":403,\"error\":\"Forbidden\",\"message\":\"Accès refusé : privilèges insuffisants\",\"path\":\"" + request.getRequestURI() + "\"}");
+                    ErrorResponse body = ErrorResponse.builder()
+                        .timestamp(Instant.now())
+                        .status(HttpServletResponse.SC_FORBIDDEN)
+                        .error("Forbidden")
+                        .message("Accès refusé : privilèges insuffisants")
+                        .path(request.getRequestURI())
+                        .build();
+                    objectMapper.writeValue(response.getWriter(), body);
                 })
             )
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/addresses/mine")).authenticated()
                 .requestMatchers(
                     AntPathRequestMatcher.antMatcher("/api/health"),
+                    AntPathRequestMatcher.antMatcher("/api/health/ready"),
                     AntPathRequestMatcher.antMatcher("/api/auth/register"),
                     AntPathRequestMatcher.antMatcher("/api/auth/login"),
                     AntPathRequestMatcher.antMatcher("/api/auth/refresh"),
@@ -124,6 +156,7 @@ public class SecurityConfig {
                 response.setHeader("X-Content-Type-Options", "nosniff");
                 response.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
                 response.setHeader("Permissions-Policy", "geolocation=(self), camera=(self)");
+                response.setHeader("Content-Security-Policy", CSP_ENFORCING_VALUE);
                 response.setHeader("Content-Security-Policy-Report-Only", CSP_REPORT_ONLY_VALUE);
                 if (isProd) {
                     response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");

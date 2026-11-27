@@ -32,16 +32,21 @@ public class AuthController {
 
     @Operation(
             summary = "Inscription d'un nouvel utilisateur (Rôle PROPRIETAIRE par défaut)",
-            description = "Crée un compte utilisateur avec hachage BCrypt (coût 12)."
+            description = "Crée un compte utilisateur avec hachage BCrypt (coût 12). Limité à 10 inscriptions/min/IP."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Compte créé avec succès", content = @Content(schema = @Schema(implementation = UserProfileResponse.class))),
         @ApiResponse(responseCode = "400", description = "Données invalides", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-        @ApiResponse(responseCode = "409", description = "Adresse email déjà utilisée", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+        @ApiResponse(responseCode = "409", description = "Adresse email déjà utilisée", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "429", description = "Trop de tentatives d'inscription", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/register")
-    public ResponseEntity<UserProfileResponse> register(@Valid @RequestBody RegisterRequest request) {
-        UserProfileResponse response = authService.register(request);
+    public ResponseEntity<UserProfileResponse> register(
+        @Valid @RequestBody RegisterRequest request,
+        HttpServletRequest httpRequest
+    ) {
+        String clientIp = extractClientIp(httpRequest);
+        UserProfileResponse response = authService.register(request, clientIp);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -86,7 +91,7 @@ public class AuthController {
         return ResponseEntity.ok(authResponse);
     }
 
-    @Operation(summary = "Déconnexion utilisateur", description = "Révoque le Refresh Token en base et efface le cookie HttpOnly")
+    @Operation(summary = "Déconnexion utilisateur", description = "Révoque le Refresh Token en base (cookie Path=/api/auth et/ou session authentifiée) et efface le cookie HttpOnly")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Déconnexion effectuée",
                 content = @Content(examples = @ExampleObject(value = "{\"message\":\"Déconnexion réussie\"}")))
@@ -96,8 +101,33 @@ public class AuthController {
         @CookieValue(name = "refreshToken", required = false) String refreshToken,
         HttpServletResponse response
     ) {
-        authService.logout(refreshToken, response);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String authenticatedEmail = (auth != null && auth.isAuthenticated()
+            && !(auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken))
+            ? auth.getName()
+            : null;
+        authService.logout(refreshToken, authenticatedEmail, response);
         return ResponseEntity.ok(Map.of("message", "Déconnexion réussie"));
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @org.springframework.security.access.prepost.PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Modifier le mot de passe de l'utilisateur connecté", description = "Vérifie le mot de passe actuel, met à jour le hash BCrypt (coût 12) et renouvelle le cookie Refresh Token.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Mot de passe modifié",
+                content = @Content(examples = @ExampleObject(value = "{\"message\":\"Mot de passe mis à jour avec succès\"}"))),
+        @ApiResponse(responseCode = "400", description = "Nouveau mot de passe invalide ou identique à l'ancien", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Non authentifié ou mot de passe actuel incorrect", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(
+        @Valid @RequestBody ChangePasswordRequest request,
+        HttpServletResponse response
+    ) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        authService.changePassword(email, request, response);
+        return ResponseEntity.ok(Map.of("message", "Mot de passe mis à jour avec succès"));
     }
 
     @SecurityRequirement(name = "bearerAuth")

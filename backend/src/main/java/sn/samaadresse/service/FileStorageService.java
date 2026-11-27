@@ -79,33 +79,61 @@ public class FileStorageService implements PhotoStorage {
 
         String contentType = contentTypeForExtension(extension);
 
+        // Protection anti-decompression-bomb : inspection des dimensions avant décodage complet en mémoire
+        final int maxDimension = 8000;
+        final long maxPixels = 40_000_000L;
+        try (javax.imageio.stream.ImageInputStream iis = javax.imageio.ImageIO.createImageInputStream(new ByteArrayInputStream(rawBytes))) {
+            if (iis != null) {
+                java.util.Iterator<javax.imageio.ImageReader> readers = javax.imageio.ImageIO.getImageReaders(iis);
+                if (readers.hasNext()) {
+                    javax.imageio.ImageReader reader = readers.next();
+                    try {
+                        reader.setInput(iis, true, true);
+                        int w = reader.getWidth(0);
+                        int h = reader.getHeight(0);
+                        if (w <= 0 || h <= 0 || w > maxDimension || h > maxDimension || ((long) w * h) > maxPixels) {
+                            throw new InvalidImageException("Dimensions d'image excessives ou invalides (maximum 8000x8000 px).");
+                        }
+                    } finally {
+                        reader.dispose();
+                    }
+                }
+            }
+        } catch (InvalidImageException ex) {
+            throw ex;
+        } catch (Exception ignored) {
+            // Formats sans lecteur ImageIO natif (ex. WebP) : gérés ci-dessous
+        }
+
+        // Ré-encodage systématique (redimensionnement <= 800 px + purge intégrale des métadonnées EXIF/GPS)
         try (InputStream in = new ByteArrayInputStream(rawBytes)) {
             java.awt.image.BufferedImage original = javax.imageio.ImageIO.read(in);
-            if (original != null && original.getWidth() > 800) {
-                int newWidth = 800;
-                int newHeight = (int) Math.round(((double) original.getHeight() / original.getWidth()) * newWidth);
-                java.awt.image.BufferedImage resized = new java.awt.image.BufferedImage(
-                        newWidth,
-                        newHeight,
-                        original.getType() == 0 ? java.awt.image.BufferedImage.TYPE_INT_RGB : original.getType()
-                );
-                java.awt.Graphics2D g2d = resized.createGraphics();
+            if (original != null) {
+                int targetWidth = original.getWidth() > 800 ? 800 : original.getWidth();
+                int targetHeight = original.getWidth() > 800
+                        ? Math.max(1, (int) Math.round(((double) original.getHeight() / original.getWidth()) * targetWidth))
+                        : original.getHeight();
+                boolean isPng = ".png".equals(extension);
+                int imgType = isPng ? java.awt.image.BufferedImage.TYPE_INT_ARGB : java.awt.image.BufferedImage.TYPE_INT_RGB;
+                java.awt.image.BufferedImage clean = new java.awt.image.BufferedImage(targetWidth, targetHeight, imgType);
+                java.awt.Graphics2D g2d = clean.createGraphics();
+                if (!isPng) {
+                    g2d.setColor(java.awt.Color.WHITE);
+                    g2d.fillRect(0, 0, targetWidth, targetHeight);
+                }
                 g2d.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2d.drawImage(original, 0, 0, newWidth, newHeight, null);
+                g2d.drawImage(original, 0, 0, targetWidth, targetHeight, null);
                 g2d.dispose();
 
-                String formatName = extension.replace(".", "").toLowerCase();
-                if ("jpg".equals(formatName)) {
-                    formatName = "jpeg";
-                }
+                String formatName = isPng ? "png" : "jpeg";
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                boolean written = javax.imageio.ImageIO.write(resized, formatName, baos);
+                boolean written = javax.imageio.ImageIO.write(clean, formatName, baos);
                 if (written && baos.size() > 0) {
                     return new ProcessedImage(baos.toByteArray(), extension, contentType);
                 }
             }
         } catch (Exception ignored) {
-            // Repli sur les octets d'origine si le redimensionnement ImageIO échoue
+            // Repli sur les octets d'origine si le format n'est pas décodable par ImageIO (ex. WebP)
         }
 
         return new ProcessedImage(rawBytes, extension, contentType);

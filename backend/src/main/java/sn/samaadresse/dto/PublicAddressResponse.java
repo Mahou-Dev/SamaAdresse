@@ -40,6 +40,9 @@ public class PublicAddressResponse {
     @Schema(description = "URL de la photo de façade de l'adresse", example = "/uploads/123e4567-e89b-12d3-a456-426614174000.jpg")
     private String photoUrl;
 
+    @Schema(description = "Nom du propriétaire (uniquement si explicitement autorisé par ce dernier)", example = "Mamadou Diallo")
+    private String ownerName;
+
     @Schema(description = "Date de création")
     private Instant createdAt;
 }

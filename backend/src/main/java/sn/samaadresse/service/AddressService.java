@@ -96,26 +96,39 @@ public class AddressService {
 
         boolean listed = Boolean.TRUE.equals(request.getListed());
         boolean showOwnerName = Boolean.TRUE.equals(request.getShowOwnerName());
-        String searchText = computeSearchText(request.getDescription(), quartier.getCode(), showOwnerName, currentUser.getFullName());
+        String searchText = computeSearchTextForQuartier(
+                request.getDescription(), quartier.getCode(), quartier.getZoneCode(), showOwnerName, currentUser.getFullName()
+        );
 
-        // 3. Construction et enregistrement de l'entité
-        Address address = Address.builder()
-                .code(finalCode)
-                .clientRequestId(request.getClientRequestId())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .zone(quartier.getZoneCode())
-                .quartier(quartier.getCode())
-                .description(request.getDescription())
-                .locationType(request.getLocationType())
-                .status(AddressStatus.ACTIVE)
-                .listed(listed)
-                .showOwnerName(showOwnerName)
-                .searchText(searchText)
-                .owner(currentUser)
-                .build();
-
-        Address savedAddress = addressRepository.save(address);
+        // 3. Construction et enregistrement de l'entité (avec retry sur collision concurrente de code)
+        Address savedAddress = null;
+        int maxSaveAttempts = (matchedReservation != null) ? 1 : 3;
+        for (int saveAttempt = 0; saveAttempt < maxSaveAttempts; saveAttempt++) {
+            Address address = Address.builder()
+                    .code(finalCode)
+                    .clientRequestId(request.getClientRequestId())
+                    .latitude(request.getLatitude())
+                    .longitude(request.getLongitude())
+                    .zone(quartier.getZoneCode())
+                    .quartier(quartier.getCode())
+                    .description(request.getDescription())
+                    .locationType(request.getLocationType())
+                    .status(AddressStatus.ACTIVE)
+                    .listed(listed)
+                    .showOwnerName(showOwnerName)
+                    .searchText(searchText)
+                    .owner(currentUser)
+                    .build();
+            try {
+                savedAddress = addressRepository.save(address);
+                break;
+            } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+                if (saveAttempt + 1 >= maxSaveAttempts) {
+                    throw ex;
+                }
+                finalCode = addressCodeGenerator.generateCode(quartier.getZoneCode(), quartier.getCode());
+            }
+        }
 
         if (matchedReservation != null) {
             matchedReservation.setStatus(ReservedCodeStatus.USED);
@@ -243,9 +256,10 @@ public class AddressService {
             address.setShowOwnerName(request.getShowOwnerName());
         }
 
-        address.setSearchText(computeSearchText(
+        address.setSearchText(computeSearchTextForQuartier(
                 address.getDescription(),
                 address.getQuartier(),
+                address.getZone(),
                 address.isShowOwnerName(),
                 currentUser.getFullName()
         ));
@@ -352,9 +366,10 @@ public class AddressService {
             }
         }
 
-        address.setSearchText(computeSearchText(
+        address.setSearchText(computeSearchTextForQuartier(
                 address.getDescription(),
                 address.getQuartier(),
+                address.getZone(),
                 address.isShowOwnerName(),
                 currentUser.getFullName()
         ));
@@ -385,7 +400,7 @@ public class AddressService {
         String qRaw = trimmedQ.isEmpty() ? null : trimmedQ;
         String qNorm = trimmedQ.isEmpty() ? null : normalizeText(trimmedQ);
         String exactCode = trimmedQ.isEmpty() ? "" : trimmedQ.toUpperCase();
-        String filterQuartier = (quartier != null && !quartier.isBlank()) ? quartier.trim().toUpperCase() : null;
+        String filterQuartier = resolveQuartierFilterCode(quartier);
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(pageIndex, pageSize);
         org.springframework.data.domain.Page<Address> addressPage = addressRepository.searchDirectory(
@@ -393,6 +408,39 @@ public class AddressService {
         );
 
         return addressPage.map(this::mapToDirectoryItem);
+    }
+
+    /**
+     * Résout un filtre quartier saisi sous forme de code ("KBG") OU de nom humain ("Boucotte", "Médina", "Kandé")
+     * vers le code canonique 3 lettres en base.
+     */
+    public String resolveQuartierFilterCode(String rawQuartier) {
+        if (rawQuartier == null || rawQuartier.isBlank()) {
+            return null;
+        }
+        String trimmed = rawQuartier.trim();
+        String upper = trimmed.toUpperCase(java.util.Locale.ROOT);
+        String norm = normalizeText(trimmed);
+
+        List<GeoQuartier> allQuartiers = (geoGridService != null) ? geoGridService.getAllQuartiers() : null;
+        if (allQuartiers != null && !allQuartiers.isEmpty()) {
+            for (GeoQuartier q : allQuartiers) {
+                if (q.getCode() != null && q.getCode().equalsIgnoreCase(upper)) {
+                    return q.getCode().toUpperCase(java.util.Locale.ROOT);
+                }
+            }
+            for (GeoQuartier q : allQuartiers) {
+                if (q.getName() != null && normalizeText(q.getName()).equals(norm)) {
+                    return q.getCode().toUpperCase(java.util.Locale.ROOT);
+                }
+            }
+            for (GeoQuartier q : allQuartiers) {
+                if (q.getName() != null && !norm.isEmpty() && normalizeText(q.getName()).contains(norm)) {
+                    return q.getCode().toUpperCase(java.util.Locale.ROOT);
+                }
+            }
+        }
+        return upper;
     }
 
     public sn.samaadresse.dto.DirectoryItemResponse mapToDirectoryItem(Address address) {
@@ -413,6 +461,8 @@ public class AddressService {
                 .description(desc)
                 .photoUrl(address.getPhotoUrl())
                 .createdAt(address.getCreatedAt())
+                .latitude(address.getLatitude())
+                .longitude(address.getLongitude())
                 .ownerName(ownerName)
                 .build();
     }
@@ -439,6 +489,33 @@ public class AddressService {
         return sb.toString().trim();
     }
 
+    private String computeSearchTextForQuartier(String description, String quartierCode, String zoneCode, boolean showOwnerName, String ownerName) {
+        StringBuilder sb = new StringBuilder(computeSearchText(description, quartierCode, showOwnerName, ownerName));
+        if (geoGridService != null && geoGridService.getAllQuartiers() != null && quartierCode != null) {
+            geoGridService.getAllQuartiers().stream()
+                    .filter(q -> q.getCode().equalsIgnoreCase(quartierCode)
+                            && (zoneCode == null || q.getZoneCode().equalsIgnoreCase(zoneCode)))
+                    .findFirst()
+                    .ifPresent(q -> {
+                        if (q.getName() != null && !q.getName().isBlank()) {
+                            sb.append(" ").append(normalizeText(q.getName()));
+                        }
+                    });
+        }
+        if (geoGridService != null && geoGridService.getAllZones() != null && zoneCode != null) {
+            geoGridService.getAllZones().stream()
+                    .filter(z -> z.getCode().equalsIgnoreCase(zoneCode))
+                    .findFirst()
+                    .ifPresent(z -> {
+                        if (z.getName() != null && !z.getName().isBlank()) {
+                            sb.append(" ").append(normalizeText(z.getName()));
+                        }
+                    });
+        }
+        String result = sb.toString().trim();
+        return result.length() > 1000 ? result.substring(0, 1000) : result;
+    }
+
     public AddressResponse mapToAddressResponse(Address address) {
         UserProfileResponse ownerProfile = UserProfileResponse.builder()
                 .id(address.getOwner().getId())
@@ -449,6 +526,10 @@ public class AddressService {
                 .enabled(address.getOwner().isEnabled())
                 .createdAt(address.getOwner().getCreatedAt())
                 .build();
+
+        String moderationNotice = address.getStatus() == AddressStatus.SUSPENDED
+                ? "Suspendue par la modération"
+                : null;
 
         return AddressResponse.builder()
                 .id(address.getId())
@@ -463,7 +544,7 @@ public class AddressService {
                 .status(address.getStatus())
                 .listed(address.isListed())
                 .showOwnerName(address.isShowOwnerName())
-                .moderationNotice(address.getStatus() == AddressStatus.SUSPENDED ? "Suspendue par la modération" : null)
+                .moderationNotice(moderationNotice)
                 .createdAt(address.getCreatedAt())
                 .owner(ownerProfile)
                 .clientRequestId(address.getClientRequestId())
@@ -471,6 +552,9 @@ public class AddressService {
     }
 
     public PublicAddressResponse mapToPublicAddressResponse(Address address) {
+        String ownerName = (address.isShowOwnerName() && address.getOwner() != null)
+                ? address.getOwner().getFullName()
+                : null;
         return PublicAddressResponse.builder()
                 .code(address.getCode())
                 .latitude(address.getLatitude())
@@ -480,6 +564,7 @@ public class AddressService {
                 .description(address.getDescription())
                 .photoUrl(address.getPhotoUrl())
                 .locationType(address.getLocationType())
+                .ownerName(ownerName)
                 .createdAt(address.getCreatedAt())
                 .build();
     }
