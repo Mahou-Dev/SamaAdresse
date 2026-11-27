@@ -1,5 +1,5 @@
 import { ArrowLeft, ArrowLeftRight, ArrowRight, Check, Info, LocateFixed, MapPin, Save } from 'lucide-react'
-import { useRef, useState, type ClipboardEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/authContext'
 import { FormField } from '../components/FormField'
@@ -96,7 +96,12 @@ export function NewAddressPage() {
   const [geo, setGeo] = useState<GeoState>({ kind: 'idle' })
   const [photo, setPhoto] = useState<Blob | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const focusRafRef = useRef<number | null>(null)
   const geolocationAvailable = typeof navigator !== 'undefined' && 'geolocation' in navigator
+
+  useEffect(() => () => {
+    if (focusRafRef.current !== null) cancelAnimationFrame(focusRafRef.current)
+  }, [])
 
   const lat = parseCoordinate(values.latitude)
   const lng = parseCoordinate(values.longitude)
@@ -141,7 +146,15 @@ export function NewAddressPage() {
   function goTo(nextStep: number) {
     setStep(nextStep)
     setError(null)
-    requestAnimationFrame(() => headingRef.current?.focus())
+    if (focusRafRef.current !== null) cancelAnimationFrame(focusRafRef.current)
+    focusRafRef.current = requestAnimationFrame(() => {
+      focusRafRef.current = null
+      const active = document.activeElement
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) {
+        return
+      }
+      headingRef.current?.focus()
+    })
   }
 
   function next() {

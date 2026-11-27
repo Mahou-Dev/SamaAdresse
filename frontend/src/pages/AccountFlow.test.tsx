@@ -82,6 +82,7 @@ async function fillInformationStep(u: U, placeType = 'MAISON') {
   await u.selectOptions(await screen.findByLabelText('Type de lieu'), placeType)
   await u.type(screen.getByLabelText('Nom du lieu'), 'Maison familiale')
   await u.click(screen.getByRole('button', { name: /Suivant/ }))
+  await screen.findByLabelText('Latitude')
 }
 
 describe('parcours compte et adresses', () => {
@@ -155,7 +156,7 @@ describe('parcours compte et adresses', () => {
     await u.type(screen.getByLabelText('Longitude'), '2.35')
     await u.click(screen.getByRole('button', { name: /Suivant/ }))
 
-    expect(screen.getAllByText(/hors des zones couvertes/)[0]).toBeInTheDocument()
+    expect((await screen.findAllByText(/hors des zones couvertes/))[0]).toBeInTheDocument()
   })
 
   it('crée l’adresse avec résolution geo-grid, clientRequestId et active immédiatement le QR code', async () => {
