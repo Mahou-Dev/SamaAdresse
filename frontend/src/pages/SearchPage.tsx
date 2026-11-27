@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { CodeLookup } from '../components/CodeLookup'
 import { apiUrl, searchDirectory, type DirectoryItem, type DirectoryQuery, type Page, type PlaceType } from '../lib/api'
 import { errorMessage } from '../lib/errors'
-import { getAllQuartiers, getZoneName } from '../lib/geoGrid'
+import { getAllQuartiers, getZoneName, resolveQuartierCode } from '../lib/geoGrid'
 import { PLACE_TYPE_LABELS } from '../lib/labels'
 import { PLACE_TYPE_ICONS } from '../lib/placeIcons'
 
@@ -67,6 +67,7 @@ function DirectorySearch({ mode }: { mode: Exclude<Mode, 'code'> }) {
   const [text, setText] = useState('')
   const [quartier, setQuartier] = useState('')
   const [type, setType] = useState<PlaceType>('MAISON')
+  const [typeFilter, setTypeFilter] = useState<PlaceType | ''>('')
   const [state, setState] = useState<ResultState>({ kind: 'idle' })
   const [validation, setValidation] = useState<string | null>(null)
 
@@ -97,11 +98,13 @@ function DirectorySearch({ mode }: { mode: Exclude<Mode, 'code'> }) {
       return
     }
     setValidation(null)
+    const resolvedQuartier = quartier || resolveQuartierCode(value) || value
+    const resolvedOptionalQuartier = value ? (resolveQuartierCode(value) || value) : undefined
     const query: DirectoryQuery = mode === 'recherche'
-      ? { q: value }
+      ? { q: value, quartier: quartier || undefined, type: typeFilter || undefined }
       : mode === 'quartier'
-        ? { quartier: quartier || value }
-        : { type, quartier: value || undefined }
+        ? { quartier: resolvedQuartier }
+        : { type, quartier: resolvedOptionalQuartier }
     void load(query, 0, [])
   }
 
@@ -138,6 +141,28 @@ function DirectorySearch({ mode }: { mode: Exclude<Mode, 'code'> }) {
         </button>
       </form>
       {validation && <p className="field-error" id="directory-error" role="alert">{validation}</p>}
+      {mode === 'recherche' && (
+        <div className="field-row" aria-label="Filtres combinés optionnels">
+          <div className="field">
+            <label htmlFor="directory-combined-quartier">Quartier (facultatif)</label>
+            <select id="directory-combined-quartier" value={quartier} onChange={(e) => setQuartier(e.target.value)}>
+              <option value="">Tous les quartiers</option>
+              {QUARTIERS.map((q) => (
+                <option key={`${q.zoneCode}-${q.code}`} value={q.code}>{q.name} ({getZoneName(q.zoneCode)})</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="directory-combined-type">Type de lieu (facultatif)</label>
+            <select id="directory-combined-type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as PlaceType | '')}>
+              <option value="">Tous les types</option>
+              {TYPES.map((t) => (
+                <option key={t} value={t}>{PLACE_TYPE_LABELS[t]}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
       {mode === 'recherche' && <p className="field-hint">Seules les adresses actives référencées dans l’annuaire apparaissent ici (le nom du propriétaire uniquement s’il l’a autorisé).</p>}
 
       {state.kind === 'loading' && <p className="loading" role="status">Recherche dans l’annuaire…</p>}

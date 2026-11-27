@@ -7,8 +7,8 @@ import { AddressMap } from '../components/map/AddressMap'
 import { LocationPicker } from '../components/map/LocationPicker'
 import { PhotoPicker } from '../components/PhotoPicker'
 import { gridCell } from '../lib/addressCode'
-import { draftsSupported, saveDraft } from '../lib/drafts'
-import { ApiError, composeAddressDescription, createMyAddress, uploadMyAddressPhoto, type FieldErrors, type PlaceType } from '../lib/api'
+import { draftsSupported, getReservedCodes, saveDraft, storeReservedCodes, takeReservedCode } from '../lib/drafts'
+import { ApiError, composeAddressDescription, createMyAddress, topUpReservedCodes, uploadMyAddressPhoto, type FieldErrors, type PlaceType } from '../lib/api'
 import { errorMessage } from '../lib/errors'
 import { describedBy } from '../lib/forms'
 import { looksSwapped, parseCoordinate, parseCoordinatePair } from '../lib/coordinates'
@@ -97,6 +97,7 @@ export function NewAddressPage() {
   const [photo, setPhoto] = useState<Blob | null>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const focusRafRef = useRef<number | null>(null)
+  const warmedZonesRef = useRef<Set<string>>(new Set())
   const geolocationAvailable = typeof navigator !== 'undefined' && 'geolocation' in navigator
 
   useEffect(() => () => {
@@ -111,6 +112,25 @@ export function NewAddressPage() {
   const previewCode = point && resolvedQuartier
     ? `${resolvedQuartier.zoneCode}-${resolvedQuartier.code}-${gridCell(point.lat, point.lng)}`
     : null
+
+  // P1-02 : pré-réserve silencieusement des codes serveur pour la zone courante (usage hors ligne stable).
+  useEffect(() => {
+    if (!token || !user || !resolvedQuartier) return
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+    const zone = resolvedQuartier.zoneCode
+    if (warmedZonesRef.current.has(zone)) return
+    const existing = getReservedCodes(user.id).some(
+      (c) => c.zone.toUpperCase() === zone.toUpperCase() && c.quartier.toUpperCase() === resolvedQuartier.code.toUpperCase(),
+    )
+    if (existing) {
+      warmedZonesRef.current.add(zone)
+      return
+    }
+    warmedZonesRef.current.add(zone)
+    void topUpReservedCodes(token, zone)
+      .then((codes) => storeReservedCodes(user.id, codes))
+      .catch(() => { /* Optionnel en arrière-plan */ })
+  }, [token, user, resolvedQuartier])
 
   function update<K extends keyof FormValues>(key: K, value: FormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }))
@@ -269,7 +289,12 @@ export function NewAddressPage() {
       }
       if (err instanceof ApiError && err.status === 0 && user && draftsSupported()) {
         try {
-          const draft = await saveDraft(user.id, draftInput, previewCode ?? 'BROUILLON', photo)
+          const reservedCode = resolvedQuartier
+            ? takeReservedCode(user.id, resolvedQuartier.zoneCode, resolvedQuartier.code)
+            : null
+          const offlineInput = reservedCode ? { ...draftInput, reservedCode } : draftInput
+          const offlineLabel = reservedCode ?? previewCode ?? 'BROUILLON'
+          const draft = await saveDraft(user.id, offlineInput, offlineLabel, photo)
           navigate('/mes-adresses', { state: { draftSaved: draft.provisionalCode } })
           return
         } catch {

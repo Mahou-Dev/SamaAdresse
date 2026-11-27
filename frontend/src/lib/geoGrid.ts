@@ -161,3 +161,29 @@ export function formatOutOfZoneMessage(gridData: GeoGridData = geoGridJson as Ge
   return `Ces coordonnées sont hors des zones couvertes (${zoneList}). Déplacez le repère ou saisissez d'autres coordonnées.`;
 }
 
+function normalizeLabel(value: string): string {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+/** Résout un code ("KBG") ou nom humain ("Boucotte", "Médina", "Kandé") vers le code quartier canonique. */
+export function resolveQuartierCode(
+  input?: string,
+  gridData: GeoGridData = geoGridJson as GeoGridData,
+): string | null {
+  if (!input || !input.trim()) return null;
+  const trimmed = input.trim();
+  const upper = trimmed.toUpperCase();
+  const norm = normalizeLabel(trimmed);
+
+  const byCode = gridData.quartiers.find((q) => q.code.toUpperCase() === upper);
+  if (byCode) return byCode.code.toUpperCase();
+
+  const byExactName = gridData.quartiers.find((q) => normalizeLabel(q.name) === norm);
+  if (byExactName) return byExactName.code.toUpperCase();
+
+  const byPartialName = gridData.quartiers.find((q) => norm.length >= 2 && normalizeLabel(q.name).includes(norm));
+  if (byPartialName) return byPartialName.code.toUpperCase();
+
+  return null;
+}
+

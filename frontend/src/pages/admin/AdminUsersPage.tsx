@@ -13,8 +13,8 @@ export function AdminUsersPage() {
         <section className="admin-panel state">
           <Users aria-hidden="true" />
           <h2>Gestion des comptes non exposée par l’API actuelle</h2>
-          <p className="admin-muted" style={{ maxWidth: '52ch' }}>
-            <Info aria-hidden="true" className="inline-icon" /> Le backend Spring Boot expose actuellement la modération des signalements et la suspension/réactivation des adresses (<code>/api/admin/reports</code>, <code>/api/admin/addresses/&#123;id&#125;/suspend|reinstate</code>), mais pas encore de route d’énumération des utilisateurs.
+          <p className="admin-muted admin-note">
+            <Info aria-hidden="true" className="inline-icon" /> Le backend Spring Boot expose la modération des signalements, le registre complet des adresses et le journal d’audit (<code>/api/admin/reports</code>, <code>/api/admin/addresses</code>, <code>/api/admin/actions</code>), mais pas de route d’énumération des utilisateurs (principe de minimisation des données personnelles).
           </p>
           <Link className="button button-primary" to="/admin/signalements">Accéder à la modération des signalements</Link>
         </section>

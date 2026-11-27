@@ -40,7 +40,7 @@
 .app-page__head h1 { margin: 4px 0; color: var(--ink-900); font-size: 28px; font-weight: 800; letter-spacing: -.8px; }
 .app-page__head p { margin: 0; font-size: 14.5px; }
 .app-page__actions { display: flex; flex-wrap: wrap; gap: 10px; }
-.back-link { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 14px; color: var(--blue-600); font-size: 14px; font-weight: 700; text-decoration: none; }
+.back-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-bottom: 10px; color: var(--blue-600); font-size: 14px; font-weight: 700; text-decoration: none; }
 .back-link svg { width: 16px; height: 16px; }
 
 /* Cartes statistiques (tableau de bord, administration) */
@@ -367,6 +367,9 @@
 .directory__text span { overflow: hidden; color: var(--ink-700); font-size: 13.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .directory__text small { overflow: hidden; color: var(--ink-500); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
 .directory .button-block { border-radius: 0; border-width: 1px 0 0; }
+@media (max-width: 768px) {
+  .search-tabs button { min-height: 44px; }
+}
 @media (max-width: 600px) {
   .search-tabs { grid-template-columns: repeat(2, 1fr); }
   .directory__form, .directory__form:has(#directory-city) { grid-template-columns: 1fr; }
@@ -386,3 +389,4 @@
 .report-link a { color: var(--blue-600); font-weight: 700; }
 .settings-row--action { border-top: 0; padding-top: 0; }
 .route-controls__summary small { display: block; margin-top: 2px; color: var(--ink-500); font-size: 11.5px; }
+.route-controls__steps { margin: 8px 0 0; padding-left: 18px; color: var(--ink-700); font-size: 12.5px; display: grid; gap: 4px; }

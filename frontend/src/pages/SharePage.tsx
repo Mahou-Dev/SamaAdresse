@@ -87,7 +87,7 @@ export function SharePage() {
             <button className="button button-secondary" type="button" onClick={() => window.print()}><Printer aria-hidden="true" />Imprimer</button>
           </div>
           {feedback && <p className="alert alert--success" role="status">{feedback}</p>}
-          <p className="field-hint">« Envoyer par SMS » ouvre l’application de messagerie de votre appareil : SamaAdresse n’envoie aucun SMS lui-même.</p>
+          <p className="field-hint">« Envoyer par SMS » ouvre l’application de messagerie de votre appareil. Le propriétaire peut aussi envoyer un SMS direct depuis la gestion de son adresse.</p>
         </section>
       </div>
     </main>

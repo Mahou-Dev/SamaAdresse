@@ -2,7 +2,7 @@ name: CI — SamaAdresse
 
 on:
   push:
-    branches: [main, develop, "feature/**"]
+    branches: [main, develop, "feature/**", "fix/**"]
   pull_request:
     branches: [main, develop]
 
@@ -128,6 +128,10 @@ jobs:
       - name: Installation des dépendances
         working-directory: frontend
         run: npm ci
+
+      - name: Audit de sécurité des dépendances runtime (npm audit --omit=dev)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=moderate
 
       - name: Vérification TypeScript (tsc -b --noEmit)
         working-directory: frontend

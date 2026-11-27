@@ -125,8 +125,8 @@
 .auth-card__footer a { color: var(--blue-600); font-weight: 700; text-decoration: none; }
 .stack-form { display: grid; gap: 16px; }
 .password-input { position: relative; }
-.password-input input { padding-right: 46px; }
-.password-input__toggle { position: absolute; top: 50%; right: 6px; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 8px; color: var(--ink-500); background: none; transform: translateY(-50%); cursor: pointer; }
+.password-input input { padding-right: 48px; }
+.password-input__toggle { position: absolute; top: 50%; right: 2px; width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 8px; color: var(--ink-500); background: none; transform: translateY(-50%); cursor: pointer; }
 .password-input__toggle:hover { color: var(--blue-600); background: var(--blue-50); }
 .password-input__toggle svg { width: 18px; height: 18px; }
 
@@ -155,7 +155,8 @@
   .public-header__inner { width: calc(100% - 32px); height: 66px; gap: 12px; }
   .public-header__actions { gap: 10px; margin-left: auto; }
   .public-header__inner > .button { margin-left: auto; }
-  .public-header .logo { font-size: 18px; }
+  .public-header .logo { font-size: 18px; min-height: 44px; }
+  .public-header__login { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; }
   .public-header .logo .brand-mark { width: 32px; height: 32px; }
   .hero__inner, .hero-features, .home-search, .home-steps, .home-cta, .site-footer__inner { width: calc(100% - 32px); }
   .hero__inner { padding-top: 96px; gap: 28px; }
