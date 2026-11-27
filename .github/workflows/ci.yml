@@ -153,6 +153,13 @@ jobs:
     name: Image Docker de Production, Smoke-Test & Playwright E2E
     runs-on: ubuntu-24.04
     needs: [secrets, backend, frontend]
+    env:
+      PROD_TEST_DB_PASSWORD: ci_prod_test_db_password
+      JWT_SECRET: ci_test_ephemeral_jwt_secret_at_least_32_bytes_long_ok
+      DEMO_PASSWORD: CiTestDemoPassword2026!
+      ADMIN_EMAIL: admin@samaadresse.sn
+      ADMIN_PASSWORD: CiTestDemoPassword2026!
+      ORS_API_KEY: ""
     steps:
       - name: Checkout
         uses: actions/checkout@v4.2.2
@@ -171,13 +178,6 @@ jobs:
           npx playwright install --with-deps chromium
 
       - name: Build et démarrage de l'image Docker de production avec PostgreSQL 16
-        env:
-          PROD_TEST_DB_PASSWORD: ci_prod_test_db_password
-          JWT_SECRET: ci_test_ephemeral_jwt_secret_at_least_32_bytes_long_ok
-          DEMO_PASSWORD: CiTestDemoPassword2026!
-          ADMIN_EMAIL: admin@samaadresse.sn
-          ADMIN_PASSWORD: CiTestDemoPassword2026!
-          ORS_API_KEY: ""
         run: |
           docker compose -f docker-compose.prod-test.yml up -d --build --wait
           for i in $(seq 1 60); do
@@ -199,7 +199,6 @@ jobs:
         working-directory: frontend
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:8082
-          DEMO_PASSWORD: CiTestDemoPassword2026!
         run: npx playwright test
 
       - name: Redémarrage léger du conteneur app (réinitialise le quota login mémoire avant smoke-prod)
@@ -214,10 +213,6 @@ jobs:
           curl -sf http://localhost:8082/api/health
 
       - name: Exécution de smoke-prod.sh
-        env:
-          DEMO_PASSWORD: CiTestDemoPassword2026!
-          ADMIN_EMAIL: admin@samaadresse.sn
-          ADMIN_PASSWORD: CiTestDemoPassword2026!
         run: ./scripts/smoke-prod.sh http://localhost:8082 /tmp/smoke-prod-ci.md
 
       - name: Affichage des journaux Docker en cas d'échec
